@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspace Platform</title>
+  <style>
+    :root {
+      --sidebar-bg: #0f172a; --main-bg: #f8fafc; --accent: #2563eb;
+      --text-main: #1e293b; --card-bg: #ffffff; --border: #e2e8f0;
+    }
+
+    /* --- DASHBOARD THEMES --- */
+    body.theme-dark { --sidebar-bg: #020617; --main-bg: #0f172a; --text-main: #f8fafc; --card-bg: #1e293b; --border: #334155; }
+    body.theme-blue { --sidebar-bg: #1e3a8a; --main-bg: #dbeafe; --text-main: #1e3a8a; --card-bg: #ffffff; --border: #93c5fd; }
+    body.theme-yellow { --sidebar-bg: #713f12; --main-bg: #fef9c3; --text-main: #713f12; --card-bg: #ffffff; --border: #fde047; }
+    body.theme-beige { --sidebar-bg: #4a3728; --main-bg: #f5f5dc; --text-main: #4a3728; --card-bg: #fffcf5; --border: #d2b48c; }
+
+    body { margin: 0; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text-main); transition: 0.3s; }
+
+    #sidebar {
+      width: 280px; background: var(--sidebar-bg); color: white;
+      display: flex; flex-direction: column; padding: 30px; box-sizing: border-box;
+      border-right: 1px solid var(--border); transition: 0.3s;
+    }
+
+    #workspace-area { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
+    
+    #header { height: 70px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+
+    .theme-btn { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--card-bg); cursor: pointer; color: var(--text-main); font-weight: 600; }
+
+    #app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 40px; overflow-y: auto; }
+
+    .app-card {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+      padding: 30px; text-align: center; cursor: pointer; transition: 0.3s;
+    }
+    .app-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .app-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+
+    /* --- FULL SCREEN APP VIEWER --- */
+    #app-viewer { 
+        display: none; position: fixed; top: 0; left: 0; 
+        width: 100vw; height: 100vh; background: white; z-index: 1000; 
+    }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
+</head>
+<body class="theme-light">
+
+  <aside id="sidebar">
+    <h1>Workspace Platform</h1>
+    <p style="color: #94a3b8; font-size: 0.85rem;">Corporate Ecosystem Launcher</p>
+  </aside>
+
+  <div id="workspace-area">
+    <header id="header">
+      <h2>Dashboard</h2>
+      <button class="theme-btn" id="ws-theme-btn" onclick="cycleWorkspaceTheme()">Theme: Light</button>
+    </header>
+
+    <div id="app-grid">
+      <div class="app-card" onclick="launchApp('Silo.html')">
+        <span class="icon">📝</span>
+        <h3>Silo Notes</h3>
+        <p>Corporate Notes</p>
+      </div>
+
+      <div class="app-card" onclick="launchApp('Updates Hub.html')">
+        <span class="icon">📣</span>
+        <h3>Updates Hub</h3>
+        <p>Latest News</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-viewer">
+      <iframe id="app-frame" src=""></iframe>
+  </div>
+
+  <script>
+    const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
+    let currentThemeIdx = 0;
+
+    function cycleWorkspaceTheme() {
+      document.body.classList.remove(`theme-${themes[currentThemeIdx]}`);
+      currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+      const newTheme = themes[currentThemeIdx];
+      document.body.classList.add(`theme-${newTheme}`);
+      document.getElementById('ws-theme-btn').innerText = `Theme: ${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}`;
+    }
+
+    function launchApp(url) {
+      const viewer = document.getElementById('app-viewer');
+      const frame = document.getElementById('app-frame');
+      frame.src = url;
+      viewer.style.display = 'block'; // Opens in fixed full-screen overlay
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data === 'closeApp') {
+        document.getElementById('app-viewer').style.display = 'none';
+        document.getElementById('app-frame').src = '';
+      }
+    });
+  </script>
+</body>
+</html>
