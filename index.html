@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corporate Workspace Platform</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    /* =========================================
+       COMBINED THEME VARIABLES 
+       ========================================= */
+    :root, body.theme-light { 
+      /* Silo Vars */
+      --bg-color: #f4f5f7; --panel-bg: #ffffff; --card-bg: #ffffff; --text-main: #172b4d; --text-muted: #5e6c84; --primary-btn: #0052cc; --primary-hover: #0047b3; --border-color: #dfe1e6; --hover-bg: #ebecf0; --input-bg: #ffffff; --danger-btn: #dc3545; --toolbar-bg: #f9fafc; 
+      /* Hub & Workspace Vars */
+      --sidebar-bg: #0f172a; --topbar-bg: #ffffff; --main-bg: #f8fafc; --accent: #2563eb; --text: #1e293b; --sidebar-text: #f8fafc; --border: #cbd5e1;
+    }
+    body.theme-dark { 
+      --bg-color: #121212; --panel-bg: #1e1e1e; --card-bg: #242424; --text-main: #e0e0e0; --text-muted: #a0a0a0; --primary-btn: #bb86fc; --primary-hover: #9965f4; --border-color: #333333; --hover-bg: #333333; --input-bg: #2c2c2c; --danger-btn: #cf6679; --toolbar-bg: #1a1a1a; 
+      --sidebar-bg: #020617; --topbar-bg: #1e293b; --main-bg: #0f172a; --text: #f8fafc; --border: #475569; --sidebar-text: #f8fafc; --accent: #bb86fc;
+    }
+    body.theme-yellow { 
+      --bg-color: #fffde7; --panel-bg: #fff59d; --card-bg: #ffffff; --text-main: #3e2723; --text-muted: #5d4037; --primary-btn: #f57f17; --primary-hover: #f9a825; --border-color: #fbc02d; --hover-bg: #fff9c4; --input-bg: #ffffff; --danger-btn: #d84315; --toolbar-bg: #fff9c4; 
+      --sidebar-bg: #fffde7; --topbar-bg: #fff59d; --main-bg: #fff9c4; --text: #3e2723; --border: #fbc02d; --sidebar-text: #3e2723; --accent: #f57f17;
+    }
+    body.theme-blue { 
+      --bg-color: #e3f2fd; --panel-bg: #bbdefb; --card-bg: #ffffff; --text-main: #0d47a1; --text-muted: #1565c0; --primary-btn: #1976d2; --primary-hover: #1565c0; --border-color: #90caf9; --hover-bg: #e3f2fd; --input-bg: #ffffff; --danger-btn: #c62828; --toolbar-bg: #e3f2fd; 
+      --sidebar-bg: #1e3a8a; --topbar-bg: #eff6ff; --main-bg: #dbeafe; --text: #1e3a8a; --border: #93c5fd; --sidebar-text: #ffffff; --accent: #1976d2;
+    }
+    body.theme-beige { 
+      --bg-color: #f5f5dc; --panel-bg: #e8e4c9; --card-bg: #ffffff; --text-main: #4a3623; --text-muted: #6b543f; --primary-btn: #8b5a2b; --primary-hover: #a06b3a; --border-color: #d2b48c; --hover-bg: #f0ebd8; --input-bg: #ffffff; --danger-btn: #a52a2a; --toolbar-bg: #f0ebd8; 
+      --sidebar-bg: #4a3728; --topbar-bg: #fffaf0; --main-bg: #f5f5dc; --text: #4a3728; --border: #d2b48c; --sidebar-text: #ffffff; --accent: #8b5a2b;
+    }
+
+    /* =========================================
+       GLOBAL LAYOUT
+       ========================================= */
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; background: var(--bg-color); color: var(--text-main); }
+    .app-container { display: none; width: 100%; height: 100vh; flex-direction: row; }
+    .app-container.active { display: flex; }
+
+    /* Shared UI Components */
+    .dashboard-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .dashboard-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .theme-toggle-btn { background: transparent; border: 1px solid var(--border-color); cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; color: var(--text-main); transition: 0.2s; white-space: nowrap; }
+    .theme-toggle-btn:hover { background-color: var(--hover-bg); }
+
+    /* =========================================
+       WORKSPACE DASHBOARD CSS
+       ========================================= */
+    #ws-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 30px; border-right: 1px solid var(--border); }
+    #ws-sidebar h1 { margin: 0; font-size: 1.5rem; }
+    #ws-main { flex-grow: 1; display: flex; flex-direction: column; background: var(--main-bg); }
+    #ws-header { height: 70px; background: var(--topbar-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+    #app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 40px; overflow-y: auto; }
+    .app-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: 0.3s; color: var(--text-main); }
+    .app-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .app-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+    .app-card h3 { margin: 0 0 5px 0; }
+    .app-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+
+    /* =========================================
+       SILO NOTES CSS
+       ========================================= */
+    #silo-sidebar { width: 260px; background-color: var(--panel-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
+    .silo-header { padding: 20px; border-bottom: 1px solid var(--border-color); height: 70px; display: flex; flex-direction: column; justify-content: center; }
+    #silo-right { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .silo-topbar { height: 70px; background-color: var(--panel-bg); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; gap: 15px; }
+    .silo-search { flex: 1; max-width: 700px; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; background-color: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
+    .silo-search:focus { border-color: var(--primary-btn); }
+    
+    #label-list { list-style: none; padding: 0; margin: 0; }
+    #label-list li { padding: 10px 20px; cursor: pointer; color: var(--text-main); font-size: 14px; transition: 0.2s; }
+    #label-list li:hover, #label-list li.active { background-color: var(--hover-bg); font-weight: 600; }
+    .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px;}
+    
+    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 30px; margin: 0 auto;}
+    .note-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; padding: 15px; cursor: pointer; transition: 0.2s; }
+    .note-card:hover { transform: translateY(-2px); border-color: var(--primary-btn); }
+    
+    .rt-toolbar { display: flex; gap: 5px; background-color: var(--toolbar-bg); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; padding: 8px; flex-wrap: wrap; }
+    .rt-btn { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 5px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; }
+    .rt-btn:hover { background: var(--border-color); }
+    .rt-area { width: 100%; min-height: 250px; max-height: 40vh; overflow-y: auto; padding: 15px; border: 1px solid var(--border-color); border-radius: 0 0 4px 4px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); line-height: 1.6; margin-bottom: 12px; outline: none; }
+    
+    .silo-input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); font-family: inherit; }
+    .silo-btn { padding: 8px 16px; background-color: var(--primary-btn); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; margin-bottom: 8px; }
+    .silo-btn.secondary { background-color: var(--hover-bg); color: var(--text-main); }
+
+    /* =========================================
+       UPDATES HUB CSS
+       ========================================= */
+    #hub-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+    .hub-nav-btn { width: 100%; padding: 12px 16px; margin-bottom: 10px; background: transparent; border: 1px solid transparent; color: inherit; text-align: left; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 14px; }
+    .hub-nav-btn:hover { background: rgba(128,128,128,0.1); }
+    .hub-nav-btn.active { background: var(--hover-bg); border: 1px solid var(--border); }
+    
+    #feed { padding: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; overflow-y: auto; }
+    .update-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .update-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    
+    #hub-full-view { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--main-bg); z-index: 50; padding: 50px; box-sizing: border-box; overflow-y: auto; }
+    .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
+    .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border); }
+  </style>
+</head>
+<body class="theme-light">
+
+  <div id="app-workspace" class="app-container active">
+    <aside id="ws-sidebar">
+      <h1>Workspace Platform</h1>
+      <p style="color: #94a3b8; font-size: 0.85rem;">Corporate Ecosystem Launcher</p>
+    </aside>
+
+    <div id="ws-main">
+      <header id="ws-header">
+        <h2 style="margin:0;">Dashboard</h2>
+        <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
+      </header>
+
+      <div id="app-grid">
+        <div class="app-card" onclick="switchApp('silo')">
+          <span class="icon">📝</span>
+          <h3>Silo Notes</h3>
+          <p>Corporate Notes</p>
+        </div>
+        <div class="app-card" onclick="switchApp('updates')">
+          <span class="icon">📣</span>
+          <h3>Updates Hub</h3>
+          <p>Latest News</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-silo" class="app-container">
+    <aside id="silo-sidebar">
+      <div class="silo-header">
+        <h1 class="app-title" style="margin:0;">Silo</h1>
+        <span id="silo-mode-indicator" style="font-size: 12px; color: var(--text-muted);">Viewer Mode</span>
+      </div>
+      <div id="silo-create-section" style="padding: 15px 20px 0; display: none;">
+        <button class="silo-btn" onclick="siloSetView('Create')">+ Create Note</button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; padding: 15px 0;">
+        <div style="padding: 0 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;">Labels</div>
+        <ul id="label-list"></ul>
+      </div>
+      <div style="padding: 20px; border-top: 1px solid var(--border-color); background: var(--panel-bg);">
+        <div id="silo-login-section">
+          <input type="password" id="silo-password" class="silo-input" placeholder="Admin Password">
+          <button class="silo-btn" onclick="siloLogin()">Login to Edit</button>
+        </div>
+        <div id="silo-logout-section" style="display: none;">
+          <button class="silo-btn" style="background: #dc3545;" onclick="siloLogout()">Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <div id="silo-right">
+      <header class="silo-topbar">
+        <input type="text" id="silo-search" class="silo-search" placeholder="Search notes..." oninput="siloSearch(event)">
+        <div style="display:flex; gap:10px;">
+            <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+            <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
+        </div>
+      </header>
+
+      <main style="flex:1; overflow-y:auto; position: relative;">
+        <div id="silo-editor-panel" class="silo-content-panel">
+          <h3 style="margin-top:0;" id="silo-editor-title">Create a New Note</h3>
+          <input type="text" id="silo-note-title" class="silo-input" placeholder="Note Title">
+          <input type="text" id="silo-note-label" class="silo-input" placeholder="Label (e.g., Meeting)">
+          <div class="rt-toolbar">
+            <button class="rt-btn" onclick="siloFormat('bold')"><b>B</b></button>
+            <button class="rt-btn" onclick="siloFormat('italic')"><i>I</i></button>
+            <button class="rt-btn" onclick="siloFormat('underline')"><u>U</u></button>
+            <button class="rt-btn" onclick="siloFormat('insertUnorderedList')">• Bullet</button>
+          </div>
+          <div id="silo-note-content" class="rt-area" contenteditable="true"></div>
+          <div style="display: flex; gap: 10px;">
+            <button class="silo-btn" style="width:auto;" onclick="siloSaveNote()">Save Note</button>
+            <button class="silo-btn secondary" style="width:auto;" onclick="siloSetView('All')">Cancel</button>
+          </div>
+        </div>
+
+        <div id="silo-view-panel" class="silo-content-panel"></div>
+
+        <div id="notes-container">
+            <p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="app-updates" class="app-container">
+    <aside id="hub-sidebar">
+      <div style="padding: 25px; border-bottom: 1px solid var(--border);">
+        <h1 style="margin:0; font-size:1.6rem;">Update Hub</h1>
+        <div id="hub-mode-indicator" style="font-size: 12px; opacity: 0.7; margin-top: 5px;">Viewer Mode</div>
+      </div>
+      <div style="padding: 25px; flex-grow: 1; overflow-y: auto;">
+        <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
+        <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
+        <button class="hub-nav-btn" id="hub-create-btn" style="display:none; margin-top: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
+      </div>
+      <div style="padding: 20px 25px; border-top: 1px solid var(--border); background: var(--sidebar-bg);">
+        <div id="hub-login-section">
+          <input type="password" id="hub-password" class="silo-input" placeholder="Admin Password">
+          <button class="silo-btn" style="background:var(--accent);" onclick="hubLogin()">Login to Edit</button>
+        </div>
+        <div id="hub-logout-section" style="display:none;">
+          <button class="silo-btn" style="background: #ef4444;" onclick="hubLogout()">Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
+      <header class="silo-topbar" style="background: var(--topbar-bg);">
+        <input type="text" id="hub-search" class="silo-search" placeholder="Search updates..." onkeyup="hubRender()">
+        <div style="display: flex; gap: 10px;">
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+          <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
+        </div>
+      </header>
+
+      <div id="feed">
+          <p style="grid-column: 1 / -1; text-align: center;">Loading Updates Database...</p>
+      </div>
+
+      <div id="hub-full-view">
+        <button class="theme-toggle-btn" onclick="document.getElementById('hub-full-view').style.display='none'" style="margin-bottom: 20px; background: var(--card-bg);">← Back to Feed</button>
+        <div class="silo-content-panel" style="display:block; max-width:800px; margin:auto;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <small id="hub-fv-date" style="color: var(--accent); font-weight: bold;"></small>
+              <h1 id="hub-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
+            </div>
+            <div id="hub-fv-actions"></div>
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+          <div id="hub-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hubEditorModal" class="hub-modal">
+      <div class="hub-modal-content">
+        <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
+        <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
+        <div class="rt-toolbar">
+          <button class="rt-btn" onclick="hubFormat('bold')"><b>B</b></button>
+          <button class="rt-btn" onclick="hubFormat('italic')"><i>I</i></button>
+          <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
+        </div>
+        <div id="hubRichText" class="rt-area" contenteditable="true"></div>
+        <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="theme-toggle-btn" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
+          <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. SUPABASE INITIALIZATION ---
+    const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // --- 2. GLOBAL APP NAVIGATION & THEME ---
+    const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
+    let globalThemeIdx = 0;
+
+    function switchApp(appName) {
+      document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
+      document.getElementById(`app-${appName}`).classList.add('active');
+      
+      // Refresh data when navigating into an app
+      if(appName === 'silo') loadSiloNotes();
+      if(appName === 'updates') loadHubUpdates();
+    }
+
+    function cycleGlobalTheme() {
+      document.body.classList.remove(`theme-${themes[globalThemeIdx]}`);
+      globalThemeIdx = (globalThemeIdx + 1) % themes.length;
+      const newTheme = themes[globalThemeIdx];
+      document.body.classList.add(`theme-${newTheme}`);
+      
+      const themeLabel = `Theme: ${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}`;
+      document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = themeLabel);
+    }
+
+    // --- 3. SILO NOTES LOGIC ---
+    let siloNotes = [];
+    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
+
+    async function loadSiloNotes() {
+        try {
+            const { data, error } = await supabase.from('silo_notes').select('*').order('id', { ascending: false });
+            if (error) throw error;
+            siloNotes = data || [];
+            siloRenderUI();
+        } catch (err) {
+            document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red; background:var(--card-bg); padding:20px; border-radius:8px; border:1px solid red;"><b>Database Error:</b> ${err.message}<br><small>Did you forget to disable RLS?</small></p>`;
+        }
+    }
+
+    function siloLogin() {
+        if (document.getElementById('silo-password').value === 'admin123') { siloEditor = true; document.getElementById('silo-password').value = ''; siloRenderUI(); } 
+        else alert('Incorrect password.');
+    }
+    
+    function siloLogout() { siloEditor = false; siloRenderUI(); }
+    function siloSearch(e) { siloQuery = e.target.value.toLowerCase(); siloSetView('All'); }
+    function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
+
+    function siloSetView(view, id = null) {
+        siloCurrentView = view; siloActiveId = id;
+        siloRenderUI();
+    }
+
+    async function siloSaveNote() {
+        const title = document.getElementById('silo-note-title').value;
+        const label = document.getElementById('silo-note-label').value || 'General';
+        const content = document.getElementById('silo-note-content').innerHTML; 
+        
+        if (!title.trim() && !content.trim()) return;
+
+        if (siloActiveId) { // Edit
+            await supabase.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+        } else { // Create
+            const newNote = { id: Date.now(), title, label, content };
+            await supabase.from('silo_notes').insert([newNote]);
+        }
+        
+        document.getElementById('silo-note-title').value = '';
+        document.getElementById('silo-note-label').value = '';
+        document.getElementById('silo-note-content').innerHTML = '';
+        siloSetView('All');
+        loadSiloNotes(); // Refresh
+    }
+
+    async function siloDeleteNote(id) {
+        if(confirm("Delete this note permanently?")) {
+            await supabase.from('silo_notes').delete().eq('id', id);
+            siloSetView('All');
+            loadSiloNotes();
+        }
+    }
+
+    function siloRenderUI() {
+        // Auth UI
+        document.getElementById('silo-login-section').style.display = siloEditor ? 'none' : 'block';
+        document.getElementById('silo-logout-section').style.display = siloEditor ? 'block' : 'none';
+        document.getElementById('silo-create-section').style.display = siloEditor ? 'block' : 'none';
+        document.getElementById('silo-mode-indicator').innerText = siloEditor ? 'Editor Mode' : 'Viewer Mode';
+
+        // Panels
+        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
+        document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
+        document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
+
+        // Labels Sidebar
+        const uniqueLabels = [...new Set(siloNotes.map(n => n.label).filter(Boolean))];
+        const labelList = document.getElementById('label-list');
+        labelList.innerHTML = `<li class="${(siloCurrentView==='All'||siloCurrentView==='Create'||siloCurrentView==='ViewNote')?'active':''}" onclick="siloSetView('All')">All Notes</li>`;
+        uniqueLabels.forEach(lbl => {
+            labelList.innerHTML += `<li class="${siloCurrentView===lbl?'active':''}" onclick="siloSetView('${lbl}')">${lbl}</li>`;
+        });
+
+        if (siloCurrentView === 'ViewNote') {
+            const note = siloNotes.find(n => n.id === siloActiveId);
+            if(note) {
+                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto;">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="background:var(--danger-btn); width:auto;">Delete</button>` : '';
+                document.getElementById('silo-view-panel').innerHTML = `<button onclick="siloSetView('All')" class="silo-btn secondary" style="width:auto; margin-bottom:15px;">← Back</button><div style="display:flex; justify-content:space-between;"><div><div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label}</div><h2 style="margin:5px 0 15px 0;">${note.title}</h2></div><div style="display:flex; gap:10px;">${actions}</div></div><div>${note.content}</div>`;
+            }
+        } else if (siloCurrentView !== 'Create') {
+            const container = document.getElementById('notes-container');
+            container.innerHTML = '';
+            const filtered = siloNotes.filter(n => {
+                const matchView = (siloCurrentView === 'All') ? true : n.label === siloCurrentView;
+                const matchSearch = n.title.toLowerCase().includes(siloQuery) || n.content.toLowerCase().includes(siloQuery);
+                return matchView && matchSearch;
+            });
+            filtered.forEach(n => {
+                container.innerHTML += `<div class="note-card" onclick="siloSetView('ViewNote', ${n.id})"><h4>${n.title}</h4></div>`;
+            });
+            if(filtered.length===0) container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
+        }
+    }
+
+    function siloEditMode(id) {
+        const note = siloNotes.find(n => n.id === id);
+        if(note) {
+            siloSetView('Create', id);
+            document.getElementById('silo-editor-title').innerText = "Edit Note";
+            document.getElementById('silo-note-title').value = note.title;
+            document.getElementById('silo-note-label').value = note.label;
+            document.getElementById('silo-note-content').innerHTML = note.content;
+        }
+    }
+
+    // --- 4. UPDATES HUB LOGIC ---
+    let hubUpdates = [];
+    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
+
+    async function loadHubUpdates() {
+        try {
+            const { data, error } = await supabase.from('updates_hub').select('*').order('time', { ascending: false });
+            if (error) throw error;
+            hubUpdates = data || [];
+            hubRender();
+        } catch (err) {
+            document.getElementById('feed').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red; background:var(--card-bg); padding:20px; border-radius:8px; border:1px solid red;"><b>Database Error:</b> ${err.message}</p>`;
+        }
+    }
+
+    function hubLogin() {
+        if (document.getElementById('hub-password').value === 'admin123') { hubEditor = true; document.getElementById('hub-password').value = ''; hubRenderAuth(); hubRender(); }
+        else alert('Incorrect password.');
+    }
+    
+    function hubLogout() { hubEditor = false; hubRenderAuth(); document.getElementById('hub-full-view').style.display='none'; hubRender(); }
+    function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
+    function hubSwitchFolder(folder) { hubFolder = folder; document.getElementById('hub-full-view').style.display='none'; hubRender(); }
+    
+    function hubRenderAuth() {
+        document.getElementById('hub-login-section').style.display = hubEditor ? 'none' : 'block';
+        document.getElementById('hub-logout-section').style.display = hubEditor ? 'block' : 'none';
+        document.getElementById('hub-create-btn').style.display = hubEditor ? 'block' : 'none';
+        document.getElementById('hub-mode-indicator').innerText = hubEditor ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('hub-mode-indicator').style.color = hubEditor ? 'var(--accent)' : 'inherit';
+    }
+
+    function hubRender() {
+        const feed = document.getElementById('feed');
+        const query = document.getElementById('hub-search').value.toLowerCase();
+        feed.innerHTML = "";
+        
+        const now = Date.now(); 
+        const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+        
+        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest');
+        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
+
+        let count = 0;
+        hubUpdates.forEach((item, index) => {
+            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
+            if (belongsTo !== hubFolder) return;
+            if (!item.title.toLowerCase().includes(query) && !item.body.toLowerCase().includes(query)) return;
+
+            feed.innerHTML += `<div class="update-card" onclick="hubOpenView(${index})"><small>${item.datestr}</small><h3 style="color:var(--text-main);">${item.title}</h3></div>`;
+            count++;
+        });
+        if(count === 0) feed.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No updates found.</p>";
+    }
+
+    function hubOpenView(index) {
+        hubOpenIndex = index; const item = hubUpdates[index];
+        document.getElementById('hub-fv-title').innerText = item.title;
+        document.getElementById('hub-fv-date').innerText = item.datestr;
+        document.getElementById('hub-fv-body').innerHTML = item.body;
+        
+        const actionsDiv = document.getElementById('hub-fv-actions');
+        if (hubEditor) {
+            actionsDiv.innerHTML = `<div style="display:flex; gap:10px;"><button class="theme-toggle-btn" onclick="hubOpenEditor(true, ${index})" style="background:var(--accent); color:white;">Edit</button><button class="theme-toggle-btn" onclick="hubDelete(${index})" style="background:#ef4444; color:white; border:none;">Delete</button></div>`;
+        } else { actionsDiv.innerHTML = ''; }
+        
+        document.getElementById('hub-full-view').style.display = 'block';
+    }
+
+    function hubOpenEditor(isEdit, index = null) {
+        hubOpenIndex = index;
+        if(isEdit && index !== null) {
+            document.getElementById('hubModalTitle').innerText = "Edit Update";
+            document.getElementById('hubPostTitle').value = hubUpdates[index].title;
+            document.getElementById('hubRichText').innerHTML = hubUpdates[index].body;
+            document.getElementById('hubSaveBtn').innerText = "Update Changes";
+        } else {
+            document.getElementById('hubModalTitle').innerText = "Create New Update";
+            document.getElementById('hubPostTitle').value = "";
+            document.getElementById('hubRichText').innerHTML = "";
+            document.getElementById('hubSaveBtn').innerText = "Publish";
+            hubOpenIndex = null;
+        }
+        document.getElementById('hubEditorModal').style.display = 'flex';
+    }
+
+    async function hubSavePost() {
+        const title = document.getElementById('hubPostTitle').value;
+        const body = document.getElementById('hubRichText').innerHTML;
+        if(!title.trim()) return alert("Title is required.");
+
+        if(hubOpenIndex !== null) {
+            const id = hubUpdates[hubOpenIndex].id;
+            await supabase.from('updates_hub').update({ title, body }).eq('id', id);
+        } else {
+            const newUpdate = { id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() };
+            await supabase.from('updates_hub').insert([newUpdate]);
+        }
+        
+        document.getElementById('hubEditorModal').style.display = 'none';
+        document.getElementById('hub-full-view').style.display = 'none';
+        loadHubUpdates();
+    }
+
+    async function hubDelete(index) {
+        if(confirm("Delete this update permanently?")) {
+            const id = hubUpdates[index].id;
+            await supabase.from('updates_hub').delete().eq('id', id);
+            document.getElementById('hub-full-view').style.display = 'none';
+            loadHubUpdates();
+        }
+    }
+
+    // Initialize the very first screen
+    cycleGlobalTheme(); // Applies default theme to all nodes
+  </script>
+</body>
+</html>
