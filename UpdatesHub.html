@@ -91,7 +91,7 @@
             render();
         } else {
             // Create New
-            const newUpdate = { id: Date.now(), title, body, time: Date.now(), dateStr: new Date().toLocaleString() };
+            const newUpdate = { id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() };
             updates.unshift(newUpdate); 
             
             // Supabase Insert
@@ -139,14 +139,14 @@
             if (itemBelongsTo !== currentFolder) return;
             if (!item.title.toLowerCase().includes(query) && !item.body.replace(/<[^>]*>?/gm, '').toLowerCase().includes(query)) return;
 
-            const card = document.createElement('div'); card.className = 'update-card'; card.onclick = () => openFullView(index); card.innerHTML = `<small>${item.dateStr}</small><h3>${item.title}</h3>`; feed.appendChild(card);
+            const card = document.createElement('div'); card.className = 'update-card'; card.onclick = () => openFullView(index); card.innerHTML = `<small>${item.datestr}</small><h3>${item.title}</h3>`; feed.appendChild(card);
         });
         if(updates.length === 0) feed.innerHTML = "<p>No updates found.</p>";
     }
 
     function openFullView(index) {
         currentOpenIndex = index; const item = updates[index];
-        document.getElementById('fv-title').innerText = item.title; document.getElementById('fv-date').innerText = item.dateStr; document.getElementById('fv-body').innerHTML = item.body;
+        document.getElementById('fv-title').innerText = item.title; document.getElementById('fv-date').innerText = item.datestr; document.getElementById('fv-body').innerHTML = item.body;
         const actionsDiv = document.getElementById('fv-actions');
         if (isEditor) { actionsDiv.innerHTML = `<div style="display: flex; gap: 10px;"><button class="theme-btn" onclick="openEditor(true, ${index})" style="background: var(--accent); color: white; padding: 6px 14px;">Edit</button><button class="theme-btn" onclick="deleteUpdate(${index})" style="background: #ef4444; color: white; padding: 6px 14px; border: none;">Delete</button></div>`; } 
         else { actionsDiv.innerHTML = ''; }
