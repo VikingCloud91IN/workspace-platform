@@ -250,58 +250,41 @@
   </div>
 
   <script>
-    // --- 1. SUPABASE INITIALIZATION ---
+    // --- 1. INITIALIZE SUPABASE ---
     const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- 2. GLOBAL AUTHENTICATION LOGIC ---
+    // --- 2. DECLARE ALL STATE VARIABLES FIRST ---
+    // Global State
     let isGlobalEditor = false;
+    const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
+    let globalThemeIdx = 0;
 
-    // Supabase magically handles saving your session. This listener watches for logins/logouts globally!
-    supabase.auth.onAuthStateChange((event, session) => {
-      isGlobalEditor = !!session; // If a session exists, you are the editor!
-      siloEditor = isGlobalEditor;
-      hubEditor = isGlobalEditor;
-      
-      // Update the UI immediately
-      siloRenderUI();
-      hubRenderAuth();
-    });
+    // Silo State
+    let siloNotes = [];
+    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
 
-    async function handleAuthLogin(emailElementId, passwordElementId) {
-      const email = document.getElementById(emailElementId).value;
-      const password = document.getElementById(passwordElementId).value;
-      
-      if (!email || !password) return alert("Please enter your email and password.");
+    // Hub State
+    let hubUpdates = [];
+    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
-      if (error) {
-        alert("Login failed: " + error.message);
-      } else {
-        // Clear the fields on success
-        document.getElementById(emailElementId).value = '';
-        document.getElementById(passwordElementId).value = '';
-      }
+    // --- 3. ALL APPLICATION FUNCTIONS ---
+    async function handleAuthLogin(emailId, passId) {
+      const email = document.getElementById(emailId).value;
+      const pass = document.getElementById(passId).value;
+      if (!email || !pass) return alert("Please enter email and password.");
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (error) alert("Login failed: " + error.message);
+      else { document.getElementById(emailId).value = ''; document.getElementById(passId).value = ''; }
     }
 
     async function handleGlobalLogout() {
-      // Close any open editor panels just in case
       siloSetView('All'); 
       document.getElementById('hub-full-view').style.display = 'none';
       document.getElementById('hubEditorModal').style.display = 'none';
-
-      const { error } = await supabase.auth.signOut();
-      if (error) alert("Logout error: " + error.message);
+      await supabase.auth.signOut();
     }
-
-    // --- 3. GLOBAL APP NAVIGATION & THEME ---
-    const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
-    let globalThemeIdx = 0;
 
     function switchApp(appName) {
       document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
@@ -313,74 +296,48 @@
     function cycleGlobalTheme() {
       document.body.classList.remove(`theme-${themes[globalThemeIdx]}`);
       globalThemeIdx = (globalThemeIdx + 1) % themes.length;
-      const newTheme = themes[globalThemeIdx];
-      document.body.classList.add(`theme-${newTheme}`);
-      
-      const themeLabel = `Theme: ${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}`;
-      document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = themeLabel);
+      document.body.classList.add(`theme-${themes[globalThemeIdx]}`);
+      document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: ${themes[globalThemeIdx].charAt(0).toUpperCase() + themes[globalThemeIdx].slice(1)}`);
     }
 
-    // --- 4. SILO NOTES LOGIC ---
-    let siloNotes = [];
-    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
-
+    // SILO FUNCTIONS
     async function loadSiloNotes() {
         try {
             const { data, error } = await supabase.from('silo_notes').select('*').order('id', { ascending: false });
             if (error) throw error;
             siloNotes = data || [];
             siloRenderUI();
-        } catch (err) {
-            document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`;
-        }
+        } catch (err) { document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
     }
-
     function siloSearch(e) { siloQuery = e.target.value.toLowerCase(); siloSetView('All'); }
     function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
     function siloSetView(view, id = null) { siloCurrentView = view; siloActiveId = id; siloRenderUI(); }
-
+    
     async function siloSaveNote() {
         const title = document.getElementById('silo-note-title').value;
         const label = document.getElementById('silo-note-label').value || 'General';
         const content = document.getElementById('silo-note-content').innerHTML; 
         if (!title.trim() && !content.trim()) return;
-
-        if (siloActiveId) {
-            await supabase.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
-        } else {
-            const newNote = { id: Date.now(), title, label, content };
-            await supabase.from('silo_notes').insert([newNote]);
-        }
-        
-        document.getElementById('silo-note-title').value = '';
-        document.getElementById('silo-note-label').value = '';
-        document.getElementById('silo-note-content').innerHTML = '';
-        siloSetView('All');
-        loadSiloNotes(); 
+        if (siloActiveId) await supabase.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+        else await supabase.from('silo_notes').insert([{ id: Date.now(), title, label, content }]);
+        document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-content').innerHTML = '';
+        siloSetView('All'); loadSiloNotes(); 
     }
-
     async function siloDeleteNote(id) {
-        if(confirm("Delete this note permanently?")) {
-            await supabase.from('silo_notes').delete().eq('id', id);
-            siloSetView('All');
-            loadSiloNotes();
-        }
+        if(confirm("Delete this note permanently?")) { await supabase.from('silo_notes').delete().eq('id', id); siloSetView('All'); loadSiloNotes(); }
     }
-
     function siloRenderUI() {
         document.getElementById('silo-login-section').style.display = siloEditor ? 'none' : 'block';
         document.getElementById('silo-logout-section').style.display = siloEditor ? 'block' : 'none';
         document.getElementById('silo-create-section').style.display = siloEditor ? 'block' : 'none';
         document.getElementById('silo-mode-indicator').innerText = siloEditor ? 'Editor Mode' : 'Viewer Mode';
-
         document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
         document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
         document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
 
-        const uniqueLabels = [...new Set(siloNotes.map(n => n.label).filter(Boolean))];
-        const labelList = document.getElementById('label-list');
-        labelList.innerHTML = `<li class="${(siloCurrentView==='All'||siloCurrentView==='Create'||siloCurrentView==='ViewNote')?'active':''}" onclick="siloSetView('All')">All Notes</li>`;
-        uniqueLabels.forEach(lbl => { labelList.innerHTML += `<li class="${siloCurrentView===lbl?'active':''}" onclick="siloSetView('${lbl}')">${lbl}</li>`; });
+        const lblList = document.getElementById('label-list');
+        lblList.innerHTML = `<li class="${(siloCurrentView==='All'||siloCurrentView==='Create'||siloCurrentView==='ViewNote')?'active':''}" onclick="siloSetView('All')">All Notes</li>`;
+        [...new Set(siloNotes.map(n => n.label).filter(Boolean))].forEach(lbl => lblList.innerHTML += `<li class="${siloCurrentView===lbl?'active':''}" onclick="siloSetView('${lbl}')">${lbl}</li>`);
 
         if (siloCurrentView === 'ViewNote') {
             const note = siloNotes.find(n => n.id === siloActiveId);
@@ -389,139 +346,79 @@
                 document.getElementById('silo-view-panel').innerHTML = `<button onclick="siloSetView('All')" class="silo-btn secondary" style="width:auto; margin-bottom:15px;">← Back</button><div style="display:flex; justify-content:space-between;"><div><div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label}</div><h2 style="margin:5px 0 15px 0;">${note.title}</h2></div><div style="display:flex; gap:10px;">${actions}</div></div><div>${note.content}</div>`;
             }
         } else if (siloCurrentView !== 'Create') {
-            const container = document.getElementById('notes-container');
-            container.innerHTML = '';
-            const filtered = siloNotes.filter(n => {
-                const matchView = (siloCurrentView === 'All') ? true : n.label === siloCurrentView;
-                const matchSearch = n.title.toLowerCase().includes(siloQuery) || n.content.toLowerCase().includes(siloQuery);
-                return matchView && matchSearch;
-            });
-            filtered.forEach(n => { container.innerHTML += `<div class="note-card" onclick="siloSetView('ViewNote', ${n.id})"><h4>${n.title}</h4></div>`; });
+            const container = document.getElementById('notes-container'); container.innerHTML = '';
+            const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && (n.title.toLowerCase().includes(siloQuery) || n.content.toLowerCase().includes(siloQuery)));
+            filtered.forEach(n => container.innerHTML += `<div class="note-card" onclick="siloSetView('ViewNote', ${n.id})"><h4>${n.title}</h4></div>`);
             if(filtered.length===0) container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
         }
     }
-
     function siloEditMode(id) {
         const note = siloNotes.find(n => n.id === id);
-        if(note) {
-            siloSetView('Create', id);
-            document.getElementById('silo-editor-title').innerText = "Edit Note";
-            document.getElementById('silo-note-title').value = note.title;
-            document.getElementById('silo-note-label').value = note.label;
-            document.getElementById('silo-note-content').innerHTML = note.content;
-        }
+        if(note) { siloSetView('Create', id); document.getElementById('silo-editor-title').innerText = "Edit Note"; document.getElementById('silo-note-title').value = note.title; document.getElementById('silo-note-label').value = note.label; document.getElementById('silo-note-content').innerHTML = note.content; }
     }
 
-    // --- 5. UPDATES HUB LOGIC ---
-    let hubUpdates = [];
-    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
-
+    // HUB FUNCTIONS
     async function loadHubUpdates() {
         try {
             const { data, error } = await supabase.from('updates_hub').select('*').order('time', { ascending: false });
             if (error) throw error;
             hubUpdates = data || [];
             hubRender();
-        } catch (err) {
-            document.getElementById('feed').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`;
-        }
+        } catch (err) { document.getElementById('feed').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
     }
-
     function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
     function hubSwitchFolder(folder) { hubFolder = folder; document.getElementById('hub-full-view').style.display='none'; hubRender(); }
-    
     function hubRenderAuth() {
         document.getElementById('hub-login-section').style.display = hubEditor ? 'none' : 'block';
         document.getElementById('hub-logout-section').style.display = hubEditor ? 'block' : 'none';
         document.getElementById('hub-create-btn').style.display = hubEditor ? 'block' : 'none';
         document.getElementById('hub-mode-indicator').innerText = hubEditor ? 'Editor Mode' : 'Viewer Mode';
-        document.getElementById('hub-mode-indicator').style.color = hubEditor ? 'var(--accent)' : 'inherit';
-        
-        if (document.getElementById('hub-full-view').style.display === 'block') { hubOpenView(hubOpenIndex); } // Refresh action buttons
+        if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex);
     }
-
     function hubRender() {
-        const feed = document.getElementById('feed');
-        const query = document.getElementById('hub-search').value.toLowerCase();
-        feed.innerHTML = "";
-        
-        const now = Date.now(); 
-        const fifteenDays = 15 * 24 * 60 * 60 * 1000;
-        
-        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest');
-        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
-
+        const feed = document.getElementById('feed'); const query = document.getElementById('hub-search').value.toLowerCase(); feed.innerHTML = "";
+        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
         let count = 0;
-        hubUpdates.forEach((item, index) => {
-            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
-            if (belongsTo !== hubFolder) return;
+        hubUpdates.forEach((item, idx) => {
+            if (((Date.now() - item.time) < 1296000000 ? 'latest' : 'history') !== hubFolder) return;
             if (!item.title.toLowerCase().includes(query) && !item.body.toLowerCase().includes(query)) return;
-
-            feed.innerHTML += `<div class="update-card" onclick="hubOpenView(${index})"><small>${item.datestr}</small><h3 style="color:var(--text-main);">${item.title}</h3></div>`;
-            count++;
+            feed.innerHTML += `<div class="update-card" onclick="hubOpenView(${idx})"><small>${item.datestr}</small><h3 style="color:var(--text-main);">${item.title}</h3></div>`; count++;
         });
         if(count === 0) feed.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No updates found.</p>";
     }
-
     function hubOpenView(index) {
         hubOpenIndex = index; const item = hubUpdates[index];
-        document.getElementById('hub-fv-title').innerText = item.title;
-        document.getElementById('hub-fv-date').innerText = item.datestr;
-        document.getElementById('hub-fv-body').innerHTML = item.body;
-        
-        const actionsDiv = document.getElementById('hub-fv-actions');
-        if (hubEditor) {
-            actionsDiv.innerHTML = `<div style="display:flex; gap:10px;"><button class="theme-toggle-btn" onclick="hubOpenEditor(true, ${index})" style="background:var(--accent); color:white;">Edit</button><button class="theme-toggle-btn" onclick="hubDelete(${index})" style="background:#ef4444; color:white; border:none;">Delete</button></div>`;
-        } else { actionsDiv.innerHTML = ''; }
-        
+        document.getElementById('hub-fv-title').innerText = item.title; document.getElementById('hub-fv-date').innerText = item.datestr; document.getElementById('hub-fv-body').innerHTML = item.body;
+        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="theme-toggle-btn" onclick="hubOpenEditor(true, ${index})" style="background:var(--accent); color:white;">Edit</button><button class="theme-toggle-btn" onclick="hubDelete(${index})" style="background:#ef4444; color:white; border:none;">Delete</button></div>` : '';
         document.getElementById('hub-full-view').style.display = 'block';
     }
-
     function hubOpenEditor(isEdit, index = null) {
         hubOpenIndex = index;
-        if(isEdit && index !== null) {
-            document.getElementById('hubModalTitle').innerText = "Edit Update";
-            document.getElementById('hubPostTitle').value = hubUpdates[index].title;
-            document.getElementById('hubRichText').innerHTML = hubUpdates[index].body;
-            document.getElementById('hubSaveBtn').innerText = "Update Changes";
-        } else {
-            document.getElementById('hubModalTitle').innerText = "Create New Update";
-            document.getElementById('hubPostTitle').value = "";
-            document.getElementById('hubRichText').innerHTML = "";
-            document.getElementById('hubSaveBtn').innerText = "Publish";
-            hubOpenIndex = null;
-        }
+        if(isEdit && index !== null) { document.getElementById('hubModalTitle').innerText = "Edit Update"; document.getElementById('hubPostTitle').value = hubUpdates[index].title; document.getElementById('hubRichText').innerHTML = hubUpdates[index].body; document.getElementById('hubSaveBtn').innerText = "Update Changes"; } 
+        else { document.getElementById('hubModalTitle').innerText = "Create New Update"; document.getElementById('hubPostTitle').value = ""; document.getElementById('hubRichText').innerHTML = ""; document.getElementById('hubSaveBtn').innerText = "Publish"; hubOpenIndex = null; }
         document.getElementById('hubEditorModal').style.display = 'flex';
     }
-
     async function hubSavePost() {
-        const title = document.getElementById('hubPostTitle').value;
-        const body = document.getElementById('hubRichText').innerHTML;
+        const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
         if(!title.trim()) return alert("Title is required.");
-
-        if(hubOpenIndex !== null) {
-            const id = hubUpdates[hubOpenIndex].id;
-            await supabase.from('updates_hub').update({ title, body }).eq('id', id);
-        } else {
-            const newUpdate = { id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() };
-            await supabase.from('updates_hub').insert([newUpdate]);
-        }
-        
-        document.getElementById('hubEditorModal').style.display = 'none';
-        document.getElementById('hub-full-view').style.display = 'none';
-        loadHubUpdates();
+        if(hubOpenIndex !== null) await supabase.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+        else await supabase.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
     }
-
     async function hubDelete(index) {
-        if(confirm("Delete this update permanently?")) {
-            const id = hubUpdates[index].id;
-            await supabase.from('updates_hub').delete().eq('id', id);
-            document.getElementById('hub-full-view').style.display = 'none';
-            loadHubUpdates();
-        }
+        if(confirm("Delete this update permanently?")) { await supabase.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
     }
 
-    // Initialize the very first screen
+    // --- 4. REGISTER SUPABASE AUTH LISTENER & INITIALIZE THEME ---
+    // This is placed AFTER all variables and functions exist so it won't crash!
+    supabase.auth.onAuthStateChange((event, session) => {
+      isGlobalEditor = !!session;
+      siloEditor = isGlobalEditor;
+      hubEditor = isGlobalEditor;
+      siloRenderUI();
+      hubRenderAuth();
+    });
+
     cycleGlobalTheme();
   </script>
 </body>
