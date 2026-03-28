@@ -12,24 +12,24 @@
        COMBINED THEME VARIABLES 
        ========================================= */
     :root, body.theme-light { 
-      --bg-color: #f4f5f7; --panel-bg: #ffffff; --card-bg: #ffffff; --text-main: #172b4d; --text-muted: #5e6c84; --primary-btn: #0052cc; --primary-hover: #0047b3; --border-color: #dfe1e6; --hover-bg: #ebecf0; --input-bg: #ffffff; --danger-btn: #dc3545; --toolbar-bg: #f9fafc; 
-      --sidebar-bg: #0f172a; --topbar-bg: #ffffff; --main-bg: #f8fafc; --accent: #2563eb; --text: #1e293b; --sidebar-text: #f8fafc; --border: #cbd5e1;
+      --bg-color: #f4f5f7; --panel-bg: #ffffff; --card-bg: #ffffff; --text-main: #000000; --text-muted: #5e6c84; --primary-btn: #0052cc; --primary-hover: #0047b3; --border-color: #dfe1e6; --hover-bg: #ebecf0; --input-bg: #ffffff; --danger-btn: #dc3545; --toolbar-bg: #f9fafc; 
+      --sidebar-bg: #0f172a; --topbar-bg: #ffffff; --main-bg: #f8fafc; --accent: #2563eb; --text: #000000; --sidebar-text: #f8fafc; --border: #cbd5e1;
     }
     body.theme-dark { 
       --bg-color: #121212; --panel-bg: #1e1e1e; --card-bg: #242424; --text-main: #e0e0e0; --text-muted: #a0a0a0; --primary-btn: #bb86fc; --primary-hover: #9965f4; --border-color: #333333; --hover-bg: #333333; --input-bg: #2c2c2c; --danger-btn: #cf6679; --toolbar-bg: #1a1a1a; 
       --sidebar-bg: #020617; --topbar-bg: #1e293b; --main-bg: #0f172a; --text: #f8fafc; --border: #475569; --sidebar-text: #f8fafc; --accent: #bb86fc;
     }
     body.theme-yellow { 
-      --bg-color: #fffde7; --panel-bg: #fff59d; --card-bg: #ffffff; --text-main: #3e2723; --text-muted: #5d4037; --primary-btn: #f57f17; --primary-hover: #f9a825; --border-color: #fbc02d; --hover-bg: #fff9c4; --input-bg: #ffffff; --danger-btn: #d84315; --toolbar-bg: #fff9c4; 
-      --sidebar-bg: #fffde7; --topbar-bg: #fff59d; --main-bg: #fff9c4; --text: #3e2723; --border: #fbc02d; --sidebar-text: #3e2723; --accent: #f57f17;
+      --bg-color: #fffde7; --panel-bg: #fff59d; --card-bg: #ffffff; --text-main: #000000; --text-muted: #5d4037; --primary-btn: #f57f17; --primary-hover: #f9a825; --border-color: #fbc02d; --hover-bg: #fff9c4; --input-bg: #ffffff; --danger-btn: #d84315; --toolbar-bg: #fff9c4; 
+      --sidebar-bg: #fffde7; --topbar-bg: #fff59d; --main-bg: #fff9c4; --text: #000000; --border: #fbc02d; --sidebar-text: #3e2723; --accent: #f57f17;
     }
     body.theme-blue { 
-      --bg-color: #e3f2fd; --panel-bg: #bbdefb; --card-bg: #ffffff; --text-main: #0d47a1; --text-muted: #1565c0; --primary-btn: #1976d2; --primary-hover: #1565c0; --border-color: #90caf9; --hover-bg: #e3f2fd; --input-bg: #ffffff; --danger-btn: #c62828; --toolbar-bg: #e3f2fd; 
-      --sidebar-bg: #1e3a8a; --topbar-bg: #eff6ff; --main-bg: #dbeafe; --text: #1e3a8a; --border: #93c5fd; --sidebar-text: #ffffff; --accent: #1976d2;
+      --bg-color: #e3f2fd; --panel-bg: #bbdefb; --card-bg: #ffffff; --text-main: #000000; --text-muted: #1565c0; --primary-btn: #1976d2; --primary-hover: #1565c0; --border-color: #90caf9; --hover-bg: #e3f2fd; --input-bg: #ffffff; --danger-btn: #c62828; --toolbar-bg: #e3f2fd; 
+      --sidebar-bg: #1e3a8a; --topbar-bg: #eff6ff; --main-bg: #dbeafe; --text: #000000; --border: #93c5fd; --sidebar-text: #ffffff; --accent: #1976d2;
     }
     body.theme-beige { 
-      --bg-color: #f5f5dc; --panel-bg: #e8e4c9; --card-bg: #ffffff; --text-main: #4a3623; --text-muted: #6b543f; --primary-btn: #8b5a2b; --primary-hover: #a06b3a; --border-color: #d2b48c; --hover-bg: #f0ebd8; --input-bg: #ffffff; --danger-btn: #a52a2a; --toolbar-bg: #f0ebd8; 
-      --sidebar-bg: #4a3728; --topbar-bg: #fffaf0; --main-bg: #f5f5dc; --text: #4a3728; --border: #d2b48c; --sidebar-text: #ffffff; --accent: #8b5a2b;
+      --bg-color: #f5f5dc; --panel-bg: #e8e4c9; --card-bg: #ffffff; --text-main: #000000; --text-muted: #6b543f; --primary-btn: #8b5a2b; --primary-hover: #a06b3a; --border-color: #d2b48c; --hover-bg: #f0ebd8; --input-bg: #ffffff; --danger-btn: #a52a2a; --toolbar-bg: #f0ebd8; 
+      --sidebar-bg: #4a3728; --topbar-bg: #fffaf0; --main-bg: #f5f5dc; --text: #000000; --border: #d2b48c; --sidebar-text: #ffffff; --accent: #8b5a2b;
     }
 
     /* =========================================
@@ -103,9 +103,23 @@
     /* Ensure inputs and note content remain selectable despite body being unselectable */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
     
-    /* Strip unwanted inline background colors pasted from external sources */
+    /* Strip unwanted inline backgrounds pasted from external sources */
     .note-content-display *, .rt-area *, #hub-fv-body * { 
       background-color: transparent !important; 
+    }
+    
+    /* Force perfectly black text pasted from external sources in non-dark themes */
+    body:not(.theme-dark) .note-content-display *, 
+    body:not(.theme-dark) .rt-area *, 
+    body:not(.theme-dark) #hub-fv-body * { 
+      color: #000000 !important; 
+    }
+    
+    /* Preserve light text pasted from external sources in the dark theme */
+    body.theme-dark .note-content-display *, 
+    body.theme-dark .rt-area *, 
+    body.theme-dark #hub-fv-body * { 
+      color: var(--text-main) !important; 
     }
   </style>
 </head>
