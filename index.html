@@ -67,10 +67,12 @@
     #label-list li { padding: 10px 20px; cursor: pointer; color: var(--text-main); font-size: 14px; transition: 0.2s; }
     #label-list li:hover, #label-list li.active { background-color: var(--hover-bg); font-weight: 600; }
     .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px;}
-    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 30px; margin: 0 auto;}
+    
+    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
     .note-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; padding: 15px; cursor: pointer; transition: 0.2s; }
     .note-card:hover { transform: translateY(-2px); border-color: var(--primary-btn); }
-    .note-card.sortable-ghost { opacity: 0.4; } /* Styling while dragging */
+    .note-card.sortable-ghost { opacity: 0.4; } 
+    
     .rt-toolbar { display: flex; gap: 5px; background-color: var(--toolbar-bg); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; padding: 8px; flex-wrap: wrap; }
     .rt-btn { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 5px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; }
     .rt-btn:hover { background: var(--border-color); }
@@ -195,6 +197,8 @@
           </div>
         </div>
 
+        <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
+
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
       </main>
     </div>
@@ -286,7 +290,7 @@
     let siloNotes = [];
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
     let sortableInstance = null;
-    let isSorting = false; // Prevents drag-and-drop from colliding with real-time updates
+    let isSorting = false; // Prevents real-time DB syncs from interrupting local drag & drop
 
     let hubUpdates = [];
     let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
@@ -356,11 +360,24 @@
     // SILO FUNCTIONS
     async function loadSiloNotes(silent = false) {
         try {
-            // Fetch ordered by our custom floating sort_order column
             const { data, error } = await supabaseClient.from('silo_notes').select('*').order('sort_order', { ascending: true });
             if (error) throw error;
             siloNotes = data || [];
-            if (!silent) siloRenderUI();
+            
+            // If viewing a note that got deleted by someone else, return to grid securely
+            if (siloCurrentView === 'ViewNote' && siloActiveId) {
+                const stillExists = siloNotes.find(n => n.id === siloActiveId);
+                if (!stillExists) {
+                    alert("This note was just deleted by an administrator.");
+                    siloCurrentView = 'All';
+                    siloActiveId = null;
+                }
+            }
+            
+            // Only force a full UI re-paint if the user isn't currently trying to type a new note
+            if (!silent || siloCurrentView === 'ViewNote' || siloCurrentView !== 'Create') {
+                siloRenderUI();
+            }
         } catch (err) { 
             if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
         }
@@ -399,7 +416,6 @@
         if (siloActiveId) {
             await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
         } else {
-            // New notes get a massive sort_order so they append to the very end of the list
             await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
         }
         
@@ -444,7 +460,7 @@
         const container = document.getElementById('notes-container');
         if(sortableInstance) sortableInstance.destroy();
         
-        // Only allow drag and drop in the "All" view to prevent math collisions when filtered
+        // Only allow drag and drop in the main "All" view to prevent sorting math collisions
         if(siloEditor && siloCurrentView === 'All' && !siloQuery) {
             sortableInstance = new Sortable(container, {
                 animation: 150,
@@ -468,12 +484,10 @@
                     }
 
                     itemEl.dataset.order = newSortOrder;
-                    isSorting = true;
+                    isSorting = true; // Pause realtime listeners briefly
                     
-                    // Update only the dragged card in DB
                     await supabaseClient.from('silo_notes').update({ sort_order: newSortOrder }).eq('id', id);
                     
-                    // Allow short delay for DB echo before re-enabling realtime loads
                     setTimeout(() => { isSorting = false; loadSiloNotes(true); }, 500);
                 }
             });
@@ -485,8 +499,8 @@
         document.getElementById('silo-logout-section').style.display = siloEditor ? 'block' : 'none';
         document.getElementById('silo-create-section').style.display = siloEditor ? 'block' : 'none';
         document.getElementById('silo-mode-indicator').innerText = siloEditor ? 'Editor Mode' : 'Viewer Mode';
-        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
         
+        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
         document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
         document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
 
@@ -494,7 +508,10 @@
         lblList.innerHTML = `<li class="${(siloCurrentView==='All'||siloCurrentView==='Create'||siloCurrentView==='ViewNote')?'active':''}" onclick="siloSetView('All')">All Notes</li>`;
         [...new Set(siloNotes.map(n => n.label).filter(Boolean))].forEach(lbl => lblList.innerHTML += `<li class="${siloCurrentView===lbl?'active':''}" onclick="siloSetView('${lbl}')">${lbl}</li>`);
 
+        const folderActions = document.getElementById('silo-folder-actions');
+
         if (siloCurrentView === 'ViewNote') {
+            folderActions.style.display = 'none';
             const note = siloNotes.find(n => n.id === siloActiveId);
             if(note) {
                 let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="theme-toggle-btn" style="background:var(--accent); color:white;">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="theme-toggle-btn" style="background:var(--danger-btn); color:white; border:none;">Delete</button>` : '';
@@ -514,27 +531,29 @@
         } else if (siloCurrentView !== 'Create') {
             const container = document.getElementById('notes-container'); container.innerHTML = '';
             
+            // Contextual Top Left Button
+            if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
+                folderActions.style.display = 'block';
+                folderActions.innerHTML = `<button class="dashboard-btn" style="background: var(--accent); color: white;" onclick="siloSetView('Create', null, '${siloCurrentView}')">➕ Create Note in ${siloCurrentView}</button>`;
+            } else {
+                folderActions.style.display = 'none';
+            }
+
             const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
-            
             filtered.forEach(n => {
                 container.innerHTML += `<div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="siloSetView('ViewNote', ${n.id})"><h4>${n.title || 'Untitled'}</h4></div>`;
             });
-
-            // Contextual Create Note Card (Only shown if inside a specific folder and user is Editor)
-            if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
-                container.innerHTML += `<div class="note-card" style="border: 2px dashed var(--accent); background: transparent; box-shadow: none;" onclick="siloSetView('Create', null, '${siloCurrentView}')"><h4 style="color:var(--accent);">➕ Add Note to ${siloCurrentView}</h4></div>`;
-            }
-
             if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
             
             initSortableGrid();
+        } else {
+             folderActions.style.display = 'none';
         }
     }
     
     function siloEditMode(id) {
         const note = siloNotes.find(n => n.id === id);
         if(note) { 
-            // Edit mode always shows label to allow changing it
             siloCurrentView = 'Create'; siloActiveId = id; 
             document.getElementById('silo-note-label').style.display = 'block';
             document.getElementById('silo-editor-title').innerText = "Edit Note"; 
@@ -607,12 +626,12 @@
       hubRenderAuth();
     });
 
-    // Realtime Listener for Silo Notes
+    // Subscribes to Realtime Database changes (Requires Supabase UI Enablement!)
     supabaseClient
       .channel('public:silo_notes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => {
-        // Only trigger a silent background reload if the user isn't actively dragging or editing
-        if (!isSorting && siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') {
+        // Triggers a silent reload in the background if the user isn't currently dragging a card
+        if (!isSorting) {
             loadSiloNotes(true);
         }
       })
