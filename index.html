@@ -6,7 +6,7 @@
   <title>Corporate Workspace Platform</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   
   <style>
     /* =========================================
@@ -50,11 +50,14 @@
     #ws-main { flex-grow: 1; display: flex; flex-direction: column; background: var(--main-bg); }
     #ws-header { height: 70px; background: var(--topbar-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
     #app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 40px; overflow-y: auto; }
-    .app-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: 0.3s; color: var(--text-main); }
+    .app-card { position: relative; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: 0.3s; color: var(--text-main); }
     .app-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
     .app-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
     .app-card h3 { margin: 0 0 5px 0; }
     .app-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+    
+    /* Dashboard Unread Badge */
+    .dashboard-badge { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; line-height: 28px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: none; text-align: center; }
 
     /* Silo Notes */
     #silo-sidebar { width: 260px; background-color: var(--panel-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
@@ -69,7 +72,7 @@
     .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px;}
     
     #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
-    .note-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; padding: 15px; cursor: pointer; transition: 0.2s; }
+    .note-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; padding: 15px; cursor: pointer; transition: 0.2s; position: relative; }
     .note-card:hover { transform: translateY(-2px); border-color: var(--primary-btn); }
     .note-card.sortable-ghost { opacity: 0.4; } 
     
@@ -95,9 +98,19 @@
     .hub-nav-btn { width: 100%; padding: 12px 16px; margin-bottom: 10px; background: transparent; border: 1px solid transparent; color: inherit; text-align: left; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 14px; }
     .hub-nav-btn:hover { background: rgba(128,128,128,0.1); }
     .hub-nav-btn.active { background: var(--hover-bg); border: 1px solid var(--border); }
-    #feed { padding: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; overflow-y: auto; }
-    .update-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .update-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    
+    /* Hub Banner */
+    #hub-banner { background: var(--accent); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
+    #hub-banner:hover { opacity: 0.9; }
+
+    /* Hub Email Strip UI */
+    #hub-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+    .hub-strip { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 30px; border-radius: 50px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
+    .hub-strip:hover { transform: translateX(4px); border-color: var(--accent); }
+    .hub-strip-left { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; }
+    .hub-strip-right { text-align: right; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; padding-left: 20px; }
+    .unread-dot { display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
     .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border); }
 
@@ -131,6 +144,7 @@
           <p>Corporate Notes</p>
         </div>
         <div class="app-card" onclick="switchApp('updates')">
+          <div id="dashboard-hub-badge" class="dashboard-badge">0</div>
           <span class="icon">📣</span>
           <h3>Updates Hub</h3>
           <p>Latest News</p>
@@ -240,7 +254,9 @@
         </div>
       </header>
 
-      <div id="feed"><p style="grid-column: 1 / -1; text-align: center;">Loading Updates Database...</p></div>
+      <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread updates!</div>
+
+      <div id="hub-feed"><p style="text-align: center;">Loading Updates Database...</p></div>
     </div>
   </div>
 
@@ -290,10 +306,13 @@
     let siloNotes = [];
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
     let sortableInstance = null;
-    let isSorting = false; // Prevents real-time DB syncs from interrupting local drag & drop
+    let isSorting = false;
 
     let hubUpdates = [];
     let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
+    
+    // Load previously read updates from local storage
+    let hubReadIds = JSON.parse(localStorage.getItem('hubReadIds')) || [];
 
     document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: Light`);
 
@@ -364,7 +383,6 @@
             if (error) throw error;
             siloNotes = data || [];
             
-            // If viewing a note that got deleted by someone else, return to grid securely
             if (siloCurrentView === 'ViewNote' && siloActiveId) {
                 const stillExists = siloNotes.find(n => n.id === siloActiveId);
                 if (!stillExists) {
@@ -373,11 +391,7 @@
                     siloActiveId = null;
                 }
             }
-            
-            // Only force a full UI re-paint if the user isn't currently trying to type a new note
-            if (!silent || siloCurrentView === 'ViewNote' || siloCurrentView !== 'Create') {
-                siloRenderUI();
-            }
+            if (!silent || siloCurrentView === 'ViewNote' || siloCurrentView !== 'Create') siloRenderUI();
         } catch (err) { 
             if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
         }
@@ -447,9 +461,8 @@
                     const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
                     if (error) throw error;
                     alert("Notes restored successfully!");
-                    siloSetView('All');
-                    loadSiloNotes();
-                } else alert("Invalid backup format. Must be a valid JSON array.");
+                    siloSetView('All'); loadSiloNotes();
+                } else alert("Invalid backup format.");
             } catch (err) { alert("Failed to read or restore backup: " + err.message); }
             event.target.value = ''; 
         };
@@ -460,10 +473,10 @@
         const container = document.getElementById('notes-container');
         if(sortableInstance) sortableInstance.destroy();
         
-        // Only allow drag and drop in the main "All" view to prevent sorting math collisions
         if(siloEditor && siloCurrentView === 'All' && !siloQuery) {
             sortableInstance = new Sortable(container, {
                 animation: 150,
+                handle: ".drag-handle",
                 draggable: ".sortable-card",
                 onEnd: async function (evt) {
                     const itemEl = evt.item;
@@ -474,9 +487,7 @@
                     let newSortOrder = Date.now() * 1000; 
 
                     if (prevEl && nextEl) {
-                        const prevOrder = parseFloat(prevEl.dataset.order);
-                        const nextOrder = parseFloat(nextEl.dataset.order);
-                        newSortOrder = (prevOrder + nextOrder) / 2.0;
+                        newSortOrder = (parseFloat(prevEl.dataset.order) + parseFloat(nextEl.dataset.order)) / 2.0;
                     } else if (prevEl && !nextEl) {
                         newSortOrder = parseFloat(prevEl.dataset.order) + 1000;
                     } else if (!prevEl && nextEl) {
@@ -484,10 +495,8 @@
                     }
 
                     itemEl.dataset.order = newSortOrder;
-                    isSorting = true; // Pause realtime listeners briefly
-                    
+                    isSorting = true; 
                     await supabaseClient.from('silo_notes').update({ sort_order: newSortOrder }).eq('id', id);
-                    
                     setTimeout(() => { isSorting = false; loadSiloNotes(true); }, 500);
                 }
             });
@@ -531,7 +540,6 @@
         } else if (siloCurrentView !== 'Create') {
             const container = document.getElementById('notes-container'); container.innerHTML = '';
             
-            // Contextual Top Left Button
             if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
                 folderActions.style.display = 'block';
                 folderActions.innerHTML = `<button class="dashboard-btn" style="background: var(--accent); color: white;" onclick="siloSetView('Create', null, '${siloCurrentView}')">➕ Create Note in ${siloCurrentView}</button>`;
@@ -540,9 +548,13 @@
             }
 
             const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
+            
             filtered.forEach(n => {
-                container.innerHTML += `<div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="siloSetView('ViewNote', ${n.id})"><h4>${n.title || 'Untitled'}</h4></div>`;
+                const handle = siloEditor ? `<span class="drag-handle" style="position:absolute; top:8px; right:12px; cursor:grab; font-size:18px; color:var(--text-muted);" title="Drag to reorder">⋮⋮</span>` : '';
+                // The onclick now ignores clicks if the user clicked the drag handle
+                container.innerHTML += `<div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="if(event.target.classList.contains('drag-handle')) return; siloSetView('ViewNote', ${n.id})">${handle}<h4>${n.title || 'Untitled'}</h4></div>`;
             });
+
             if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
             
             initSortableGrid();
@@ -565,13 +577,23 @@
     }
 
     // HUB FUNCTIONS
-    async function loadHubUpdates() {
+    async function loadHubUpdates(silent = false) {
         try {
             const { data, error } = await supabaseClient.from('updates_hub').select('*').order('time', { ascending: false });
             if (error) throw error;
             hubUpdates = data || [];
+            
+            if (document.getElementById('hub-full-view').style.display === 'block' && hubOpenIndex !== null) {
+                const stillExists = hubUpdates.find(u => u.id === hubUpdates[hubOpenIndex]?.id);
+                if (!stillExists) {
+                    alert("This update was just deleted by an administrator.");
+                    document.getElementById('hub-full-view').style.display = 'none';
+                }
+            }
             hubRender();
-        } catch (err) { document.getElementById('feed').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
+        } catch (err) { 
+            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
+        }
     }
     function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
     function hubSwitchFolder(folder) { hubFolder = folder; document.getElementById('hub-full-view').style.display='none'; hubRender(); }
@@ -582,30 +604,87 @@
         document.getElementById('hub-mode-indicator').innerText = hubEditor ? 'Editor Mode' : 'Viewer Mode';
         if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex);
     }
+    
     function hubRender() {
-        const feed = document.getElementById('feed'); const query = document.getElementById('hub-search').value.toLowerCase(); feed.innerHTML = "";
-        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
+        const feed = document.getElementById('feed'); 
+        const query = document.getElementById('hub-search').value.toLowerCase(); 
+        feed.innerHTML = "";
+        
+        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
+        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
+        
         let count = 0;
+        let unreadCount = 0;
+        const now = Date.now(); 
+        const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+
         hubUpdates.forEach((item, idx) => {
-            if (((Date.now() - item.time) < 1296000000 ? 'latest' : 'history') !== hubFolder) return;
+            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
+            
+            // Calculate unread globally for badges
+            if (!hubReadIds.includes(item.id)) unreadCount++;
+
+            if (belongsTo !== hubFolder) return;
             if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
-            feed.innerHTML += `<div class="update-card" onclick="hubOpenView(${idx})"><small>${item.datestr || ''}</small><h3 style="color:var(--text-main);">${item.title || 'Untitled'}</h3></div>`; count++;
+            
+            const isRead = hubReadIds.includes(item.id);
+            const unreadDot = !isRead ? `<span class="unread-dot"></span>` : '';
+            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
+
+            feed.innerHTML += `
+              <div class="hub-strip" onclick="hubOpenView(${idx})">
+                <div class="hub-strip-left">
+                   <div style="display:flex; align-items:center;">
+                     ${unreadDot}
+                     <h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3>
+                   </div>
+                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${item.datestr || ''}</div>
+              </div>`;
+            count++;
         });
-        if(count === 0) feed.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No updates found.</p>";
+
+        if(count === 0) feed.innerHTML = "<p style='text-align:center;'>No updates found.</p>";
+
+        // Update Unread Banner & Badges
+        const badge = document.getElementById('dashboard-hub-badge');
+        const banner = document.getElementById('hub-banner');
+        
+        if (unreadCount > 0) {
+            badge.style.display = 'block';
+            badge.innerText = unreadCount;
+            banner.style.display = 'block';
+            banner.innerText = `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
+        } else {
+            badge.style.display = 'none';
+            banner.style.display = 'none';
+        }
     }
+
     function hubOpenView(index) {
         if(index === null || !hubUpdates[index]) return;
         hubOpenIndex = index; const item = hubUpdates[index];
+        
+        // Mark as Read
+        if (!hubReadIds.includes(item.id)) {
+            hubReadIds.push(item.id);
+            localStorage.setItem('hubReadIds', JSON.stringify(hubReadIds));
+            hubRender(); // Refresh UI to remove dot/badges
+        }
+
         document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; document.getElementById('hub-fv-date').innerText = item.datestr || ''; document.getElementById('hub-fv-body').innerHTML = item.body || '';
         document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="theme-toggle-btn" onclick="hubOpenEditor(true, ${index})" style="background:var(--accent); color:white;">Edit</button><button class="theme-toggle-btn" onclick="hubDelete(${index})" style="background:#ef4444; color:white; border:none;">Delete</button></div>` : '';
         document.getElementById('hub-full-view').style.display = 'block';
     }
+
     function hubOpenEditor(isEdit, index = null) {
         hubOpenIndex = index;
         if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModalTitle').innerText = "Edit Update"; document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; document.getElementById('hubRichText').innerHTML = hubUpdates[index].body || ''; document.getElementById('hubSaveBtn').innerText = "Update Changes"; } 
         else { document.getElementById('hubModalTitle').innerText = "Create New Update"; document.getElementById('hubPostTitle').value = ""; document.getElementById('hubRichText').innerHTML = ""; document.getElementById('hubSaveBtn').innerText = "Publish"; hubOpenIndex = null; }
         document.getElementById('hubEditorModal').style.display = 'flex';
     }
+    
     async function hubSavePost() {
         const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
         if(!title || !title.trim()) return alert("Title is required.");
@@ -613,6 +692,7 @@
         else await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
         document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
     }
+    
     async function hubDelete(index) {
         if(confirm("Delete this update permanently?")) { await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
     }
@@ -626,16 +706,19 @@
       hubRenderAuth();
     });
 
-    // Subscribes to Realtime Database changes (Requires Supabase UI Enablement!)
+    // Real-time Listener for Silo Notes
     supabaseClient
       .channel('public:silo_notes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => {
-        // Triggers a silent reload in the background if the user isn't currently dragging a card
-        if (!isSorting) {
-            loadSiloNotes(true);
-        }
-      })
-      .subscribe();
+        if (!isSorting) loadSiloNotes(true);
+      }).subscribe();
+
+    // Real-time Listener for Updates Hub
+    supabaseClient
+      .channel('public:updates_hub')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => {
+         loadHubUpdates(true);
+      }).subscribe();
 
   </script>
 </body>
