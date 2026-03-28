@@ -35,7 +35,7 @@
     /* =========================================
        GLOBAL LAYOUT
        ========================================= */
-    body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; background: var(--bg-color); color: var(--text-main); }
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; background: var(--bg-color); color: var(--text-main); user-select: none; -webkit-user-select: none; }
     .app-container { display: none; width: 100%; height: 100vh; flex-direction: row; }
     .app-container.active { display: flex; }
     .dashboard-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
@@ -76,6 +76,9 @@
     .silo-input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); font-family: inherit; }
     .silo-btn { padding: 8px 16px; background-color: var(--primary-btn); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; margin-bottom: 8px; }
     .silo-btn.secondary { background-color: var(--hover-bg); color: var(--text-main); }
+    .view-note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); max-height: 50vh; overflow-y: auto; padding-right: 15px; }
+    .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
 
     /* Updates Hub */
     #hub-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; border-right: 1px solid var(--border); }
@@ -88,6 +91,17 @@
     #hub-full-view { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--main-bg); z-index: 50; padding: 50px; box-sizing: border-box; overflow-y: auto; }
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
     .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border); }
+
+    /* =========================================
+       SELECTION AND PASTE FIXES
+       ========================================= */
+    /* Ensure inputs and note content remain selectable despite body being unselectable */
+    input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
+    
+    /* Strip unwanted inline background colors pasted from external sources */
+    .note-content-display *, .rt-area *, #hub-fv-body * { 
+      background-color: transparent !important; 
+    }
   </style>
 </head>
 <body class="theme-light">
@@ -135,8 +149,8 @@
       <div style="padding: 20px; border-top: 1px solid var(--border-color); background: var(--panel-bg);">
         
         <div id="silo-login-section">
-          <input type="email" id="silo-email" class="silo-input" placeholder="Admin Email">
-          <input type="password" id="silo-password" class="silo-input" placeholder="Password">
+          <input type="email" id="silo-email" class="silo-input" placeholder="Admin Email" onkeydown="if(event.key === 'Enter') handleAuthLogin('silo-email', 'silo-password')">
+          <input type="password" id="silo-password" class="silo-input" placeholder="Password" onkeydown="if(event.key === 'Enter') handleAuthLogin('silo-email', 'silo-password')">
           <button class="silo-btn" onclick="handleAuthLogin('silo-email', 'silo-password')">Secure Login</button>
         </div>
         
@@ -196,8 +210,8 @@
       <div style="padding: 20px 25px; border-top: 1px solid var(--border); background: var(--sidebar-bg);">
         
         <div id="hub-login-section">
-          <input type="email" id="hub-email" class="silo-input" placeholder="Admin Email">
-          <input type="password" id="hub-password" class="silo-input" placeholder="Password">
+          <input type="email" id="hub-email" class="silo-input" placeholder="Admin Email" onkeydown="if(event.key === 'Enter') handleAuthLogin('hub-email', 'hub-password')">
+          <input type="password" id="hub-password" class="silo-input" placeholder="Password" onkeydown="if(event.key === 'Enter') handleAuthLogin('hub-email', 'hub-password')">
           <button class="silo-btn" style="background:var(--accent);" onclick="handleAuthLogin('hub-email', 'hub-password')">Secure Login</button>
         </div>
         <div id="hub-logout-section" style="display:none;">
@@ -335,8 +349,18 @@
     
     // BACKUP & RESTORE FUNCTIONS
     function siloBackup() {
-        const backupData = JSON.stringify(siloNotes);
-        prompt("Copy this text and save it safely:", backupData);
+        // Convert notes to a formatted JSON string
+        const backupData = JSON.stringify(siloNotes, null, 2);
+        // Create a blob and standard browser download link
+        const blob = new Blob([backupData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'silo_backup.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
     
     async function siloRestore() {
@@ -372,7 +396,7 @@
             const note = siloNotes.find(n => n.id === siloActiveId);
             if(note) {
                 let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto;">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="background:var(--danger-btn); width:auto;">Delete</button>` : '';
-                document.getElementById('silo-view-panel').innerHTML = `<button onclick="siloSetView('All')" class="silo-btn secondary" style="width:auto; margin-bottom:15px;">← Back</button><div style="display:flex; justify-content:space-between;"><div><div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div><h2 style="margin:5px 0 15px 0;">${note.title || 'Untitled'}</h2></div><div style="display:flex; gap:10px;">${actions}</div></div><div>${note.content || ''}</div>`;
+                document.getElementById('silo-view-panel').innerHTML = `<button onclick="siloSetView('All')" class="silo-btn secondary" style="width:auto; margin-bottom:15px;">← Back</button><div class="view-note-header"><div><div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div><h2 style="margin:5px 0 0 0;">${note.title || 'Untitled'}</h2></div><div style="display:flex; gap:10px;">${actions}</div></div><div class="note-content-display">${note.content || ''}</div>`;
             }
         } else if (siloCurrentView !== 'Create') {
             const container = document.getElementById('notes-container'); container.innerHTML = '';
