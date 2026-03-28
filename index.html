@@ -77,8 +77,14 @@
     .silo-btn { padding: 8px 16px; background-color: var(--primary-btn); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; margin-bottom: 8px; }
     .silo-btn.secondary { background-color: var(--hover-bg); color: var(--text-main); }
     .view-note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
-    .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); max-height: 50vh; overflow-y: auto; padding-right: 15px; }
+    .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
     .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
+
+    /* True Full Screen View Panels */
+    #silo-view-panel { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
+    .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    
+    #hub-full-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
 
     /* Updates Hub */
     #hub-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; border-right: 1px solid var(--border); }
@@ -88,8 +94,7 @@
     #feed { padding: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; overflow-y: auto; }
     .update-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .update-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-    #hub-full-view { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--main-bg); z-index: 50; padding: 50px; box-sizing: border-box; overflow-y: auto; }
-    .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
+    .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
     .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border); }
 
     /* =========================================
@@ -156,7 +161,10 @@
         
         <div id="silo-logout-section" style="display: none;">
           <button class="silo-btn secondary" onclick="siloBackup()">Backup Notes</button>
-          <button class="silo-btn secondary" onclick="siloRestore()">Restore Notes</button>
+          
+          <input type="file" id="siloBackupFile" accept=".json" style="display:none;" onchange="processRestoreFile(event)">
+          <button class="silo-btn secondary" onclick="document.getElementById('siloBackupFile').click()">Restore Notes</button>
+          
           <button class="silo-btn" style="background: #dc3545; margin-top: 10px;" onclick="handleGlobalLogout()">Logout</button>
         </div>
 
@@ -190,11 +198,12 @@
           </div>
         </div>
 
-        <div id="silo-view-panel" class="silo-content-panel"></div>
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
       </main>
     </div>
   </div>
+
+  <div id="silo-view-panel"></div>
 
   <div id="app-updates" class="app-container">
     <aside id="hub-sidebar">
@@ -231,37 +240,37 @@
       </header>
 
       <div id="feed"><p style="grid-column: 1 / -1; text-align: center;">Loading Updates Database...</p></div>
-
-      <div id="hub-full-view">
-        <button class="theme-toggle-btn" onclick="document.getElementById('hub-full-view').style.display='none'" style="margin-bottom: 20px; background: var(--card-bg);">← Back to Feed</button>
-        <div class="silo-content-panel" style="display:block; max-width:800px; margin:auto;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <small id="hub-fv-date" style="color: var(--accent); font-weight: bold;"></small>
-              <h1 id="hub-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
-            </div>
-            <div id="hub-fv-actions"></div>
-          </div>
-          <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-          <div id="hub-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
-        </div>
-      </div>
     </div>
+  </div>
 
-    <div id="hubEditorModal" class="hub-modal">
-      <div class="hub-modal-content">
-        <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
-        <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
-        <div class="rt-toolbar">
-          <button class="rt-btn" onclick="hubFormat('bold')"><b>B</b></button>
-          <button class="rt-btn" onclick="hubFormat('italic')"><i>I</i></button>
-          <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
+  <div id="hub-full-view">
+    <button class="theme-toggle-btn" onclick="document.getElementById('hub-full-view').style.display='none'" style="margin-bottom: 20px; background: var(--card-bg);">← Back to Feed</button>
+    <div class="silo-view-inner">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <small id="hub-fv-date" style="color: var(--accent); font-weight: bold;"></small>
+          <h1 id="hub-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
         </div>
-        <div id="hubRichText" class="rt-area" contenteditable="true"></div>
-        <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
-          <button class="theme-toggle-btn" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
-          <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
-        </div>
+        <div id="hub-fv-actions"></div>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+      <div id="hub-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
+    </div>
+  </div>
+
+  <div id="hubEditorModal" class="hub-modal">
+    <div class="hub-modal-content">
+      <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
+      <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
+      <div class="rt-toolbar">
+        <button class="rt-btn" onclick="hubFormat('bold')"><b>B</b></button>
+        <button class="rt-btn" onclick="hubFormat('italic')"><i>I</i></button>
+        <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
+      </div>
+      <div id="hubRichText" class="rt-area" contenteditable="true"></div>
+      <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="theme-toggle-btn" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
+        <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
       </div>
     </div>
   </div>
@@ -273,23 +282,51 @@
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
     // --- 2. DECLARE ALL STATE VARIABLES FIRST ---
-    // Global State
     let isGlobalEditor = false;
     const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
     let globalThemeIdx = 0;
 
-    // Silo State
     let siloNotes = [];
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
 
-    // Hub State
     let hubUpdates = [];
     let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
 
-    // Initialize Theme labels on load so it stays light by default
     document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: Light`);
 
-    // --- 3. ALL APPLICATION FUNCTIONS ---
+    // --- 3. CTRL + A SMART SELECTION FIX ---
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+            const activeTag = document.activeElement.tagName.toLowerCase();
+            const isInput = activeTag === 'input' || activeTag === 'textarea' || document.activeElement.isContentEditable;
+            
+            // Only hijack CTRL+A if the user is NOT typing in a search bar or editor
+            if (!isInput) {
+                const siloView = document.getElementById('silo-view-panel');
+                const hubView = document.getElementById('hub-full-view');
+                
+                if (siloView && siloView.style.display === 'block') {
+                    e.preventDefault(); // Stop standard "Select everything on screen"
+                    selectElementContents(document.querySelector('#silo-view-panel .note-content-display'));
+                } else if (hubView && hubView.style.display === 'block') {
+                    e.preventDefault();
+                    selectElementContents(document.getElementById('hub-fv-body'));
+                }
+            }
+        }
+    });
+
+    // Helper to specifically highlight the exact target container
+    function selectElementContents(el) {
+        if (!el) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    // --- 4. ALL APPLICATION FUNCTIONS ---
     async function handleAuthLogin(emailId, passId) {
       const email = document.getElementById(emailId).value;
       const pass = document.getElementById(passId).value;
@@ -349,34 +386,32 @@
     
     // BACKUP & RESTORE FUNCTIONS
     function siloBackup() {
-        // Convert notes to a formatted JSON string
         const backupData = JSON.stringify(siloNotes, null, 2);
-        // Create a blob and standard browser download link
         const blob = new Blob([backupData], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'silo_backup.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = 'silo_backup.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
     
-    async function siloRestore() {
-        const backupData = prompt("Paste your backup text here to restore:");
-        if (backupData) {
+    async function processRestoreFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
             try {
-                const parsedNotes = JSON.parse(backupData);
+                const parsedNotes = JSON.parse(e.target.result);
                 if (Array.isArray(parsedNotes)) {
                     const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
                     if (error) throw error;
                     alert("Notes restored successfully!");
                     siloSetView('All');
                     loadSiloNotes();
-                } else alert("Invalid backup format.");
-            } catch (e) { alert("Failed to read or restore backup: " + e.message); }
-        }
+                } else alert("Invalid backup format. Must be a valid JSON array.");
+            } catch (err) { alert("Failed to read or restore backup: " + err.message); }
+            event.target.value = ''; // Reset the input so you can re-select the same file if needed
+        };
+        reader.readAsText(file);
     }
 
     function siloRenderUI() {
@@ -385,6 +420,8 @@
         document.getElementById('silo-create-section').style.display = siloEditor ? 'block' : 'none';
         document.getElementById('silo-mode-indicator').innerText = siloEditor ? 'Editor Mode' : 'Viewer Mode';
         document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
+        
+        // Full screen toggles
         document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
         document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
 
@@ -395,8 +432,19 @@
         if (siloCurrentView === 'ViewNote') {
             const note = siloNotes.find(n => n.id === siloActiveId);
             if(note) {
-                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto;">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="background:var(--danger-btn); width:auto;">Delete</button>` : '';
-                document.getElementById('silo-view-panel').innerHTML = `<button onclick="siloSetView('All')" class="silo-btn secondary" style="width:auto; margin-bottom:15px;">← Back</button><div class="view-note-header"><div><div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div><h2 style="margin:5px 0 0 0;">${note.title || 'Untitled'}</h2></div><div style="display:flex; gap:10px;">${actions}</div></div><div class="note-content-display">${note.content || ''}</div>`;
+                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="theme-toggle-btn" style="background:var(--accent); color:white;">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="theme-toggle-btn" style="background:var(--danger-btn); color:white; border:none;">Delete</button>` : '';
+                document.getElementById('silo-view-panel').innerHTML = `
+                    <button onclick="siloSetView('All')" class="theme-toggle-btn" style="margin-bottom:20px; background:var(--card-bg);">← Back to Notes</button>
+                    <div class="silo-view-inner">
+                        <div class="view-note-header">
+                            <div>
+                                <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div>
+                                <h2 style="margin:5px 0 0 0; color:var(--text-main);">${note.title || 'Untitled'}</h2>
+                            </div>
+                            <div style="display:flex; gap:10px;">${actions}</div>
+                        </div>
+                        <div class="note-content-display">${note.content || ''}</div>
+                    </div>`;
             }
         } else if (siloCurrentView !== 'Create') {
             const container = document.getElementById('notes-container'); container.innerHTML = '';
@@ -463,7 +511,7 @@
         if(confirm("Delete this update permanently?")) { await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
     }
 
-    // --- 4. REGISTER SUPABASE AUTH LISTENER ---
+    // --- 5. REGISTER SUPABASE AUTH LISTENER ---
     supabaseClient.auth.onAuthStateChange((event, session) => {
       isGlobalEditor = !!session;
       siloEditor = isGlobalEditor;
