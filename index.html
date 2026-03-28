@@ -139,8 +139,11 @@
           <input type="password" id="silo-password" class="silo-input" placeholder="Password">
           <button class="silo-btn" onclick="handleAuthLogin('silo-email', 'silo-password')">Secure Login</button>
         </div>
+        
         <div id="silo-logout-section" style="display: none;">
-          <button class="silo-btn" style="background: #dc3545;" onclick="handleGlobalLogout()">Logout</button>
+          <button class="silo-btn secondary" onclick="siloBackup()">Backup Notes</button>
+          <button class="silo-btn secondary" onclick="siloRestore()">Restore Notes</button>
+          <button class="silo-btn" style="background: #dc3545; margin-top: 10px;" onclick="handleGlobalLogout()">Logout</button>
         </div>
 
       </div>
@@ -251,7 +254,6 @@
 
   <script>
     // --- 1. INITIALIZE SUPABASE ---
-    // CHANGED: Renamed variable to 'supabaseClient' to prevent fatal overwrite of CDN script
     const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -330,6 +332,29 @@
     async function siloDeleteNote(id) {
         if(confirm("Delete this note permanently?")) { await supabaseClient.from('silo_notes').delete().eq('id', id); siloSetView('All'); loadSiloNotes(); }
     }
+    
+    // BACKUP & RESTORE FUNCTIONS
+    function siloBackup() {
+        const backupData = JSON.stringify(siloNotes);
+        prompt("Copy this text and save it safely:", backupData);
+    }
+    
+    async function siloRestore() {
+        const backupData = prompt("Paste your backup text here to restore:");
+        if (backupData) {
+            try {
+                const parsedNotes = JSON.parse(backupData);
+                if (Array.isArray(parsedNotes)) {
+                    const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
+                    if (error) throw error;
+                    alert("Notes restored successfully!");
+                    siloSetView('All');
+                    loadSiloNotes();
+                } else alert("Invalid backup format.");
+            } catch (e) { alert("Failed to read or restore backup: " + e.message); }
+        }
+    }
+
     function siloRenderUI() {
         document.getElementById('silo-login-section').style.display = siloEditor ? 'none' : 'block';
         document.getElementById('silo-logout-section').style.display = siloEditor ? 'block' : 'none';
@@ -415,7 +440,6 @@
     }
 
     // --- 4. REGISTER SUPABASE AUTH LISTENER ---
-    // This is safely at the bottom so it can call variables correctly!
     supabaseClient.auth.onAuthStateChange((event, session) => {
       isGlobalEditor = !!session;
       siloEditor = isGlobalEditor;
