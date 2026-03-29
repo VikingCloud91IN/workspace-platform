@@ -44,14 +44,16 @@
     .theme-toggle-btn { background: transparent; border: 1px solid var(--border-color); cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; color: var(--text-main); transition: 0.2s; white-space: nowrap; }
     .theme-toggle-btn:hover { background-color: var(--hover-bg); }
 
-    /* Burger Menu CSS */
+    /* Burger Menu & Dynamic Top Bar Title CSS */
     .burger-btn { background: transparent; border: none; color: inherit; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .burger-btn:hover { background: rgba(128, 128, 128, 0.2); }
     .main-burger { display: none; color: var(--text-main); }
+    .topbar-app-title { display: none; white-space: nowrap; color: var(--text-main); margin: 0; font-size: 1.3rem; }
     
-    /* When Sidebar is Hidden, stretch layout and show main-burger */
+    /* When Sidebar is Hidden */
     .app-container.sidebar-hidden aside { display: none !important; }
     .app-container.sidebar-hidden .main-burger { display: flex !important; }
+    .app-container.sidebar-hidden .topbar-app-title { display: block; }
 
     /* Workspace Dashboard */
     #ws-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 30px; border-right: 1px solid var(--border); z-index: 10;}
@@ -146,11 +148,12 @@
 
     <div id="ws-main">
       <header id="ws-header">
-        <div style="display:flex; align-items:center; gap:15px;">
+        <div style="display:flex; align-items:center; gap:10px;">
           <button class="burger-btn main-burger" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
-          <h2 style="margin:0;">Dashboard</h2>
+          <h2 class="topbar-app-title">Viking Cloud Workspace Platform <span style="opacity:0.3; font-weight:normal; margin:0 5px;">|</span></h2>
+          <h2 style="margin:0; font-size: 1.3rem;">Dashboard</h2>
         </div>
         <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
       </header>
@@ -211,10 +214,11 @@
 
     <div id="silo-right">
       <header class="silo-topbar">
-        <div style="display:flex; align-items:center; flex:1; gap:10px;">
+        <div style="display:flex; align-items:center; flex:1; gap:15px;">
           <button class="burger-btn main-burger" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
+          <h2 class="topbar-app-title">Silo</h2>
           <input type="text" id="silo-search" class="silo-search" placeholder="Search notes..." oninput="siloSearch(event)">
         </div>
         <div style="display:flex; gap:10px; margin-left: 15px;">
@@ -242,6 +246,7 @@
         </div>
 
         <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
+
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
       </main>
     </div>
@@ -281,10 +286,11 @@
 
     <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
       <header class="silo-topbar" style="background: var(--topbar-bg);">
-        <div style="display:flex; align-items:center; flex:1; gap:10px;">
+        <div style="display:flex; align-items:center; flex:1; gap:15px;">
           <button class="burger-btn main-burger" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
+          <h2 class="topbar-app-title">Update Hub</h2>
           <input type="text" id="hub-search" class="silo-search" placeholder="Search updates..." onkeyup="hubRender()">
         </div>
         <div style="display: flex; gap: 10px; margin-left: 15px;">
@@ -590,9 +596,8 @@
             const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
             
             filtered.forEach(n => {
-                // Handle is ONLY generated and injected if siloEditor is TRUE
+                // Ensure drag handle ONLY generated if logged into Editor mode
                 const handle = siloEditor ? `<span class="drag-handle" style="position:absolute; top:5px; right:5px; cursor:grab; font-size:20px; color:var(--text-muted); padding:10px; z-index:10; line-height:1;" title="Drag to reorder" onclick="event.stopPropagation()">⋮⋮</span>` : '';
-                
                 container.innerHTML += `
                   <div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="if(!event.target.classList.contains('drag-handle')) siloSetView('ViewNote', ${n.id})">
                     ${handle}
@@ -725,44 +730,4 @@
 
     function hubOpenEditor(isEdit, index = null) {
         hubOpenIndex = index;
-        if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModalTitle').innerText = "Edit Update"; document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; document.getElementById('hubRichText').innerHTML = hubUpdates[index].body || ''; document.getElementById('hubSaveBtn').innerText = "Update Changes"; } 
-        else { document.getElementById('hubModalTitle').innerText = "Create New Update"; document.getElementById('hubPostTitle').value = ""; document.getElementById('hubRichText').innerHTML = ""; document.getElementById('hubSaveBtn').innerText = "Publish"; hubOpenIndex = null; }
-        document.getElementById('hubEditorModal').style.display = 'flex';
-    }
-    
-    async function hubSavePost() {
-        const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
-        if(!title || !title.trim()) return alert("Title is required.");
-        if(hubOpenIndex !== null) await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
-        else await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
-        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
-    }
-    
-    async function hubDelete(index) {
-        if(confirm("Delete this update permanently?")) { await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
-    }
-
-    // --- 5. REGISTER SUPABASE LISTENERS (Auth & Realtime) ---
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      isGlobalEditor = !!session;
-      siloEditor = isGlobalEditor;
-      hubEditor = isGlobalEditor;
-      siloRenderUI();
-      hubRenderAuth();
-    });
-
-    supabaseClient
-      .channel('public:silo_notes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => {
-        if (!isSorting) loadSiloNotes(true);
-      }).subscribe();
-
-    supabaseClient
-      .channel('public:updates_hub')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => {
-         loadHubUpdates(true);
-      }).subscribe();
-
-  </script>
-</body>
-</html>
+        if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModal
