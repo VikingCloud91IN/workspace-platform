@@ -355,13 +355,24 @@
 
     let hubUpdates = [];
     let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
-    let hubReadIds = JSON.parse(localStorage.getItem('hubReadIds')) || [];
+    
+    // ARMOR: Try-Catch wrapper to prevent strict browser configurations from crashing the script
+    let hubReadIds = [];
+    try {
+        const storedIds = localStorage.getItem('hubReadIds');
+        if (storedIds) {
+            hubReadIds = JSON.parse(storedIds);
+        }
+    } catch (e) {
+        console.error("Local storage disabled or corrupted.", e);
+        hubReadIds = [];
+    }
 
     document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: Light`);
 
     // --- 3. CTRL + A SMART SELECTION FIX ---
     document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'a') {
             const activeTag = document.activeElement.tagName.toLowerCase();
             const isInput = activeTag === 'input' || activeTag === 'textarea' || document.activeElement.isContentEditable;
             
@@ -427,6 +438,7 @@
             siloNotes = data || [];
             
             if (siloCurrentView === 'ViewNote' && siloActiveId) {
+                // FIXED: Removed the '?.' operator that crashes older corporate browsers
                 const stillExists = siloNotes.find(n => n.id === siloActiveId);
                 if (!stillExists) {
                     alert("This note was just deleted by an administrator.");
@@ -636,7 +648,9 @@
             hubUpdates = data || [];
             
             if (document.getElementById('hub-full-view').style.display === 'block' && hubOpenIndex !== null) {
-                const stillExists = hubUpdates.find(u => u.id === hubUpdates[hubOpenIndex]?.id);
+                // FIXED: Removed the '?.' operator that crashes older corporate browsers
+                const openId = hubUpdates[hubOpenIndex] ? hubUpdates[hubOpenIndex].id : null;
+                const stillExists = hubUpdates.find(u => u.id === openId);
                 if (!stillExists) {
                     alert("This update was just deleted by an administrator.");
                     document.getElementById('hub-full-view').style.display = 'none';
@@ -719,7 +733,9 @@
         
         if (!hubReadIds.includes(item.id)) {
             hubReadIds.push(item.id);
-            localStorage.setItem('hubReadIds', JSON.stringify(hubReadIds));
+            try {
+                localStorage.setItem('hubReadIds', JSON.stringify(hubReadIds));
+            } catch(e) {} // Fail silently if local storage is blocked
             hubRender(); 
         }
 
@@ -730,4 +746,44 @@
 
     function hubOpenEditor(isEdit, index = null) {
         hubOpenIndex = index;
-        if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModal
+        if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModalTitle').innerText = "Edit Update"; document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; document.getElementById('hubRichText').innerHTML = hubUpdates[index].body || ''; document.getElementById('hubSaveBtn').innerText = "Update Changes"; } 
+        else { document.getElementById('hubModalTitle').innerText = "Create New Update"; document.getElementById('hubPostTitle').value = ""; document.getElementById('hubRichText').innerHTML = ""; document.getElementById('hubSaveBtn').innerText = "Publish"; hubOpenIndex = null; }
+        document.getElementById('hubEditorModal').style.display = 'flex';
+    }
+    
+    async function hubSavePost() {
+        const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
+        if(!title || !title.trim()) return alert("Title is required.");
+        if(hubOpenIndex !== null) await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+        else await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
+    }
+    
+    async function hubDelete(index) {
+        if(confirm("Delete this update permanently?")) { await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
+    }
+
+    // --- 5. REGISTER SUPABASE LISTENERS (Auth & Realtime) ---
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      isGlobalEditor = !!session;
+      siloEditor = isGlobalEditor;
+      hubEditor = isGlobalEditor;
+      siloRenderUI();
+      hubRenderAuth();
+    });
+
+    supabaseClient
+      .channel('public:silo_notes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => {
+        if (!isSorting) loadSiloNotes(true);
+      }).subscribe();
+
+    supabaseClient
+      .channel('public:updates_hub')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => {
+         loadHubUpdates(true);
+      }).subscribe();
+
+  </script>
+</body>
+</html>
