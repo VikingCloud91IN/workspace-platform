@@ -16,16 +16,16 @@
       --bg-color: #f1f5f9; 
       --panel-bg: #ffffff; 
       --card-bg: #ffffff; 
-      --text-main: #000000; /* Fixed: Absolute Black */
+      --text-main: #000000; 
       --text-muted: #64748b; 
-      --primary-btn: #1e3a8a; /* Viking Deep Blue */
+      --primary-btn: #1e3a8a; 
       --primary-hover: #1e40af; 
       --border-color: #e2e8f0; 
       --hover-bg: #f8fafc; 
       --input-bg: #ffffff; 
       --danger-btn: #ef4444; 
       --toolbar-bg: #f8fafc; 
-      --sidebar-bg: #1e3a8a; /* Deep blue sidebar */
+      --sidebar-bg: #1e3a8a; 
       --sidebar-text: #ffffff; 
       --topbar-bg: #ffffff; 
       --main-bg: #f1f5f9; 
@@ -109,8 +109,8 @@
     .hub-strip-right { display: flex; align-items: center; gap: 15px; text-align: right; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; padding-left: 20px; }
     .unread-dot { display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
 
-    /* Full Screens & Modals */
-    #silo-view-panel, #hub-full-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
+    /* Full Screens & Modals (Used for Logs, Users, Notes, and Hub Updates) */
+    .full-screen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
     .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
     .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.2);}
@@ -119,7 +119,7 @@
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     
-    .data-container { display: none; padding: 40px; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
+    /* Fixed Full Screen Data Lists */
     .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
@@ -257,16 +257,20 @@
         <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
 
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
-        
-        <div id="silo-data-container" class="data-container">
-            <h2 id="silo-data-title" style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
-            <div id="silo-data-list"></div>
-        </div>
       </main>
     </div>
   </div>
 
-  <div id="silo-view-panel"></div>
+  <div id="silo-view-panel" class="full-screen-overlay"></div>
+
+  <div id="silo-data-container" class="full-screen-overlay">
+      <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="closeDataView('silo')">← Back to Feed</button>
+      <div class="silo-view-inner" style="max-width: 1000px;">
+          <h1 id="silo-data-title" style="margin: 0 0 20px 0; color: var(--text-main);">Platform Directory</h1>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+          <div id="silo-data-list"></div>
+      </div>
+  </div>
 
   <div id="app-updates" class="app-container">
     <aside id="hub-sidebar">
@@ -284,7 +288,7 @@
         <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
         
         <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
-        <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
+        <button class="hub-nav-btn admin-only" id="hub-btn-history" style="display:none;" onclick="hubSwitchFolder('history')">📁 Update History</button>
         <button class="hub-nav-btn" id="hub-btn-protocol" onclick="hubSwitchFolder('protocol')">🛡️ Protocol</button>
         
       </div>
@@ -309,15 +313,19 @@
       <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread updates!</div>
 
       <div id="hub-feed" style="flex:1; overflow-y:auto; padding: 30px;"><p style="text-align: center;">Loading Updates Database...</p></div>
-      
-      <div id="hub-data-container" class="data-container">
-            <h2 id="hub-data-title" style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
-            <div id="hub-data-list"></div>
-      </div>
     </div>
   </div>
 
-  <div id="hub-full-view">
+  <div id="hub-data-container" class="full-screen-overlay">
+      <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="closeDataView('hub')">← Back to Feed</button>
+      <div class="silo-view-inner" style="max-width: 1000px;">
+          <h1 id="hub-data-title" style="margin: 0 0 20px 0; color: var(--text-main);">Platform Directory</h1>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+          <div id="hub-data-list"></div>
+      </div>
+  </div>
+
+  <div id="hub-full-view" class="full-screen-overlay">
     <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="document.getElementById('hub-full-view').style.display='none'">← Back to Feed</button>
     <div class="silo-view-inner">
       <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -370,7 +378,7 @@
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
     let sortableInstance = null;
     let isSorting = false;
-    let activeDataView = ''; // Tracks if viewing 'users' or 'logs'
+    let activeDataView = ''; 
 
     let hubUpdates = [];
     let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
@@ -390,7 +398,7 @@
         }
     } catch (e) {}
 
-    // --- NEW: CONTENT ENHANCER (NON-AI) & IMAGE HANDLERS ---
+    // --- NEW: CONTENT ENHANCER & IMAGE HANDLERS ---
     function formatCleanup(editorId) {
         document.execCommand('removeFormat', false, null);
         alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
@@ -592,24 +600,38 @@
             renderDataView('hub', viewType);
         }
     }
+    
+    function closeDataView(appContext) {
+        document.getElementById(`${appContext}-data-container`).style.display = 'none';
+        activeDataView = '';
+        if (appContext === 'silo') {
+            siloSetView('All');
+        } else if (appContext === 'hub') {
+            hubSwitchFolder(hubFolder);
+        }
+    }
 
     async function renderDataView(appContext, viewType) {
         const uiList = document.getElementById(`${appContext}-data-list`);
         if(!uiList) return;
-        uiList.innerHTML = '<p>Loading data...</p>';
+        
+        // Prevent visual flashing during background syncs
+        if (uiList.innerHTML === '') uiList.innerHTML = '<p>Loading data...</p>';
 
         const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
         let count = 0;
-        uiList.innerHTML = '';
+        let htmlContent = '';
 
         if (viewType === 'users') {
             const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
-            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users.</p>';
+            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure database tables exist.</p>';
 
-            const activePresence = [];
-            for (const key in onlineUsers) { activePresence.push(onlineUsers[key][0]); }
+            // Ensure no ghost duplicates from testing by mapping to unique emails
+            const uniqueProfilesMap = new Map();
+            allProfiles.forEach(p => uniqueProfilesMap.set(p.email, p));
+            const uniqueProfiles = Array.from(uniqueProfilesMap.values());
 
-            allProfiles.forEach(profile => {
+            uniqueProfiles.forEach(profile => {
                 if (!profile.email.toLowerCase().includes(searchQuery)) return;
                 count++;
 
@@ -624,7 +646,7 @@
                 
                 const dotClass = isOnline ? 'status-online' : 'status-offline';
 
-                uiList.innerHTML += `
+                htmlContent += `
                     <div class="data-row">
                         <div>
                             <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
@@ -635,7 +657,7 @@
                         <div style="text-align:right; font-size: 13px; color: var(--text-muted);">${locationText}</div>
                     </div>`;
             });
-            if (count === 0) uiList.innerHTML = "<p>No users found matching your search.</p>";
+            if (count === 0) htmlContent = "<p>No users found matching your search.</p>";
             
         } else if (viewType === 'logs') {
             const appFilter = appContext === 'silo' ? 'silo' : 'hub';
@@ -647,13 +669,14 @@
                 if (!searchString.includes(searchQuery)) return;
                 count++;
                 
+                // Convert to IST natively
                 const dateIST = new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
                 
                 let actionColor = 'var(--text-muted)';
                 if (log.action === 'Deleted') actionColor = 'var(--danger-btn)';
                 if (log.action === 'Created') actionColor = '#22c55e';
 
-                uiList.innerHTML += `
+                htmlContent += `
                     <div class="data-row">
                         <div>
                             <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
@@ -666,8 +689,11 @@
                         </div>
                     </div>`;
             });
-            if (count === 0) uiList.innerHTML = "<p>No logs found matching your search.</p>";
+            if (count === 0) htmlContent = "<p>No logs found matching your search.</p>";
         }
+        
+        // Single DOM update prevents double-entry glitches
+        uiList.innerHTML = htmlContent;
     }
 
     // --- 7. SILO FUNCTIONS ---
@@ -859,7 +885,7 @@
                   </div>`;
             });
 
-            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
+            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:var(--text-main);'>No notes found.</p>";
             
             initSortableGrid();
         } else {
@@ -944,7 +970,7 @@
         }
 
         const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
-        feed.innerHTML = "";
+        let htmlContent = "";
         
         document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
         document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
@@ -976,8 +1002,10 @@
             if (hubEditor) {
                 const safeTitle = (item.title || '').replace(/'/g, "\\'");
                 if (hubFolder === 'latest') {
+                    // Removed 'Move to Protocol' from Latest Updates
                     actionBtns = `<div style="display:flex; gap:5px;">
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); setProtocol(${item.id}, true, '${safeTitle}')">Move to Protocol</button>
+                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
+                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
                                   </div>`;
                 } else if (hubFolder === 'history') {
                     actionBtns = `<div style="display:flex; gap:5px;">
@@ -993,7 +1021,7 @@
                 }
             }
 
-            feed.innerHTML += `
+            htmlContent += `
               <div class="hub-strip" onclick="hubOpenView(${idx})">
                 <div class="hub-strip-left">
                    <div style="display:flex; align-items:center;">
@@ -1010,7 +1038,9 @@
             count++;
         });
 
-        if(count === 0) feed.innerHTML = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
+        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
+        
+        feed.innerHTML = htmlContent; // Single DOM write to prevent duplicates
 
         const badge = document.getElementById('dashboard-hub-badge');
         const banner = document.getElementById('hub-banner');
