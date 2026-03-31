@@ -109,7 +109,7 @@
     .hub-strip-right { display: flex; align-items: center; gap: 15px; text-align: right; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; padding-left: 20px; }
     .unread-dot { display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
 
-    /* Full Screens & Modals (Used for Logs, Users, Notes, and Hub Updates) */
+    /* Full Screens & Modals */
     .full-screen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
     .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
@@ -119,13 +119,12 @@
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     
-    /* Fixed Full Screen Data Lists */
     .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    /* Selection & Paste Fixes (Forces absolute black on white backgrounds) */
+    /* Selection & Paste Fixes */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
     .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
@@ -200,6 +199,10 @@
         </div>
       </div>
       
+      <div id="silo-create-section" class="admin-only" style="padding: 15px 20px 0; display: none;">
+        <button class="silo-btn" onclick="siloSetView('Create')">+ Create Note</button>
+      </div>
+      
       <div style="flex: 1; overflow-y: auto; padding: 15px 0;">
         <div style="padding: 0 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 10px;">Labels</div>
         <ul id="label-list"></ul>
@@ -242,10 +245,8 @@
             
             <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
             <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
-            
             <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('silo-note-content')" title="Clears messy formatting">🧹 Format Cleanup</button>
           </div>
-          
           <div id="silo-note-content" class="rt-area" contenteditable="true" spellcheck="true"></div>
           
           <div style="display: flex; gap: 10px;">
@@ -255,7 +256,6 @@
         </div>
 
         <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
-
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
       </main>
     </div>
@@ -286,7 +286,6 @@
       <div style="padding: 25px; flex-grow: 1; overflow-y: auto;">
         
         <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
-        
         <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
         <button class="hub-nav-btn admin-only" id="hub-btn-history" style="display:none;" onclick="hubSwitchFolder('history')">📁 Update History</button>
         <button class="hub-nav-btn" id="hub-btn-protocol" onclick="hubSwitchFolder('protocol')">🛡️ Protocol</button>
@@ -311,7 +310,6 @@
       </header>
 
       <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread updates!</div>
-
       <div id="hub-feed" style="flex:1; overflow-y:auto; padding: 30px;"><p style="text-align: center;">Loading Updates Database...</p></div>
     </div>
   </div>
@@ -348,10 +346,8 @@
         <button class="rt-btn" onclick="hubFormat('bold')"><b>B</b></button>
         <button class="rt-btn" onclick="hubFormat('italic')"><i>I</i></button>
         <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
-        
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
-        
         <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
       <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
@@ -363,16 +359,14 @@
   </div>
 
   <script>
-    // --- 1. INITIALIZE SUPABASE ---
     const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
     
     let supabaseClient = null;
     try {
         if (typeof supabase !== 'undefined') { supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); }
-    } catch (e) { console.error("Supabase Initialization Error:", e); }
+    } catch (e) { console.error("Supabase Error:", e); }
 
-    // --- 2. STATE VARIABLES ---
     let isGlobalEditor = false;
     let siloNotes = [];
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
@@ -398,7 +392,6 @@
         }
     } catch (e) {}
 
-    // --- NEW: CONTENT ENHANCER & IMAGE HANDLERS ---
     function formatCleanup(editorId) {
         document.execCommand('removeFormat', false, null);
         alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
@@ -417,20 +410,15 @@
         event.target.value = ''; 
     }
 
-    // --- NEW: AUDIT LOGGER ---
     async function logActivity(app, action, title) {
         if (!supabaseClient || !currentUser) return;
         try {
             await supabaseClient.from('app_logs').insert([{
-                app: app,
-                action: action,
-                item_title: title,
-                user_email: currentUser.email
+                app: app, action: action, item_title: title, user_email: currentUser.email
             }]);
-        } catch(e) { console.error("Log failed", e); }
+        } catch(e) {}
     }
 
-    // --- 3. SELECTION FIX ---
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'a') {
             const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
@@ -439,28 +427,18 @@
             if (!isInput) {
                 const siloView = document.getElementById('silo-view-panel');
                 const hubView = document.getElementById('hub-full-view');
-                
-                if (siloView && siloView.style.display === 'block') {
-                    e.preventDefault(); 
-                    selectElementContents(document.querySelector('#silo-view-panel .note-content-display'));
-                } else if (hubView && hubView.style.display === 'block') {
-                    e.preventDefault();
-                    selectElementContents(document.getElementById('hub-fv-body'));
-                }
+                if (siloView && siloView.style.display === 'block') { e.preventDefault(); selectElementContents(document.querySelector('#silo-view-panel .note-content-display')); } 
+                else if (hubView && hubView.style.display === 'block') { e.preventDefault(); selectElementContents(document.getElementById('hub-fv-body')); }
             }
         }
     });
     
     function selectElementContents(el) {
         if (!el) return;
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
+        const range = document.createRange(); range.selectNodeContents(el);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
     }
 
-    // --- 4. AUTHENTICATION & PRESENCE ---
     async function checkSession() {
         if (!supabaseClient) return;
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -491,10 +469,7 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          
-          setupPresence();
-          loadSiloNotes(true);
-          loadHubUpdates(true);
+          setupPresence(); loadSiloNotes(true); loadHubUpdates(true);
       }
     }
 
@@ -505,16 +480,23 @@
     }
 
     async function fetchUserProfile() {
-        const { data, error } = await supabaseClient.from('user_profiles').select('role').eq('id', currentUser.id).single();
-        if (data) userRole = data.role || 'Viewer';
+        // Fetch role and the new display_name
+        const { data, error } = await supabaseClient.from('user_profiles').select('role, display_name').eq('id', currentUser.id).single();
+        
+        let displayName = currentUser.email; 
+        if (data) {
+            userRole = data.role || 'Viewer';
+            if (data.display_name) displayName = data.display_name;
+        }
 
-        isGlobalEditor = (userRole === 'Editor');
+        isGlobalEditor = (userRole.trim().toLowerCase() === 'editor');
+        userRole = isGlobalEditor ? 'Editor' : 'Viewer';
         siloEditor = isGlobalEditor;
         hubEditor = isGlobalEditor;
         
-        document.getElementById('user-display-info').innerText = `${currentUser.email}\nRole: ${userRole}`;
-        document.getElementById('silo-mode-indicator').innerText = userRole === 'Editor' ? 'Editor Mode' : 'Viewer Mode';
-        document.getElementById('hub-mode-indicator').innerText = userRole === 'Editor' ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('user-display-info').innerText = `${displayName}\nRole: ${userRole}`;
+        document.getElementById('silo-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('hub-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
         
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = isGlobalEditor ? 'block' : 'none');
         document.getElementById('silo-admin-tools').style.display = isGlobalEditor ? 'block' : 'none';
@@ -524,16 +506,8 @@
     }
 
     function setupPresence() {
-        if (presenceChannel) {
-            presenceChannel.untrack();
-            supabaseClient.removeChannel(presenceChannel);
-        }
-        
-        presenceChannel = supabaseClient.channel('workspace_presence', {
-            config: {
-                presence: { key: currentUser.email }
-            }
-        });
+        if (presenceChannel) { presenceChannel.untrack(); supabaseClient.removeChannel(presenceChannel); }
+        presenceChannel = supabaseClient.channel('workspace_presence', { config: { presence: { key: currentUser.email } }});
         
         presenceChannel.on('presence', { event: 'sync' }, () => {
             onlineUsers = presenceChannel.presenceState();
@@ -542,20 +516,14 @@
                 if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'users');
             }
         });
-        
-        presenceChannel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') await updatePresenceLocation();
-        });
+        presenceChannel.subscribe(async (status) => { if (status === 'SUBSCRIBED') await updatePresenceLocation(); });
     }
 
     async function updatePresenceLocation() {
         if(!currentUser || !presenceChannel) return;
-        try {
-            await presenceChannel.track({ email: currentUser.email, role: userRole, location: currentAppLocation, online_at: new Date().toISOString() });
-        } catch(e) {}
+        try { await presenceChannel.track({ email: currentUser.email, role: userRole, location: currentAppLocation, online_at: new Date().toISOString() }); } catch(e) {}
     }
 
-    // --- 5. UI NAVIGATION ---
     function switchApp(appName) {
       document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
       
@@ -572,12 +540,9 @@
       updatePresenceLocation();
     }
 
-    // --- 6. SHARED DATA VIEWS (Users & Logs) ---
     async function openDataView(appContext, viewType) {
         if (userRole !== 'Editor') return;
-        
-        currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; 
-        updatePresenceLocation();
+        currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; updatePresenceLocation();
         activeDataView = viewType;
         
         if (appContext === 'silo') {
@@ -604,35 +569,28 @@
     function closeDataView(appContext) {
         document.getElementById(`${appContext}-data-container`).style.display = 'none';
         activeDataView = '';
-        if (appContext === 'silo') {
-            siloSetView('All');
-        } else if (appContext === 'hub') {
-            hubSwitchFolder(hubFolder);
-        }
+        if (appContext === 'silo') siloSetView('All');
+        else if (appContext === 'hub') hubSwitchFolder(hubFolder);
     }
 
     async function renderDataView(appContext, viewType) {
         const uiList = document.getElementById(`${appContext}-data-list`);
         if(!uiList) return;
-        
-        // Prevent visual flashing during background syncs
         if (uiList.innerHTML === '') uiList.innerHTML = '<p>Loading data...</p>';
 
         const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
-        let count = 0;
-        let htmlContent = '';
+        let count = 0; let htmlContent = '';
 
         if (viewType === 'users') {
             const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
-            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure database tables exist.</p>';
+            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users.</p>';
 
-            // Ensure no ghost duplicates from testing by mapping to unique emails
             const uniqueProfilesMap = new Map();
             allProfiles.forEach(p => uniqueProfilesMap.set(p.email, p));
             const uniqueProfiles = Array.from(uniqueProfilesMap.values());
 
             uniqueProfiles.forEach(profile => {
-                if (!profile.email.toLowerCase().includes(searchQuery)) return;
+                if (!profile.email.toLowerCase().includes(searchQuery) && !(profile.display_name || '').toLowerCase().includes(searchQuery)) return;
                 count++;
 
                 const userPresenceArray = onlineUsers[profile.email];
@@ -645,19 +603,20 @@
                 }
                 
                 const dotClass = isOnline ? 'status-online' : 'status-offline';
+                const visibleName = profile.display_name ? profile.display_name : profile.email;
 
                 htmlContent += `
                     <div class="data-row">
                         <div>
                             <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
-                                <span class="status-dot ${dotClass}"></span>${profile.email}
+                                <span class="status-dot ${dotClass}"></span>${visibleName}
                             </div>
-                            <div style="font-size: 13px; color: var(--text-muted);">Role: ${profile.role}</div>
+                            <div style="font-size: 13px; color: var(--text-muted);">${profile.email} • Role: ${profile.role}</div>
                         </div>
                         <div style="text-align:right; font-size: 13px; color: var(--text-muted);">${locationText}</div>
                     </div>`;
             });
-            if (count === 0) htmlContent = "<p>No users found matching your search.</p>";
+            if (count === 0) htmlContent = "<p>No users found.</p>";
             
         } else if (viewType === 'logs') {
             const appFilter = appContext === 'silo' ? 'silo' : 'hub';
@@ -669,9 +628,7 @@
                 if (!searchString.includes(searchQuery)) return;
                 count++;
                 
-                // Convert to IST natively
                 const dateIST = new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
-                
                 let actionColor = 'var(--text-muted)';
                 if (log.action === 'Deleted') actionColor = 'var(--danger-btn)';
                 if (log.action === 'Created') actionColor = '#22c55e';
@@ -689,14 +646,11 @@
                         </div>
                     </div>`;
             });
-            if (count === 0) htmlContent = "<p>No logs found matching your search.</p>";
+            if (count === 0) htmlContent = "<p>No logs found.</p>";
         }
-        
-        // Single DOM update prevents double-entry glitches
         uiList.innerHTML = htmlContent;
     }
 
-    // --- 7. SILO FUNCTIONS ---
     async function loadSiloNotes(silent = false) {
         if (!supabaseClient) return;
         try {
@@ -706,10 +660,7 @@
             
             if (siloCurrentView === 'ViewNote' && siloActiveId) {
                 const stillExists = siloNotes.find(n => n.id === siloActiveId);
-                if (!stillExists) {
-                    alert("This note was just deleted by an administrator.");
-                    siloCurrentView = 'All'; siloActiveId = null;
-                }
+                if (!stillExists) { alert("This note was just deleted by an administrator."); siloCurrentView = 'All'; siloActiveId = null; }
             }
             if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'DataView')) siloRenderUI();
         } catch (err) { if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
@@ -717,30 +668,19 @@
     
     function siloSearch(e) { 
         siloQuery = e.target.value.toLowerCase(); 
-        if (activeDataView !== '') {
-            renderDataView('silo', activeDataView);
-        } else {
-            siloSetView('All'); 
-        }
+        if (activeDataView !== '') renderDataView('silo', activeDataView);
+        else siloSetView('All'); 
     }
     function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
     
     function siloSetView(view, id = null, presetLabel = null) { 
-        document.getElementById('silo-data-container').style.display = 'none';
-        activeDataView = '';
-
+        document.getElementById('silo-data-container').style.display = 'none'; activeDataView = '';
         siloCurrentView = view; siloActiveId = id; 
 
         if (view === 'Create') {
-            document.getElementById('silo-note-title').value = '';
-            document.getElementById('silo-note-content').innerHTML = '';
-            if (presetLabel) {
-                document.getElementById('silo-note-label').value = presetLabel;
-                document.getElementById('silo-note-label').style.display = 'none';
-            } else {
-                document.getElementById('silo-note-label').value = '';
-                document.getElementById('silo-note-label').style.display = 'block';
-            }
+            document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-content').innerHTML = '';
+            if (presetLabel) { document.getElementById('silo-note-label').value = presetLabel; document.getElementById('silo-note-label').style.display = 'none'; } 
+            else { document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-label').style.display = 'block'; }
         }
         siloRenderUI(); 
     }
@@ -762,7 +702,6 @@
             await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
             logActivity('silo', 'Created', title);
         }
-        
         document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-content').innerHTML = '';
         siloSetView('All'); loadSiloNotes(); 
     }
@@ -906,7 +845,6 @@
         }
     }
 
-    // --- 8. HUB FUNCTIONS ---
     async function loadHubUpdates(silent = false) {
         if (!supabaseClient) return;
         try {
@@ -922,12 +860,8 @@
                     document.getElementById('hub-full-view').style.display = 'none';
                 }
             }
-            if (document.getElementById('hub-data-container').style.display !== 'block') {
-                hubRender();
-            }
-        } catch (err) { 
-            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
-        }
+            if (document.getElementById('hub-data-container').style.display !== 'block') hubRender();
+        } catch (err) { if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
     }
     
     function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
@@ -935,15 +869,12 @@
     function hubSwitchFolder(folder) { 
         document.getElementById('hub-data-container').style.display = 'none';
         document.getElementById('hub-feed').style.display = 'flex';
-        activeDataView = '';
-        hubFolder = folder; 
+        activeDataView = ''; hubFolder = folder; 
         document.getElementById('hub-full-view').style.display='none'; 
         hubRender(); 
     }
     
-    function hubRenderAuth() {
-        if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex);
-    }
+    function hubRenderAuth() { if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex); }
     
     async function setProtocol(id, status, title) {
         if(!supabaseClient) return;
@@ -964,10 +895,7 @@
 
     function hubRender() {
         const feed = document.getElementById('hub-feed'); 
-        
-        if (activeDataView !== '') {
-            return renderDataView('hub', activeDataView);
-        }
+        if (activeDataView !== '') return renderDataView('hub', activeDataView);
 
         const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
         let htmlContent = "";
@@ -976,10 +904,8 @@
         document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
         document.getElementById('hub-btn-protocol').classList.toggle('active', hubFolder === 'protocol');
         
-        let count = 0;
-        let unreadCount = 0;
-        const now = Date.now(); 
-        const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+        let count = 0; let unreadCount = 0;
+        const now = Date.now(); const fifteenDays = 15 * 24 * 60 * 60 * 1000;
 
         hubUpdates.forEach((item, idx) => {
             const isProtocol = item.is_protocol === true;
@@ -1002,7 +928,6 @@
             if (hubEditor) {
                 const safeTitle = (item.title || '').replace(/'/g, "\\'");
                 if (hubFolder === 'latest') {
-                    // Removed 'Move to Protocol' from Latest Updates
                     actionBtns = `<div style="display:flex; gap:5px;">
                                     <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
                                     <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
@@ -1024,41 +949,26 @@
             htmlContent += `
               <div class="hub-strip" onclick="hubOpenView(${idx})">
                 <div class="hub-strip-left">
-                   <div style="display:flex; align-items:center;">
-                     ${unreadDot}
-                     <h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3>
-                   </div>
+                   <div style="display:flex; align-items:center;">${unreadDot}<h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3></div>
                    <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
                 </div>
-                <div class="hub-strip-right">
-                    ${actionBtns}
-                    ${item.datestr || ''}
-                </div>
+                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
               </div>`;
             count++;
         });
 
         if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
-        
-        feed.innerHTML = htmlContent; // Single DOM write to prevent duplicates
+        feed.innerHTML = htmlContent;
 
-        const badge = document.getElementById('dashboard-hub-badge');
-        const banner = document.getElementById('hub-banner');
-        
+        const badge = document.getElementById('dashboard-hub-badge'); const banner = document.getElementById('hub-banner');
         if (unreadCount > 0) {
-            badge.style.display = 'block';
-            badge.innerText = unreadCount;
-            banner.style.display = 'block';
-            banner.innerText = `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
-        } else {
-            badge.style.display = 'none';
-            banner.style.display = 'none';
-        }
+            badge.style.display = 'block'; badge.innerText = unreadCount;
+            banner.style.display = 'block'; banner.innerText = `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
+        } else { badge.style.display = 'none'; banner.style.display = 'none'; }
     }
 
     document.querySelector('#app-updates .silo-search').addEventListener('input', () => {
-        if (activeDataView !== '') renderDataView('hub', activeDataView);
-        else hubRender();
+        if (activeDataView !== '') renderDataView('hub', activeDataView); else hubRender();
     });
 
     function hubOpenView(index) {
@@ -1071,9 +981,7 @@
             hubRender(); 
         }
 
-        document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; 
-        document.getElementById('hub-fv-date').innerText = item.datestr || ''; 
-        document.getElementById('hub-fv-body').innerHTML = item.body || '';
+        document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; document.getElementById('hub-fv-date').innerText = item.datestr || ''; document.getElementById('hub-fv-body').innerHTML = item.body || '';
         
         const safeTitle = (item.title || '').replace(/'/g, "\\'");
         document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="hubOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="hubDelete(${index}, '${safeTitle}')">Delete</button></div>` : '';
@@ -1117,31 +1025,17 @@
     }
 
     // --- 9. STARTUP ---
-    window.onload = () => {
-        checkSession();
-    };
+    window.onload = () => { checkSession(); };
 
     if (supabaseClient) {
-        supabaseClient
-          .channel('public:silo_notes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => {
-            if (!isSorting) loadSiloNotes(true);
-          }).subscribe();
-
-        supabaseClient
-          .channel('public:updates_hub')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => {
-             loadHubUpdates(true);
-          }).subscribe();
-          
-        supabaseClient
-          .channel('public:app_logs')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_logs' }, payload => {
+        supabaseClient.channel('public:silo_notes').on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => { if (!isSorting) loadSiloNotes(true); }).subscribe();
+        supabaseClient.channel('public:updates_hub').on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => { loadHubUpdates(true); }).subscribe();
+        supabaseClient.channel('public:app_logs').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_logs' }, payload => {
              if (activeDataView === 'logs') {
                  if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'logs');
                  if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'logs');
              }
-          }).subscribe();
+        }).subscribe();
     }
 
   </script>
