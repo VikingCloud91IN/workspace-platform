@@ -18,14 +18,14 @@
       --card-bg: #ffffff; 
       --text-main: #000000; 
       --text-muted: #64748b; 
-      --primary-btn: #1e3a8a; 
+      --primary-btn: #1e3a8a; /* Viking Deep Blue */
       --primary-hover: #1e40af; 
       --border-color: #e2e8f0; 
       --hover-bg: #f8fafc; 
       --input-bg: #ffffff; 
       --danger-btn: #ef4444; 
       --toolbar-bg: #f8fafc; 
-      --sidebar-bg: #1e3a8a; 
+      --sidebar-bg: #1e3a8a; /* Deep blue sidebar */
       --sidebar-text: #ffffff; 
       --topbar-bg: #ffffff; 
       --main-bg: #f1f5f9; 
@@ -109,7 +109,7 @@
     .hub-strip-right { display: flex; align-items: center; gap: 15px; text-align: right; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; padding-left: 20px; }
     .unread-dot { display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
 
-    /* Full Screens & Modals */
+    /* Full Screens & Modals (Used for Logs, Users, Notes, and Hub Updates) */
     .full-screen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
     .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
@@ -119,12 +119,13 @@
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     
+    /* Fixed Full Screen Data Lists */
     .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    /* Selection & Paste Fixes */
+    /* Selection & Paste Fixes (Forces absolute black on white backgrounds) */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
     .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
@@ -480,8 +481,8 @@
     }
 
     async function fetchUserProfile() {
-        // Fetch role and the new display_name
-        const { data, error } = await supabaseClient.from('user_profiles').select('role, display_name').eq('id', currentUser.id).single();
+        // FIXED: Bulletproof fetch. Pulls EVERYTHING (select '*') to prevent crashes if 'display_name' column is missing in DB.
+        const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', currentUser.id).single();
         
         let displayName = currentUser.email; 
         if (data) {
@@ -489,6 +490,7 @@
             if (data.display_name) displayName = data.display_name;
         }
 
+        // FIXED: Force Case-Insensitive check so 'editor', 'Editor', or 'EDITOR' all grant Admin powers
         isGlobalEditor = (userRole.trim().toLowerCase() === 'editor');
         userRole = isGlobalEditor ? 'Editor' : 'Viewer';
         siloEditor = isGlobalEditor;
@@ -583,7 +585,7 @@
 
         if (viewType === 'users') {
             const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
-            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users.</p>';
+            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure database tables exist.</p>';
 
             const uniqueProfilesMap = new Map();
             allProfiles.forEach(p => uniqueProfilesMap.set(p.email, p));
@@ -860,8 +862,12 @@
                     document.getElementById('hub-full-view').style.display = 'none';
                 }
             }
-            if (document.getElementById('hub-data-container').style.display !== 'block') hubRender();
-        } catch (err) { if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
+            if (document.getElementById('hub-data-container').style.display !== 'block') {
+                hubRender();
+            }
+        } catch (err) { 
+            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
+        }
     }
     
     function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
