@@ -115,11 +115,12 @@
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
     .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.2);}
 
-    /* Auth & Users UI */
+    /* Auth, Users & Logs UI */
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-    #users-container { display: none; padding: 40px; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
-    .user-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+    
+    .data-container { display: none; padding: 40px; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
+    .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
@@ -164,7 +165,7 @@
           <button class="burger-btn main-burger" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
-          <h2 class="topbar-app-title">Viking Cloud Workspace <span style="opacity:0.3; font-weight:normal; margin:0 5px;">|</span></h2>
+          <h2 class="topbar-app-title">Viking Cloud Workspace Platform <span style="opacity:0.3; font-weight:normal; margin:0 5px;">|</span></h2>
           <h2 style="margin:0; font-size: 1.3rem;">Dashboard</h2>
         </div>
       </header>
@@ -189,7 +190,7 @@
     <aside id="silo-sidebar">
       <div class="silo-header">
         <div style="display:flex; align-items:center; gap:10px;">
-          <button class="burger-btn" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+          <button class="burger-btn" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar" style="color:var(--text-main);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <div>
@@ -218,10 +219,11 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <h2 class="topbar-app-title">Silo</h2>
-          <input type="text" id="silo-search" class="silo-search" placeholder="Search notes or users..." oninput="siloSearch(event)">
+          <input type="text" id="silo-search" class="silo-search" placeholder="Search notes, users, or logs..." oninput="siloSearch(event)">
         </div>
         <div style="display:flex; gap:10px; margin-left: 15px;">
-            <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openUsersDirectory('silo')">Users</button>
+            <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('silo', 'users')">Users</button>
+            <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('silo', 'logs')">Activity Logs</button>
             <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
         </div>
       </header>
@@ -240,10 +242,12 @@
             
             <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
             <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
-            <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="triggerAI()">✨ AI Enhance</button>
+            
+            <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('silo-note-content')" title="Clears messy formatting">🧹 Format Cleanup</button>
           </div>
           
-          <div id="silo-note-content" class="rt-area" contenteditable="true"></div>
+          <div id="silo-note-content" class="rt-area" contenteditable="true" spellcheck="true"></div>
+          
           <div style="display: flex; gap: 10px;">
             <button class="silo-btn" style="width:auto;" onclick="siloSaveNote()">Save Note</button>
             <button class="silo-btn secondary" style="width:auto;" onclick="siloSetView('All')">Cancel</button>
@@ -254,9 +258,9 @@
 
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
         
-        <div id="silo-users-container" style="display:none; padding:40px; max-width:1000px; margin:0 auto;">
-            <h2 style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
-            <div id="silo-users-list"></div>
+        <div id="silo-data-container" class="data-container">
+            <h2 id="silo-data-title" style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
+            <div id="silo-data-list"></div>
         </div>
       </main>
     </div>
@@ -293,10 +297,11 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <h2 class="topbar-app-title">Update Hub</h2>
-          <input type="text" id="hub-search" class="silo-search" placeholder="Search updates or users..." onkeyup="hubRender()">
+          <input type="text" id="hub-search" class="silo-search" placeholder="Search updates, users, or logs..." onkeyup="hubRender()">
         </div>
         <div style="display: flex; gap: 10px; margin-left: 15px;">
-          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openUsersDirectory('hub')">Users</button>
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('hub', 'users')">Users</button>
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('hub', 'logs')">Activity Logs</button>
           <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
         </div>
       </header>
@@ -305,9 +310,9 @@
 
       <div id="hub-feed" style="flex:1; overflow-y:auto; padding: 30px;"><p style="text-align: center;">Loading Updates Database...</p></div>
       
-      <div id="hub-users-container" style="display:none; padding:40px; max-width:1000px; margin:0 auto; flex:1; overflow-y:auto;">
-            <h2 style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
-            <div id="hub-users-list"></div>
+      <div id="hub-data-container" class="data-container">
+            <h2 id="hub-data-title" style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
+            <div id="hub-data-list"></div>
       </div>
     </div>
   </div>
@@ -338,9 +343,10 @@
         
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
-        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="triggerAI()">✨ AI Enhance</button>
+        
+        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
-      <div id="hubRichText" class="rt-area" contenteditable="true"></div>
+      <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
         <button class="silo-btn secondary" style="width:auto;" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
         <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
@@ -364,11 +370,11 @@
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
     let sortableInstance = null;
     let isSorting = false;
+    let activeDataView = ''; // Tracks if viewing 'users' or 'logs'
 
     let hubUpdates = [];
     let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
     
-    // Auth & Presence Variables
     let currentUser = null;
     let userRole = 'Viewer';
     let currentAppLocation = 'Dashboard';
@@ -384,12 +390,11 @@
         }
     } catch (e) {}
 
-    // --- NEW: AI & IMAGE HANDLERS ---
-    function triggerAI() {
-        const promptTxt = prompt("What would you like the AI to do? (e.g., 'Make this more professional', 'Summarize this')\n\n[NOTE: This UI is ready for your Backend Team to securely connect an OpenAI/Gemini API key!]");
-        if (promptTxt) {
-            alert(`AI Request Registered: "${promptTxt}"\n\n(Awaiting backend API connection to process text).`);
-        }
+    // --- NEW: CONTENT ENHANCER (NON-AI) & IMAGE HANDLERS ---
+    function formatCleanup(editorId) {
+        // Native browser command to strip inline CSS formats (colors, bad fonts) from pasted text
+        document.execCommand('removeFormat', false, null);
+        alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
     }
 
     function handleImageUpload(event, editorId) {
@@ -402,7 +407,20 @@
             document.execCommand('insertImage', false, e.target.result);
         };
         reader.readAsDataURL(file);
-        event.target.value = ''; // Reset input
+        event.target.value = ''; 
+    }
+
+    // --- NEW: AUDIT LOGGER ---
+    async function logActivity(app, action, title) {
+        if (!supabaseClient || !currentUser) return;
+        try {
+            await supabaseClient.from('app_logs').insert([{
+                app: app,
+                action: action,
+                item_title: title,
+                user_email: currentUser.email
+            }]);
+        } catch(e) { console.error("Log failed", e); }
     }
 
     // --- 3. SELECTION FIX ---
@@ -507,8 +525,10 @@
         
         presenceChannel.on('presence', { event: 'sync' }, () => {
             onlineUsers = presenceChannel.presenceState();
-            if (document.getElementById('silo-users-container').style.display === 'block') renderUsersDirectory('silo');
-            if (document.getElementById('hub-users-container').style.display === 'block') renderUsersDirectory('hub');
+            if (activeDataView === 'users') {
+                if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'users');
+                if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'users');
+            }
         });
         
         presenceChannel.subscribe(async (status) => {
@@ -527,10 +547,11 @@
     function switchApp(appName) {
       document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
       
-      document.getElementById('silo-users-container').style.display = 'none';
-      document.getElementById('hub-users-container').style.display = 'none';
+      document.getElementById('silo-data-container').style.display = 'none';
+      document.getElementById('hub-data-container').style.display = 'none';
       document.getElementById('notes-container').style.display = 'grid';
       document.getElementById('hub-feed').style.display = 'flex';
+      activeDataView = '';
 
       let targetApp = appName === 'workspace' ? 'app-workspace' : `app-${appName}`;
       document.getElementById(targetApp).classList.add('active');
@@ -539,66 +560,111 @@
       updatePresenceLocation();
     }
 
-    // --- 6. USERS DIRECTORY LOGIC ---
-    async function openUsersDirectory(appContext) {
+    // --- 6. SHARED DATA VIEWS (Users & Logs) ---
+    async function openDataView(appContext, viewType) {
         if (userRole !== 'Editor') return;
-        currentAppLocation = 'Viewing Directory'; updatePresenceLocation();
+        
+        currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; 
+        updatePresenceLocation();
+        activeDataView = viewType;
         
         if (appContext === 'silo') {
-            siloCurrentView = 'Users';
+            siloCurrentView = 'DataView';
             document.getElementById('silo-editor-panel').style.display = 'none';
             document.getElementById('silo-view-panel').style.display = 'none';
             document.getElementById('notes-container').style.display = 'none';
             document.getElementById('silo-folder-actions').style.display = 'none';
-            document.getElementById('silo-users-container').style.display = 'block';
-            renderUsersDirectory('silo');
+            
+            document.getElementById('silo-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Silo Activity Logs';
+            document.getElementById('silo-data-container').style.display = 'block';
+            renderDataView('silo', viewType);
+            
         } else if (appContext === 'hub') {
             document.getElementById('hub-feed').style.display = 'none';
             document.getElementById('hub-full-view').style.display = 'none';
-            document.getElementById('hub-users-container').style.display = 'block';
-            renderUsersDirectory('hub');
+            
+            document.getElementById('hub-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Hub Activity Logs';
+            document.getElementById('hub-data-container').style.display = 'block';
+            renderDataView('hub', viewType);
         }
     }
 
-    async function renderUsersDirectory(appContext) {
-        const uiList = document.getElementById(`${appContext}-users-list`);
+    async function renderDataView(appContext, viewType) {
+        const uiList = document.getElementById(`${appContext}-data-list`);
         if(!uiList) return;
-        uiList.innerHTML = '<p>Loading directory...</p>';
+        uiList.innerHTML = '<p>Loading data...</p>';
 
-        const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
-        if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure RLS allows select.</p>';
-
-        uiList.innerHTML = '';
         const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
-
         let count = 0;
-        allProfiles.forEach(profile => {
-            if (!profile.email.toLowerCase().includes(searchQuery)) return;
-            count++;
+        uiList.innerHTML = '';
 
-            const userPresenceArray = onlineUsers[profile.email];
-            let isOnline = false, locationText = 'Offline';
+        if (viewType === 'users') {
+            const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
+            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users.</p>';
 
-            if (userPresenceArray && userPresenceArray.length > 0) {
-                isOnline = true;
-                const latestPresence = userPresenceArray.sort((a,b) => new Date(b.online_at) - new Date(a.online_at))[0];
-                locationText = `Viewing: ${latestPresence.location}`;
-            }
-            
-            const dotClass = isOnline ? 'status-online' : 'status-offline';
+            const activePresence = [];
+            for (const key in onlineUsers) { activePresence.push(onlineUsers[key][0]); }
 
-            uiList.innerHTML += `
-                <div class="user-row">
-                    <div>
-                        <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
-                            <span class="status-dot ${dotClass}"></span>${profile.email}
+            allProfiles.forEach(profile => {
+                if (!profile.email.toLowerCase().includes(searchQuery)) return;
+                count++;
+
+                const userPresenceArray = onlineUsers[profile.email];
+                let isOnline = false, locationText = 'Offline';
+
+                if (userPresenceArray && userPresenceArray.length > 0) {
+                    isOnline = true;
+                    const latestPresence = userPresenceArray.sort((a,b) => new Date(b.online_at) - new Date(a.online_at))[0];
+                    locationText = `Viewing: ${latestPresence.location}`;
+                }
+                
+                const dotClass = isOnline ? 'status-online' : 'status-offline';
+
+                uiList.innerHTML += `
+                    <div class="data-row">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
+                                <span class="status-dot ${dotClass}"></span>${profile.email}
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-muted);">Role: ${profile.role}</div>
                         </div>
-                        <div style="font-size: 13px; color: var(--text-muted);">Role: ${profile.role}</div>
-                    </div>
-                    <div style="text-align:right; font-size: 13px; color: var(--text-muted);">${locationText}</div>
-                </div>`;
-        });
-        if (count === 0) uiList.innerHTML = "<p>No users found matching your search.</p>";
+                        <div style="text-align:right; font-size: 13px; color: var(--text-muted);">${locationText}</div>
+                    </div>`;
+            });
+            if (count === 0) uiList.innerHTML = "<p>No users found matching your search.</p>";
+            
+        } else if (viewType === 'logs') {
+            const appFilter = appContext === 'silo' ? 'silo' : 'hub';
+            const { data: logs, error } = await supabaseClient.from('app_logs').select('*').eq('app', appFilter).order('created_at', { ascending: false }).limit(100);
+            if (error || !logs) return uiList.innerHTML = '<p>Error loading logs.</p>';
+
+            logs.forEach(log => {
+                const searchString = `${log.user_email} ${log.action} ${log.item_title}`.toLowerCase();
+                if (!searchString.includes(searchQuery)) return;
+                count++;
+                
+                // Convert to IST
+                const dateIST = new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                
+                let actionColor = 'var(--text-muted)';
+                if (log.action === 'Deleted') actionColor = 'var(--danger-btn)';
+                if (log.action === 'Created') actionColor = '#22c55e';
+
+                uiList.innerHTML += `
+                    <div class="data-row">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
+                                ${log.user_email} <span style="color:${actionColor}; margin: 0 5px;">[${log.action}]</span> 
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-main);">Item: <i>${log.item_title}</i></div>
+                        </div>
+                        <div style="text-align:right; font-size: 12px; color: var(--text-muted); font-family:monospace;">
+                            ${dateIST} (IST)
+                        </div>
+                    </div>`;
+            });
+            if (count === 0) uiList.innerHTML = "<p>No logs found matching your search.</p>";
+        }
     }
 
     // --- 7. SILO FUNCTIONS ---
@@ -616,19 +682,24 @@
                     siloCurrentView = 'All'; siloActiveId = null;
                 }
             }
-            if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'Users')) siloRenderUI();
+            if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'DataView')) siloRenderUI();
         } catch (err) { if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
     }
     
     function siloSearch(e) { 
         siloQuery = e.target.value.toLowerCase(); 
-        if (document.getElementById('silo-users-container').style.display === 'block') renderUsersDirectory('silo');
-        else siloSetView('All'); 
+        if (activeDataView !== '') {
+            renderDataView('silo', activeDataView);
+        } else {
+            siloSetView('All'); 
+        }
     }
     function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
     
     function siloSetView(view, id = null, presetLabel = null) { 
-        document.getElementById('silo-users-container').style.display = 'none';
+        document.getElementById('silo-data-container').style.display = 'none';
+        activeDataView = '';
+
         siloCurrentView = view; siloActiveId = id; 
 
         if (view === 'Create') {
@@ -655,8 +726,13 @@
         if (!title.trim() && !content.trim()) return;
         if (labelBox.style.display !== 'none' && !label.trim()) return alert("Label is required!");
 
-        if (siloActiveId) await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
-        else await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+        if (siloActiveId) {
+            await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+            logActivity('silo', 'Edited', title);
+        } else {
+            await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+            logActivity('silo', 'Created', title);
+        }
         
         document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-content').innerHTML = '';
         siloSetView('All'); loadSiloNotes(); 
@@ -664,7 +740,12 @@
 
     async function siloDeleteNote(id) {
         if (!supabaseClient) return;
-        if(confirm("Delete this note permanently?")) { await supabaseClient.from('silo_notes').delete().eq('id', id); siloSetView('All'); loadSiloNotes(); }
+        const note = siloNotes.find(n => n.id === id);
+        if(confirm("Delete this note permanently?")) { 
+            await supabaseClient.from('silo_notes').delete().eq('id', id); 
+            if(note) logActivity('silo', 'Deleted', note.title);
+            siloSetView('All'); loadSiloNotes(); 
+        }
     }
     
     function siloBackup() {
@@ -687,6 +768,7 @@
                     const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
                     if (error) throw error;
                     alert("Notes restored successfully!");
+                    logActivity('silo', 'Restored Backup', 'Multiple Notes');
                     siloSetView('All'); loadSiloNotes();
                 } else alert("Invalid backup format.");
             } catch (err) { alert("Failed to restore backup: " + err.message); }
@@ -700,7 +782,7 @@
         const container = document.getElementById('notes-container');
         if(sortableInstance) sortableInstance.destroy();
         
-        if(siloEditor && !siloQuery && siloCurrentView !== 'Users') {
+        if(siloEditor && !siloQuery && siloCurrentView !== 'DataView') {
             sortableInstance = new Sortable(container, {
                 animation: 150, handle: ".drag-handle", draggable: ".sortable-card", forceFallback: true, fallbackClass: "sortable-ghost",
                 onEnd: async function (evt) {
@@ -721,7 +803,7 @@
     }
 
     function siloRenderUI() {
-        if (siloCurrentView === 'Users') return; 
+        if (siloCurrentView === 'DataView') return; 
 
         document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
         document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
@@ -811,7 +893,7 @@
                     document.getElementById('hub-full-view').style.display = 'none';
                 }
             }
-            if (document.getElementById('hub-users-container').style.display !== 'block') {
+            if (document.getElementById('hub-data-container').style.display !== 'block') {
                 hubRender();
             }
         } catch (err) { 
@@ -822,8 +904,9 @@
     function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
     
     function hubSwitchFolder(folder) { 
-        document.getElementById('hub-users-container').style.display = 'none';
+        document.getElementById('hub-data-container').style.display = 'none';
         document.getElementById('hub-feed').style.display = 'flex';
+        activeDataView = '';
         hubFolder = folder; 
         document.getElementById('hub-full-view').style.display='none'; 
         hubRender(); 
@@ -833,17 +916,19 @@
         if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex);
     }
     
-    // NEW: Inline Actions for Updates Hub strips
-    async function setProtocol(id, status) {
+    async function setProtocol(id, status, title) {
         if(!supabaseClient) return;
         await supabaseClient.from('updates_hub').update({ is_protocol: status }).eq('id', id);
+        logActivity('hub', status ? 'Moved to Protocol' : 'Moved to History', title);
         loadHubUpdates();
     }
-    async function hubDeleteById(id) {
+    
+    async function hubDeleteById(id, title) {
         if(!supabaseClient) return;
         if(confirm("Delete this update permanently?")) { 
             await supabaseClient.from('updates_hub').delete().eq('id', id); 
             document.getElementById('hub-full-view').style.display = 'none'; 
+            logActivity('hub', 'Deleted', title);
             loadHubUpdates(); 
         }
     }
@@ -851,8 +936,8 @@
     function hubRender() {
         const feed = document.getElementById('hub-feed'); 
         
-        if (document.getElementById('hub-users-container').style.display === 'block') {
-            return renderUsersDirectory('hub');
+        if (activeDataView !== '') {
+            return renderDataView('hub', activeDataView);
         }
 
         const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
@@ -871,12 +956,10 @@
             const isProtocol = item.is_protocol === true;
             const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
             
-            // Only count unread if it's NOT a protocol item (so older items moved to protocol don't spam notifications)
             if (!hubReadIds.includes(item.id) && !isProtocol) unreadCount++;
 
-            // Routing Logic
             if (hubFolder === 'protocol' && !isProtocol) return;
-            if (hubFolder !== 'protocol' && isProtocol) return; // Hide protocols from Latest/History
+            if (hubFolder !== 'protocol' && isProtocol) return; 
             if (hubFolder === 'latest' && belongsTo !== 'latest') return;
             if (hubFolder === 'history' && belongsTo !== 'history') return;
 
@@ -886,23 +969,23 @@
             const unreadDot = (!isRead && !isProtocol) ? `<span class="unread-dot"></span>` : '';
             const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
 
-            // Editor Inline Buttons
             let actionBtns = '';
             if (hubEditor) {
+                const safeTitle = (item.title || '').replace(/'/g, "\\'");
                 if (hubFolder === 'latest') {
                     actionBtns = `<div style="display:flex; gap:5px;">
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); setProtocol(${item.id}, true)">Move to Protocol</button>
+                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); setProtocol(${item.id}, true, '${safeTitle}')">Move to Protocol</button>
                                   </div>`;
                 } else if (hubFolder === 'history') {
                     actionBtns = `<div style="display:flex; gap:5px;">
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); setProtocol(${item.id}, true)">Move to Protocol</button>
-                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id})">Delete</button>
+                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); setProtocol(${item.id}, true, '${safeTitle}')">Move to Protocol</button>
+                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
                                   </div>`;
                 } else if (hubFolder === 'protocol') {
                     actionBtns = `<div style="display:flex; gap:5px;">
                                     <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--hover-bg);" onclick="event.stopPropagation(); setProtocol(${item.id}, false)">Move to History</button>
-                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id})">Delete</button>
+                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--hover-bg);" onclick="event.stopPropagation(); setProtocol(${item.id}, false, '${safeTitle}')">Move to History</button>
+                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
                                   </div>`;
                 }
             }
@@ -940,7 +1023,10 @@
         }
     }
 
-    document.querySelector('#app-updates .silo-search').addEventListener('input', hubRender);
+    document.querySelector('#app-updates .silo-search').addEventListener('input', () => {
+        if (activeDataView !== '') renderDataView('hub', activeDataView);
+        else hubRender();
+    });
 
     function hubOpenView(index) {
         if(index === null || !hubUpdates[index]) return;
@@ -952,13 +1038,12 @@
             hubRender(); 
         }
 
-        // Full Screen View logic
         document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; 
         document.getElementById('hub-fv-date').innerText = item.datestr || ''; 
         document.getElementById('hub-fv-body').innerHTML = item.body || '';
         
-        // Inline Edit/Delete in Full View (Standardized)
-        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="hubOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="hubDelete(${index})">Delete</button></div>` : '';
+        const safeTitle = (item.title || '').replace(/'/g, "\\'");
+        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="hubOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="hubDelete(${index}, '${safeTitle}')">Delete</button></div>` : '';
         document.getElementById('hub-full-view').style.display = 'block';
     }
 
@@ -974,18 +1059,28 @@
         const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
         if(!title || !title.trim()) return alert("Title is required.");
         
-        // Inherit is_protocol if editing an existing protocol
         let currentIsProtocol = false;
         if (hubOpenIndex !== null && hubUpdates[hubOpenIndex]) currentIsProtocol = hubUpdates[hubOpenIndex].is_protocol || false;
 
-        if(hubOpenIndex !== null) await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
-        else await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: currentIsProtocol }]);
+        if(hubOpenIndex !== null) {
+            await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+            logActivity('hub', 'Edited', title);
+        } else {
+            await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: currentIsProtocol }]);
+            logActivity('hub', 'Created', title);
+        }
+        
         document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
     }
     
-    async function hubDelete(index) {
+    async function hubDelete(index, title) {
         if (!supabaseClient) return;
-        if(confirm("Delete this update permanently?")) { await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
+        if(confirm("Delete this update permanently?")) { 
+            await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); 
+            document.getElementById('hub-full-view').style.display = 'none'; 
+            logActivity('hub', 'Deleted', title);
+            loadHubUpdates(); 
+        }
     }
 
     // --- 9. STARTUP ---
@@ -1004,6 +1099,15 @@
           .channel('public:updates_hub')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => {
              loadHubUpdates(true);
+          }).subscribe();
+          
+        supabaseClient
+          .channel('public:app_logs')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_logs' }, payload => {
+             if (activeDataView === 'logs') {
+                 if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'logs');
+                 if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'logs');
+             }
           }).subscribe();
     }
 
