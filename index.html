@@ -9,6 +9,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   
   <style>
+    /* =========================================
+       COMBINED THEME VARIABLES 
+       ========================================= */
     :root, body.theme-light { 
       --bg-color: #f4f5f7; --panel-bg: #ffffff; --card-bg: #ffffff; --text-main: #000000; --text-muted: #5e6c84; --primary-btn: #0052cc; --primary-hover: #0047b3; --border-color: #dfe1e6; --hover-bg: #ebecf0; --input-bg: #ffffff; --danger-btn: #dc3545; --toolbar-bg: #f9fafc; 
       --sidebar-bg: #0f172a; --topbar-bg: #ffffff; --main-bg: #f8fafc; --accent: #2563eb; --text: #000000; --sidebar-text: #f8fafc; --border: #cbd5e1;
@@ -17,8 +20,22 @@
       --bg-color: #121212; --panel-bg: #1e1e1e; --card-bg: #242424; --text-main: #e0e0e0; --text-muted: #a0a0a0; --primary-btn: #bb86fc; --primary-hover: #9965f4; --border-color: #333333; --hover-bg: #333333; --input-bg: #2c2c2c; --danger-btn: #cf6679; --toolbar-bg: #1a1a1a; 
       --sidebar-bg: #020617; --topbar-bg: #1e293b; --main-bg: #0f172a; --text: #f8fafc; --border: #475569; --sidebar-text: #f8fafc; --accent: #bb86fc;
     }
-    /* ... (Yellow, Blue, Beige themes omitted for brevity, ensure you keep your previous CSS variables here) ... */
+    body.theme-yellow { 
+      --bg-color: #fffde7; --panel-bg: #fff59d; --card-bg: #ffffff; --text-main: #000000; --text-muted: #5d4037; --primary-btn: #f57f17; --primary-hover: #f9a825; --border-color: #fbc02d; --hover-bg: #fff9c4; --input-bg: #ffffff; --danger-btn: #d84315; --toolbar-bg: #fff9c4; 
+      --sidebar-bg: #fffde7; --topbar-bg: #fff59d; --main-bg: #fff9c4; --text: #000000; --border: #fbc02d; --sidebar-text: #3e2723; --accent: #f57f17;
+    }
+    body.theme-blue { 
+      --bg-color: #e3f2fd; --panel-bg: #bbdefb; --card-bg: #ffffff; --text-main: #000000; --text-muted: #1565c0; --primary-btn: #1976d2; --primary-hover: #1565c0; --border-color: #90caf9; --hover-bg: #e3f2fd; --input-bg: #ffffff; --danger-btn: #c62828; --toolbar-bg: #e3f2fd; 
+      --sidebar-bg: #1e3a8a; --topbar-bg: #eff6ff; --main-bg: #dbeafe; --text: #000000; --border: #93c5fd; --sidebar-text: #ffffff; --accent: #1976d2;
+    }
+    body.theme-beige { 
+      --bg-color: #f5f5dc; --panel-bg: #e8e4c9; --card-bg: #ffffff; --text-main: #000000; --text-muted: #6b543f; --primary-btn: #8b5a2b; --primary-hover: #a06b3a; --border-color: #d2b48c; --hover-bg: #f0ebd8; --input-bg: #ffffff; --danger-btn: #a52a2a; --toolbar-bg: #f0ebd8; 
+      --sidebar-bg: #4a3728; --topbar-bg: #fffaf0; --main-bg: #f5f5dc; --text: #000000; --border: #d2b48c; --sidebar-text: #ffffff; --accent: #8b5a2b;
+    }
 
+    /* =========================================
+       GLOBAL LAYOUT
+       ========================================= */
     body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; background: var(--bg-color); color: var(--text-main); user-select: none; -webkit-user-select: none; }
     .app-container { display: none; width: 100%; height: 100vh; flex-direction: row; }
     .app-container.active { display: flex; }
@@ -27,163 +44,390 @@
     .theme-toggle-btn { background: transparent; border: 1px solid var(--border-color); cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; color: var(--text-main); transition: 0.2s; white-space: nowrap; }
     .theme-toggle-btn:hover { background-color: var(--hover-bg); }
 
+    /* Burger Menu & Dynamic Top Bar Title CSS */
     .burger-btn { background: transparent; border: none; color: inherit; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .burger-btn:hover { background: rgba(128, 128, 128, 0.2); }
     .main-burger { display: none; color: var(--text-main); }
     .topbar-app-title { display: none; white-space: nowrap; color: var(--text-main); margin: 0; font-size: 1.3rem; }
     
+    /* When Sidebar is Hidden */
     .app-container.sidebar-hidden aside { display: none !important; }
     .app-container.sidebar-hidden .main-burger { display: flex !important; }
     .app-container.sidebar-hidden .topbar-app-title { display: block; }
 
-    /* UI Layouts */
-    aside { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; border-right: 1px solid var(--border); z-index: 10; }
-    main { flex-grow: 1; display: flex; flex-direction: column; background: var(--main-bg); overflow: hidden; position: relative; }
-    header { height: 70px; background: var(--topbar-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; gap: 15px;}
+    /* Workspace Dashboard */
+    #ws-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 30px; border-right: 1px solid var(--border); z-index: 10;}
+    #ws-main { flex-grow: 1; display: flex; flex-direction: column; background: var(--main-bg); overflow: hidden; }
+    #ws-header { height: 70px; background: var(--topbar-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+    #app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 40px; overflow-y: auto; }
+    .app-card { position: relative; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: 0.3s; color: var(--text-main); }
+    .app-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .app-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+    .app-card h3 { margin: 0 0 5px 0; }
+    .app-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
     
+    /* Dashboard Unread Badge */
+    .dashboard-badge { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; line-height: 28px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: none; text-align: center; }
+
+    /* Silo Notes */
+    #silo-sidebar { width: 280px; background-color: var(--panel-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
+    .silo-header { padding: 20px; border-bottom: 1px solid var(--border-color); height: 70px; display: flex; align-items: center; gap: 10px; }
+    #silo-right { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .silo-topbar { height: 70px; background-color: var(--panel-bg); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; gap: 15px; }
+    .silo-search { flex: 1; max-width: 700px; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; background-color: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
+    .silo-search:focus { border-color: var(--primary-btn); }
+    #label-list { list-style: none; padding: 0; margin: 0; }
+    #label-list li { padding: 10px 20px; cursor: pointer; color: var(--text-main); font-size: 14px; transition: 0.2s; }
+    #label-list li:hover, #label-list li.active { background-color: var(--hover-bg); font-weight: 600; }
+    .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px;}
+    
+    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
+    .note-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden;}
+    .note-card:hover { border-color: var(--primary-btn); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .note-card.sortable-ghost { opacity: 0.2; background: var(--hover-bg); border: 2px dashed var(--accent); } 
+    
+    .rt-toolbar { display: flex; gap: 5px; background-color: var(--toolbar-bg); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; padding: 8px; flex-wrap: wrap; }
+    .rt-btn { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 5px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; }
+    .rt-btn:hover { background: var(--border-color); }
+    .rt-area { width: 100%; min-height: 250px; max-height: 40vh; overflow-y: auto; padding: 15px; border: 1px solid var(--border-color); border-radius: 0 0 4px 4px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); line-height: 1.6; margin-bottom: 12px; outline: none; }
     .silo-input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); font-family: inherit; }
     .silo-btn { padding: 8px 16px; background-color: var(--primary-btn); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; margin-bottom: 8px; }
-    .silo-search { flex: 1; max-width: 700px; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; background-color: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; }
+    .silo-btn.secondary { background-color: var(--hover-bg); color: var(--text-main); }
+    .view-note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+    .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
+    .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
+
+    /* True Full Screen View Panels */
+    #silo-view-panel { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
+    .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     
+    #hub-full-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
+
+    /* Updates Hub */
+    #hub-sidebar { width: 280px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; border-right: 1px solid var(--border); z-index:10; }
+    .hub-nav-btn { width: 100%; padding: 12px 16px; margin-bottom: 10px; background: transparent; border: 1px solid transparent; color: inherit; text-align: left; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 14px; }
+    .hub-nav-btn:hover { background: rgba(128,128,128,0.1); }
+    .hub-nav-btn.active { background: var(--hover-bg); border: 1px solid var(--border); }
+    
+    /* Hub Banner */
+    #hub-banner { background: var(--accent); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
+    #hub-banner:hover { opacity: 0.9; }
+
+    /* Hub Email Strip UI */
+    #hub-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+    .hub-strip { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 30px; border-radius: 50px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
+    .hub-strip:hover { transform: translateX(4px); border-color: var(--accent); }
+    .hub-strip-left { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; }
+    .hub-strip-right { text-align: right; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; padding-left: 20px; }
+    .unread-dot { display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+
+    .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
+    .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border); }
+
+    /* Global Auth Overlay */
+    #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
     /* Users Directory Styles */
     #users-container { display: none; padding: 40px; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
     .user-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; }
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
-    
-    /* ... (Keep your existing grid, feed, modal, and note card CSS here) ... */
-    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
-    .note-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden;}
-    
+
+    /* =========================================
+       SELECTION AND PASTE FIXES
+       ========================================= */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
+    .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; }
+    body:not(.theme-dark) .note-content-display *, body:not(.theme-dark) .rt-area *, body:not(.theme-dark) #hub-fv-body * { color: #000000 !important; }
+    body.theme-dark .note-content-display *, body.theme-dark .rt-area *, body.theme-dark #hub-fv-body * { color: var(--text-main) !important; }
   </style>
 </head>
 <body class="theme-light">
 
-  <div id="global-login-overlay" style="position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-      <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center;">
-          <h2>Viking Cloud Workspace</h2>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">Please sign in to continue.</p>
-          <input type="email" id="auth-email" class="silo-input" placeholder="Corporate Email">
-          <input type="password" id="auth-password" class="silo-input" placeholder="Password">
+  <div id="global-login-overlay">
+      <div class="login-box">
+          <h2 style="margin-top:0; color:var(--text-main);">Viking Cloud Workspace</h2>
+          <p style="color: var(--text-muted); margin-bottom: 20px; font-size:14px;">Please sign in to continue.</p>
+          <input type="email" id="auth-email" class="silo-input" placeholder="Corporate Email" onkeydown="if(event.key === 'Enter') handleAuthLogin()">
+          <input type="password" id="auth-password" class="silo-input" placeholder="Password" onkeydown="if(event.key === 'Enter') handleAuthLogin()">
           <button class="silo-btn" onclick="handleAuthLogin()">Secure Login</button>
       </div>
   </div>
 
   <div id="app-workspace" class="app-container">
-    <aside style="padding: 30px;">
+    <aside id="ws-sidebar">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-        <button class="burger-btn" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
-        <h1 style="margin:0; font-size:1.3rem;">Viking Cloud</h1>
+        <button class="burger-btn" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <h1 style="margin:0; font-size:1.3rem; line-height:1.2;">Viking Cloud Workspace Platform</h1>
       </div>
-      <p style="color: #94a3b8; font-size: 0.85rem; margin:0;">Dashboard</p>
-      
+      <p style="color: #94a3b8; font-size: 0.85rem; margin:0;">Corporate Ecosystem Launcher</p>
+
       <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
-          <div id="user-display-info" style="font-size: 14px; margin-bottom: 10px; word-break: break-all;"></div>
+          <div id="user-display-info" style="font-size: 13px; font-weight:bold; margin-bottom: 15px; color:var(--text-main); word-break: break-all;"></div>
           <button class="silo-btn" style="background: #ef4444;" onclick="handleGlobalLogout()">Logout</button>
       </div>
     </aside>
 
-    <main>
-      <header>
+    <div id="ws-main">
+      <header id="ws-header">
         <div style="display:flex; align-items:center; gap:10px;">
-          <button class="burger-btn main-burger" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
-          <h2 class="topbar-app-title">Viking Cloud Workspace <span style="opacity:0.3;">|</span></h2>
+          <button class="burger-btn main-burger" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <h2 class="topbar-app-title">Viking Cloud Workspace Platform <span style="opacity:0.3; font-weight:normal; margin:0 5px;">|</span></h2>
           <h2 style="margin:0; font-size: 1.3rem;">Dashboard</h2>
         </div>
-        <button class="theme-toggle-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
+        <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
       </header>
 
-      <div id="app-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 40px;">
-        <div class="app-card" onclick="switchApp('silo')"><h3>📝 Silo Notes</h3></div>
-        <div class="app-card" onclick="switchApp('updates')"><h3>📣 Updates Hub</h3></div>
+      <div id="app-grid">
+        <div class="app-card" onclick="switchApp('silo')">
+          <span class="icon">📝</span>
+          <h3>Silo Notes</h3>
+          <p>Corporate Notes</p>
+        </div>
+        <div class="app-card" onclick="switchApp('updates')">
+          <div id="dashboard-hub-badge" class="dashboard-badge">0</div>
+          <span class="icon">📣</span>
+          <h3>Updates Hub</h3>
+          <p>Latest News</p>
+        </div>
       </div>
-    </main>
+    </div>
   </div>
 
   <div id="app-silo" class="app-container">
-    <aside style="background: var(--panel-bg); color: var(--text-main);">
-      <div style="padding: 20px; border-bottom: 1px solid var(--border-color); height: 70px; display: flex; align-items: center; gap: 10px;">
-          <button class="burger-btn" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
-          <h1 style="margin:0; font-size:1.5rem;">Silo <span id="silo-role" style="font-size:12px; color:gray;"></span></h1>
+    <aside id="silo-sidebar">
+      <div class="silo-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="burger-btn" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar" style="color:var(--text-main);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div>
+            <h1 class="app-title" style="margin:0; font-size:1.5rem;">Silo</h1>
+            <div id="silo-mode-indicator" style="font-size: 12px; color: var(--text-muted); margin-top:2px;">Viewer Mode</div>
+          </div>
+        </div>
       </div>
       <div id="silo-create-section" style="padding: 15px 20px 0; display: none;">
         <button class="silo-btn" onclick="siloSetView('Create')">+ Create Note</button>
       </div>
       <div style="flex: 1; overflow-y: auto; padding: 15px 0;">
-        <ul id="label-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+        <div style="padding: 0 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;">Labels</div>
+        <ul id="label-list"></ul>
+      </div>
+      
+      <div id="silo-admin-tools" style="padding: 20px; border-top: 1px solid var(--border-color); background: var(--panel-bg); display: none;">
+          <button class="silo-btn secondary" onclick="siloBackup()">Backup Notes</button>
+          <input type="file" id="siloBackupFile" accept=".json" style="display:none;" onchange="processRestoreFile(event)">
+          <button class="silo-btn secondary" onclick="document.getElementById('siloBackupFile').click()">Restore Notes</button>
       </div>
     </aside>
 
-    <main>
-      <header style="background: var(--panel-bg);">
+    <div id="silo-right">
+      <header class="silo-topbar">
         <div style="display:flex; align-items:center; flex:1; gap:15px;">
-          <button class="burger-btn main-burger" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+          <button class="burger-btn main-burger" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
           <h2 class="topbar-app-title">Silo</h2>
           <input type="text" id="silo-search" class="silo-search" placeholder="Search notes or users..." oninput="siloSearch(event)">
         </div>
-        <div style="display:flex; gap:10px;">
-            <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openUsersDirectory()">Users</button>
+        <div style="display:flex; gap:10px; margin-left: 15px;">
+            <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openUsersDirectory('silo')">Users</button>
             <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+            <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
         </div>
       </header>
 
-      <div id="silo-view-panel" style="display:none; padding: 40px; max-width: 800px; margin: auto;"></div>
-      <div id="notes-container"></div>
-      
-      <div id="users-container">
-          <h2>Platform Directory</h2>
-          <div id="users-list-ui"></div>
-      </div>
-    </main>
+      <main style="flex:1; overflow-y:auto; position: relative;">
+        <div id="silo-editor-panel" class="silo-content-panel">
+          <h3 style="margin-top:0;" id="silo-editor-title">Create a New Note</h3>
+          <input type="text" id="silo-note-title" class="silo-input" placeholder="Note Title">
+          <input type="text" id="silo-note-label" class="silo-input" placeholder="Label (e.g., Meeting)">
+          <div class="rt-toolbar">
+            <button class="rt-btn" onclick="siloFormat('bold')"><b>B</b></button>
+            <button class="rt-btn" onclick="siloFormat('italic')"><i>I</i></button>
+            <button class="rt-btn" onclick="siloFormat('underline')"><u>U</u></button>
+            <button class="rt-btn" onclick="siloFormat('insertUnorderedList')">• Bullet</button>
+          </div>
+          <div id="silo-note-content" class="rt-area" contenteditable="true"></div>
+          <div style="display: flex; gap: 10px;">
+            <button class="silo-btn" style="width:auto;" onclick="siloSaveNote()">Save Note</button>
+            <button class="silo-btn secondary" style="width:auto;" onclick="siloSetView('All')">Cancel</button>
+          </div>
+        </div>
+
+        <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
+
+        <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
+        
+        <div id="silo-users-container" style="display:none; padding:40px; max-width:1000px; margin:0 auto;">
+            <h2 style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
+            <div id="silo-users-list"></div>
+        </div>
+      </main>
+    </div>
   </div>
 
+  <div id="silo-view-panel"></div>
+
   <div id="app-updates" class="app-container">
-     <aside style="background: var(--panel-bg); color: var(--text-main);">
-      <div style="padding: 20px; border-bottom: 1px solid var(--border-color); height: 70px; display: flex; align-items: center; gap: 10px;">
-          <button class="burger-btn" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
-          <h1 style="margin:0; font-size:1.5rem;">Hub <span id="hub-role" style="font-size:12px; color:gray;"></span></h1>
+    <aside id="hub-sidebar">
+      <div style="padding: 25px; border-bottom: 1px solid var(--border); display:flex; align-items:center; gap:10px;">
+        <button class="burger-btn" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div>
+          <h1 style="margin:0; font-size:1.6rem; line-height:1;">Update Hub</h1>
+          <div id="hub-mode-indicator" style="font-size: 12px; opacity: 0.7; margin-top: 5px;">Viewer Mode</div>
+        </div>
       </div>
-      <div style="padding: 25px;">
-        <button class="silo-btn secondary" onclick="hubSwitchFolder('latest')">Latest Updates</button>
-        <button class="silo-btn secondary" onclick="hubSwitchFolder('history')">Update History</button>
-        <button id="hub-create-btn" class="silo-btn admin-only" style="display:none; margin-top:20px;" onclick="hubOpenEditor()">+ Create Update</button>
+      <div style="padding: 25px; flex-grow: 1; overflow-y: auto;">
+        <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
+        <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
+        <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-top: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
       </div>
     </aside>
-    <main>
-      <header style="background: var(--panel-bg);">
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
+      <header class="silo-topbar" style="background: var(--topbar-bg);">
         <div style="display:flex; align-items:center; flex:1; gap:15px;">
-          <button class="burger-btn main-burger" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+          <button class="burger-btn main-burger" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
           <h2 class="topbar-app-title">Update Hub</h2>
-          <input type="text" class="silo-search" placeholder="Search updates...">
+          <input type="text" id="hub-search" class="silo-search" placeholder="Search updates or users..." onkeyup="hubRender()">
         </div>
-        <div style="display:flex; gap:10px;">
-            <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openUsersDirectory()">Users</button>
-            <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+        <div style="display: flex; gap: 10px; margin-left: 15px;">
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openUsersDirectory('hub')">Users</button>
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+          <button class="theme-toggle-btn global-theme-btn" onclick="cycleGlobalTheme()">Theme: Light</button>
         </div>
       </header>
-      <div id="hub-feed" style="padding: 30px;"></div>
-      <div id="hub-full-view" style="display:none; padding:40px; max-width:800px; margin:auto;"></div>
-    </main>
+
+      <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread updates!</div>
+
+      <div id="hub-feed" style="flex:1; overflow-y:auto;"><p style="text-align: center;">Loading Updates Database...</p></div>
+      
+      <div id="hub-users-container" style="display:none; padding:40px; max-width:1000px; margin:0 auto; flex:1; overflow-y:auto;">
+            <h2 style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
+            <div id="hub-users-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="hub-full-view">
+    <button class="theme-toggle-btn" onclick="document.getElementById('hub-full-view').style.display='none'" style="margin-bottom: 20px; background: var(--card-bg);">← Back to Feed</button>
+    <div class="silo-view-inner">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <small id="hub-fv-date" style="color: var(--accent); font-weight: bold;"></small>
+          <h1 id="hub-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
+        </div>
+        <div id="hub-fv-actions"></div>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+      <div id="hub-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
+    </div>
+  </div>
+
+  <div id="hubEditorModal" class="hub-modal">
+    <div class="hub-modal-content">
+      <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
+      <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
+      <div class="rt-toolbar">
+        <button class="rt-btn" onclick="hubFormat('bold')"><b>B</b></button>
+        <button class="rt-btn" onclick="hubFormat('italic')"><i>I</i></button>
+        <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
+      </div>
+      <div id="hubRichText" class="rt-area" contenteditable="true"></div>
+      <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="theme-toggle-btn" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
+        <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    // --- 1. INITIALIZE SUPABASE ---
     const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    let supabaseClient = null;
+    try {
+        if (typeof supabase !== 'undefined') supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        else console.error("Supabase failed to load. Corporate firewall may be blocking it.");
+    } catch (e) { console.error("Supabase Initialization Error:", e); }
 
-    // Identity State
+    // --- 2. STATE VARIABLES ---
+    let isGlobalEditor = false;
+    const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
+    let globalThemeIdx = 0;
+
+    let siloNotes = [];
+    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
+    let sortableInstance = null;
+    let isSorting = false;
+
+    let hubUpdates = [];
+    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
+    
+    // Auth & Presence Variables
     let currentUser = null;
-    let userRole = 'Viewer'; 
+    let userRole = 'Viewer';
     let currentAppLocation = 'Dashboard';
-    let onlineUsers = {}; // Stores presence state
+    let onlineUsers = {};
+    let presenceChannel = null;
 
-    // Realtime Presence Channel
-    const presenceChannel = supabaseClient.channel('workspace_presence');
+    let hubReadIds = [];
+    try {
+        const storedIds = localStorage.getItem('hubReadIds');
+        if (storedIds) {
+            const parsed = JSON.parse(storedIds);
+            if (Array.isArray(parsed)) hubReadIds = parsed;
+        }
+    } catch (e) { console.error("Local storage disabled or corrupted.", e); }
 
-    // --- AUTHENTICATION & PRESENCE LOGIC ---
+    document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: Light`);
+
+    // --- 3. CTRL + A SMART SELECTION FIX ---
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'a') {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable);
+            
+            if (!isInput) {
+                const siloView = document.getElementById('silo-view-panel');
+                const hubView = document.getElementById('hub-full-view');
+                
+                if (siloView && siloView.style.display === 'block') {
+                    e.preventDefault(); 
+                    selectElementContents(document.querySelector('#silo-view-panel .note-content-display'));
+                } else if (hubView && hubView.style.display === 'block') {
+                    e.preventDefault();
+                    selectElementContents(document.getElementById('hub-fv-body'));
+                }
+            }
+        }
+    });
+    
+    function selectElementContents(el) {
+        if (!el) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    // --- 4. AUTHENTICATION & PRESENCE LOGIC ---
     async function checkSession() {
+        if (!supabaseClient) return;
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
             currentUser = session.user;
@@ -191,13 +435,14 @@
             document.getElementById('global-login-overlay').style.display = 'none';
             document.getElementById('app-workspace').classList.add('active');
             
-            // Start tracking presence
             setupPresence();
             loadSiloNotes(true);
+            loadHubUpdates(true);
         }
     }
 
     async function handleAuthLogin() {
+      if (!supabaseClient) return alert("Database connection blocked by network.");
       const email = document.getElementById('auth-email').value;
       const pass = document.getElementById('auth-password').value;
       if (!email || !pass) return alert("Required fields missing.");
@@ -211,35 +456,47 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
+          
           setupPresence();
+          loadSiloNotes(true);
+          loadHubUpdates(true);
       }
     }
 
     async function handleGlobalLogout() {
-        presenceChannel.untrack();
+        if (presenceChannel) presenceChannel.untrack();
         await supabaseClient.auth.signOut();
         window.location.reload();
     }
 
     async function fetchUserProfile() {
         const { data, error } = await supabaseClient.from('user_profiles').select('role').eq('id', currentUser.id).single();
-        if (data) userRole = data.role;
-        
-        document.getElementById('user-display-info').innerText = `Logged in as:\n${currentUser.email}\nRole: ${userRole}`;
-        document.getElementById('silo-role').innerText = userRole;
-        document.getElementById('hub-role').innerText = userRole;
-
-        // Reveal Admin UI if Editor
-        if (userRole === 'Editor') {
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-            document.getElementById('silo-create-section').style.display = 'block';
+        if (data) {
+            userRole = data.role || 'Viewer';
         }
+
+        // Link database role to UI logic
+        isGlobalEditor = (userRole === 'Editor');
+        siloEditor = isGlobalEditor;
+        hubEditor = isGlobalEditor;
+        
+        document.getElementById('user-display-info').innerText = `${currentUser.email}\nRole: ${userRole}`;
+        
+        // Show/Hide Admin Tools globally
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isGlobalEditor ? 'block' : 'none');
+        document.getElementById('silo-admin-tools').style.display = isGlobalEditor ? 'block' : 'none';
+
+        siloRenderUI();
+        hubRenderAuth();
     }
 
     function setupPresence() {
+        presenceChannel = supabaseClient.channel('workspace_presence');
         presenceChannel.on('presence', { event: 'sync' }, () => {
             onlineUsers = presenceChannel.presenceState();
-            renderUsersDirectory();
+            // Re-render directory if it is currently open
+            if (document.getElementById('silo-users-container').style.display === 'block') renderUsersDirectory('silo');
+            if (document.getElementById('hub-users-container').style.display === 'block') renderUsersDirectory('hub');
         });
         
         presenceChannel.subscribe(async (status) => {
@@ -250,7 +507,7 @@
     }
 
     async function updatePresenceLocation() {
-        if(!currentUser) return;
+        if(!currentUser || !presenceChannel) return;
         await presenceChannel.track({
             email: currentUser.email,
             role: userRole,
@@ -259,13 +516,15 @@
         });
     }
 
-    // --- NAVIGATION & UI LOGIC ---
+    // --- 5. UI NAVIGATION ---
     function switchApp(appName) {
       document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
       
-      // Hide users container, show normal grids
+      // Close user directories when switching apps
+      document.getElementById('silo-users-container').style.display = 'none';
+      document.getElementById('hub-users-container').style.display = 'none';
       document.getElementById('notes-container').style.display = 'grid';
-      document.getElementById('users-container').style.display = 'none';
+      document.getElementById('hub-feed').style.display = 'flex';
 
       let targetApp = appName === 'workspace' ? 'app-workspace' : `app-${appName}`;
       document.getElementById(targetApp).classList.add('active');
@@ -274,39 +533,54 @@
       updatePresenceLocation();
     }
 
-    // --- USERS DIRECTORY (Admin Only) ---
-    async function openUsersDirectory() {
-        if (userRole !== 'Editor') return;
-        
-        document.getElementById('notes-container').style.display = 'none';
-        document.getElementById('silo-view-panel').style.display = 'none';
-        document.getElementById('hub-feed').style.display = 'none';
-        document.getElementById('users-container').style.display = 'block';
-        
-        renderUsersDirectory();
+    function cycleGlobalTheme() {
+      document.body.classList.remove(`theme-${themes[globalThemeIdx]}`);
+      globalThemeIdx = (globalThemeIdx + 1) % themes.length;
+      document.body.classList.add(`theme-${themes[globalThemeIdx]}`);
+      document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: ${themes[globalThemeIdx].charAt(0).toUpperCase() + themes[globalThemeIdx].slice(1)}`);
     }
 
-    async function renderUsersDirectory() {
-        const uiList = document.getElementById('users-list-ui');
+    // --- 6. USERS DIRECTORY LOGIC ---
+    async function openUsersDirectory(appContext) {
+        if (userRole !== 'Editor') return;
+        
+        if (appContext === 'silo') {
+            siloCurrentView = 'Users';
+            document.getElementById('silo-editor-panel').style.display = 'none';
+            document.getElementById('silo-view-panel').style.display = 'none';
+            document.getElementById('notes-container').style.display = 'none';
+            document.getElementById('silo-folder-actions').style.display = 'none';
+            document.getElementById('silo-users-container').style.display = 'block';
+            renderUsersDirectory('silo');
+        } else if (appContext === 'hub') {
+            document.getElementById('hub-feed').style.display = 'none';
+            document.getElementById('hub-full-view').style.display = 'none';
+            document.getElementById('hub-users-container').style.display = 'block';
+            renderUsersDirectory('hub');
+        }
+    }
+
+    async function renderUsersDirectory(appContext) {
+        const uiList = document.getElementById(`${appContext}-users-list`);
+        if(!uiList) return;
         uiList.innerHTML = '<p>Loading directory...</p>';
 
-        // 1. Fetch ALL users from the database profile table
         const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*');
         if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users.</p>';
 
-        // 2. Map realtime presence data
         const activePresence = [];
         for (const key in onlineUsers) {
-            activePresence.push(onlineUsers[key][0]); // Get the latest presence object for the user
+            activePresence.push(onlineUsers[key][0]); 
         }
 
         uiList.innerHTML = '';
-        const searchQuery = document.getElementById('silo-search')?.value.toLowerCase() || '';
+        const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
 
+        let count = 0;
         allProfiles.forEach(profile => {
             if (!profile.email.toLowerCase().includes(searchQuery)) return;
+            count++;
 
-            // Check if this database user is currently in the active presence array
             const presenceData = activePresence.find(p => p.email === profile.email);
             const isOnline = !!presenceData;
             
@@ -316,7 +590,7 @@
             uiList.innerHTML += `
                 <div class="user-row">
                     <div>
-                        <div style="font-weight: 600; margin-bottom: 4px;">
+                        <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
                             <span class="status-dot ${dotClass}"></span>
                             ${profile.email}
                         </div>
@@ -330,26 +604,394 @@
                 </div>
             `;
         });
+        
+        if (count === 0) uiList.innerHTML = "<p>No users found matching your search.</p>";
     }
 
-    // Overwrite standard search to also filter users if directory is open
+
+    // --- 7. SILO FUNCTIONS ---
+    async function loadSiloNotes(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('silo_notes').select('*').order('sort_order', { ascending: true });
+            if (error) throw error;
+            siloNotes = data || [];
+            
+            if (siloCurrentView === 'ViewNote' && siloActiveId) {
+                const stillExists = siloNotes.find(n => n.id === siloActiveId);
+                if (!stillExists) {
+                    alert("This note was just deleted by an administrator.");
+                    siloCurrentView = 'All';
+                    siloActiveId = null;
+                }
+            }
+            if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'Users')) siloRenderUI();
+        } catch (err) { 
+            if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
+        }
+    }
+    
     function siloSearch(e) { 
-        if (document.getElementById('users-container').style.display === 'block') {
-            renderUsersDirectory();
+        siloQuery = e.target.value.toLowerCase(); 
+        if (document.getElementById('silo-users-container').style.display === 'block') {
+            renderUsersDirectory('silo');
         } else {
-            // (Your normal Silo search logic here)
+            siloSetView('All'); 
+        }
+    }
+    function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
+    
+    function siloSetView(view, id = null, presetLabel = null) { 
+        document.getElementById('silo-users-container').style.display = 'none'; // Ensure users dir closes
+
+        siloCurrentView = view; 
+        siloActiveId = id; 
+
+        if (view === 'Create') {
+            document.getElementById('silo-note-title').value = '';
+            document.getElementById('silo-note-content').innerHTML = '';
+            if (presetLabel) {
+                document.getElementById('silo-note-label').value = presetLabel;
+                document.getElementById('silo-note-label').style.display = 'none';
+            } else {
+                document.getElementById('silo-note-label').value = '';
+                document.getElementById('silo-note-label').style.display = 'block';
+            }
+        }
+        siloRenderUI(); 
+    }
+    
+    async function siloSaveNote() {
+        if (!supabaseClient) return;
+        const title = document.getElementById('silo-note-title').value;
+        const labelBox = document.getElementById('silo-note-label');
+        const label = labelBox.value;
+        const content = document.getElementById('silo-note-content').innerHTML; 
+        
+        if (!title.trim() && !content.trim()) return;
+        if (labelBox.style.display !== 'none' && !label.trim()) return alert("Label is required!");
+
+        if (siloActiveId) {
+            await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+        } else {
+            await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+        }
+        
+        document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-content').innerHTML = '';
+        siloSetView('All'); loadSiloNotes(); 
+    }
+
+    async function siloDeleteNote(id) {
+        if (!supabaseClient) return;
+        if(confirm("Delete this note permanently?")) { await supabaseClient.from('silo_notes').delete().eq('id', id); siloSetView('All'); loadSiloNotes(); }
+    }
+    
+    function siloBackup() {
+        const backupData = JSON.stringify(siloNotes, null, 2);
+        const blob = new Blob([backupData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'silo_backup.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    
+    async function processRestoreFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const parsedNotes = JSON.parse(e.target.result);
+                if (Array.isArray(parsedNotes)) {
+                    if (!supabaseClient) throw new Error("Database connection blocked.");
+                    const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
+                    if (error) throw error;
+                    alert("Notes restored successfully!");
+                    siloSetView('All'); loadSiloNotes();
+                } else alert("Invalid backup format.");
+            } catch (err) { alert("Failed to restore backup: " + err.message); }
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    function initSortableGrid() {
+        if (typeof Sortable === 'undefined') return; 
+        const container = document.getElementById('notes-container');
+        if(sortableInstance) sortableInstance.destroy();
+        
+        if(siloEditor && !siloQuery && siloCurrentView !== 'Users') {
+            sortableInstance = new Sortable(container, {
+                animation: 150,
+                handle: ".drag-handle",
+                draggable: ".sortable-card",
+                forceFallback: true, 
+                fallbackClass: "sortable-ghost",
+                onEnd: async function (evt) {
+                    if (!supabaseClient) return;
+                    const itemEl = evt.item;
+                    const prevEl = itemEl.previousElementSibling;
+                    const nextEl = itemEl.nextElementSibling;
+                    
+                    const id = parseInt(itemEl.dataset.id);
+                    let newSortOrder = Date.now() * 1000; 
+
+                    if (prevEl && nextEl) {
+                        newSortOrder = (parseFloat(prevEl.dataset.order) + parseFloat(nextEl.dataset.order)) / 2.0;
+                    } else if (prevEl && !nextEl) {
+                        newSortOrder = parseFloat(prevEl.dataset.order) + 1000;
+                    } else if (!prevEl && nextEl) {
+                        newSortOrder = parseFloat(nextEl.dataset.order) - 1000;
+                    }
+
+                    itemEl.dataset.order = newSortOrder;
+                    isSorting = true; 
+                    await supabaseClient.from('silo_notes').update({ sort_order: newSortOrder }).eq('id', id);
+                    setTimeout(() => { isSorting = false; loadSiloNotes(true); }, 500);
+                }
+            });
         }
     }
 
-    // Theme logic
-    const themes = ['light', 'dark', 'blue', 'yellow', 'beige'];
-    let globalThemeIdx = 0;
-    function cycleGlobalTheme() {
-      document.body.className = `theme-${themes[++globalThemeIdx % themes.length]}`;
+    function siloRenderUI() {
+        if (siloCurrentView === 'Users') return; // Do not override if currently viewing directory
+
+        document.getElementById('silo-mode-indicator').innerText = siloEditor ? 'Editor Mode' : 'Viewer Mode';
+        
+        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
+        document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
+        document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
+
+        const lblList = document.getElementById('label-list');
+        lblList.innerHTML = `<li class="${(siloCurrentView==='All'||siloCurrentView==='Create'||siloCurrentView==='ViewNote')?'active':''}" onclick="siloSetView('All')">All Notes</li>`;
+        [...new Set(siloNotes.map(n => n.label).filter(Boolean))].forEach(lbl => lblList.innerHTML += `<li class="${siloCurrentView===lbl?'active':''}" onclick="siloSetView('${lbl}')">${lbl}</li>`);
+
+        const folderActions = document.getElementById('silo-folder-actions');
+
+        if (siloCurrentView === 'ViewNote') {
+            folderActions.style.display = 'none';
+            const note = siloNotes.find(n => n.id === siloActiveId);
+            if(note) {
+                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="theme-toggle-btn" style="background:var(--accent); color:white;">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="theme-toggle-btn" style="background:var(--danger-btn); color:white; border:none;">Delete</button>` : '';
+                document.getElementById('silo-view-panel').innerHTML = `
+                    <button onclick="siloSetView('All')" class="theme-toggle-btn" style="margin-bottom:20px; background:var(--card-bg);">← Back to Notes</button>
+                    <div class="silo-view-inner">
+                        <div class="view-note-header">
+                            <div>
+                                <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div>
+                                <h2 style="margin:5px 0 0 0; color:var(--text-main);">${note.title || 'Untitled'}</h2>
+                            </div>
+                            <div style="display:flex; gap:10px;">${actions}</div>
+                        </div>
+                        <div class="note-content-display">${note.content || ''}</div>
+                    </div>`;
+            }
+        } else if (siloCurrentView !== 'Create') {
+            const container = document.getElementById('notes-container'); container.innerHTML = '';
+            
+            if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
+                folderActions.style.display = 'block';
+                folderActions.innerHTML = `<button class="dashboard-btn" style="background: var(--accent); color: white;" onclick="siloSetView('Create', null, '${siloCurrentView}')">➕ Create Note in ${siloCurrentView}</button>`;
+            } else {
+                folderActions.style.display = 'none';
+            }
+
+            const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
+            
+            filtered.forEach(n => {
+                const handle = siloEditor ? `<span class="drag-handle" style="position:absolute; top:5px; right:5px; cursor:grab; font-size:20px; color:var(--text-muted); padding:10px; z-index:10; line-height:1;" title="Drag to reorder" onclick="event.stopPropagation()">⋮⋮</span>` : '';
+                container.innerHTML += `
+                  <div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="if(!event.target.classList.contains('drag-handle')) siloSetView('ViewNote', ${n.id})">
+                    ${handle}
+                    <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; padding:25px 15px 15px 15px; box-sizing:border-box;">
+                      <h4 style="margin:0; font-size:16px; font-weight:600; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; color:var(--text-main); pointer-events:none;">${n.title || 'Untitled'}</h4>
+                    </div>
+                  </div>`;
+            });
+
+            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
+            
+            initSortableGrid();
+        } else {
+             folderActions.style.display = 'none';
+        }
+    }
+    
+    function siloEditMode(id) {
+        const note = siloNotes.find(n => n.id === id);
+        if(note) { 
+            siloCurrentView = 'Create'; siloActiveId = id; 
+            document.getElementById('silo-note-label').style.display = 'block';
+            document.getElementById('silo-editor-title').innerText = "Edit Note"; 
+            document.getElementById('silo-note-title').value = note.title || ''; 
+            document.getElementById('silo-note-label').value = note.label || ''; 
+            document.getElementById('silo-note-content').innerHTML = note.content || ''; 
+            siloRenderUI();
+        }
     }
 
-    // Initialize application security
-    window.onload = checkSession;
+    // --- 8. HUB FUNCTIONS ---
+    async function loadHubUpdates(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('updates_hub').select('*').order('time', { ascending: false });
+            if (error) throw error;
+            hubUpdates = data || [];
+            
+            if (document.getElementById('hub-full-view').style.display === 'block' && hubOpenIndex !== null) {
+                const openId = hubUpdates[hubOpenIndex] ? hubUpdates[hubOpenIndex].id : null;
+                const stillExists = hubUpdates.find(u => u.id === openId);
+                if (!stillExists) {
+                    alert("This update was just deleted by an administrator.");
+                    document.getElementById('hub-full-view').style.display = 'none';
+                }
+            }
+            if (document.getElementById('hub-users-container').style.display !== 'block') {
+                hubRender();
+            }
+        } catch (err) { 
+            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
+        }
+    }
+    
+    function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
+    
+    function hubSwitchFolder(folder) { 
+        document.getElementById('hub-users-container').style.display = 'none';
+        document.getElementById('hub-feed').style.display = 'flex';
+        hubFolder = folder; 
+        document.getElementById('hub-full-view').style.display='none'; 
+        hubRender(); 
+    }
+    
+    function hubRenderAuth() {
+        document.getElementById('hub-mode-indicator').innerText = hubEditor ? 'Editor Mode' : 'Viewer Mode';
+        if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex);
+    }
+    
+    function hubRender() {
+        const feed = document.getElementById('hub-feed'); 
+        
+        // Hijack render if users search
+        if (document.getElementById('hub-users-container').style.display === 'block') {
+            return renderUsersDirectory('hub');
+        }
+
+        const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
+        feed.innerHTML = "";
+        
+        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
+        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
+        
+        let count = 0;
+        let unreadCount = 0;
+        const now = Date.now(); 
+        const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+
+        hubUpdates.forEach((item, idx) => {
+            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
+            
+            if (!hubReadIds.includes(item.id)) unreadCount++;
+
+            if (belongsTo !== hubFolder) return;
+            if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
+            
+            const isRead = hubReadIds.includes(item.id);
+            const unreadDot = !isRead ? `<span class="unread-dot"></span>` : '';
+            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
+
+            feed.innerHTML += `
+              <div class="hub-strip" onclick="hubOpenView(${idx})">
+                <div class="hub-strip-left">
+                   <div style="display:flex; align-items:center;">
+                     ${unreadDot}
+                     <h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3>
+                   </div>
+                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${item.datestr || ''}</div>
+              </div>`;
+            count++;
+        });
+
+        if(count === 0) feed.innerHTML = "<p style='text-align:center;'>No updates found.</p>";
+
+        const badge = document.getElementById('dashboard-hub-badge');
+        const banner = document.getElementById('hub-banner');
+        
+        if (unreadCount > 0) {
+            badge.style.display = 'block';
+            badge.innerText = unreadCount;
+            banner.style.display = 'block';
+            banner.innerText = `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
+        } else {
+            badge.style.display = 'none';
+            banner.style.display = 'none';
+        }
+    }
+
+    // Attach search event to Hub's search input
+    document.querySelector('#app-updates .silo-search').addEventListener('input', hubRender);
+
+    function hubOpenView(index) {
+        if(index === null || !hubUpdates[index]) return;
+        hubOpenIndex = index; const item = hubUpdates[index];
+        
+        if (!hubReadIds.includes(item.id)) {
+            hubReadIds.push(item.id);
+            try { localStorage.setItem('hubReadIds', JSON.stringify(hubReadIds)); } catch(e) {} 
+            hubRender(); 
+        }
+
+        document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; document.getElementById('hub-fv-date').innerText = item.datestr || ''; document.getElementById('hub-fv-body').innerHTML = item.body || '';
+        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="theme-toggle-btn" onclick="hubOpenEditor(true, ${index})" style="background:var(--accent); color:white;">Edit</button><button class="theme-toggle-btn" onclick="hubDelete(${index})" style="background:#ef4444; color:white; border:none;">Delete</button></div>` : '';
+        document.getElementById('hub-full-view').style.display = 'block';
+    }
+
+    function hubOpenEditor(isEdit, index = null) {
+        hubOpenIndex = index;
+        if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModalTitle').innerText = "Edit Update"; document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; document.getElementById('hubRichText').innerHTML = hubUpdates[index].body || ''; document.getElementById('hubSaveBtn').innerText = "Update Changes"; } 
+        else { document.getElementById('hubModalTitle').innerText = "Create New Update"; document.getElementById('hubPostTitle').value = ""; document.getElementById('hubRichText').innerHTML = ""; document.getElementById('hubSaveBtn').innerText = "Publish"; hubOpenIndex = null; }
+        document.getElementById('hubEditorModal').style.display = 'flex';
+    }
+    
+    async function hubSavePost() {
+        if (!supabaseClient) return;
+        const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
+        if(!title || !title.trim()) return alert("Title is required.");
+        if(hubOpenIndex !== null) await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+        else await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
+    }
+    
+    async function hubDelete(index) {
+        if (!supabaseClient) return;
+        if(confirm("Delete this update permanently?")) { await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates(); }
+    }
+
+    // --- 9. STARTUP ---
+    window.onload = () => {
+        checkSession();
+        // Fallback loads if users are logged in but session takes a moment
+        if (!currentUser) {
+            loadSiloNotes(true);
+            loadHubUpdates(true);
+        }
+    };
+
+    if (supabaseClient) {
+        supabaseClient
+          .channel('public:silo_notes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => {
+            if (!isSorting) loadSiloNotes(true);
+          }).subscribe();
+
+        supabaseClient
+          .channel('public:updates_hub')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => {
+             loadHubUpdates(true);
+          }).subscribe();
+    }
 
   </script>
 </body>
