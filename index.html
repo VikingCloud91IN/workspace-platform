@@ -129,7 +129,6 @@
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 
     /* Users Directory Styles */
-    #users-container { display: none; padding: 40px; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
     .user-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; }
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
@@ -312,7 +311,7 @@
 
       <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread updates!</div>
 
-      <div id="hub-feed" style="flex:1; overflow-y:auto;"><p style="text-align: center;">Loading Updates Database...</p></div>
+      <div id="hub-feed" style="flex:1; overflow-y:auto; padding: 30px;"><p style="text-align: center;">Loading Updates Database...</p></div>
       
       <div id="hub-users-container" style="display:none; padding:40px; max-width:1000px; margin:0 auto; flex:1; overflow-y:auto;">
             <h2 style="color:var(--text-main); margin-top:0;">Platform Directory</h2>
@@ -360,9 +359,14 @@
     
     let supabaseClient = null;
     try {
-        if (typeof supabase !== 'undefined') supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        else console.error("Supabase failed to load. Corporate firewall may be blocking it.");
-    } catch (e) { console.error("Supabase Initialization Error:", e); }
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        } else {
+            console.error("Supabase failed to load.");
+        }
+    } catch (e) {
+        console.error("Supabase Initialization Error:", e);
+    }
 
     // --- 2. STATE VARIABLES ---
     let isGlobalEditor = false;
@@ -391,7 +395,7 @@
             const parsed = JSON.parse(storedIds);
             if (Array.isArray(parsed)) hubReadIds = parsed;
         }
-    } catch (e) { console.error("Local storage disabled or corrupted.", e); }
+    } catch (e) {}
 
     document.querySelectorAll('.global-theme-btn').forEach(btn => btn.innerText = `Theme: Light`);
 
@@ -475,14 +479,14 @@
             userRole = data.role || 'Viewer';
         }
 
-        // Link database role to UI logic
         isGlobalEditor = (userRole === 'Editor');
         siloEditor = isGlobalEditor;
         hubEditor = isGlobalEditor;
         
         document.getElementById('user-display-info').innerText = `${currentUser.email}\nRole: ${userRole}`;
+        document.getElementById('silo-mode-indicator').innerText = userRole === 'Editor' ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('hub-mode-indicator').innerText = userRole === 'Editor' ? 'Editor Mode' : 'Viewer Mode';
         
-        // Show/Hide Admin Tools globally
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = isGlobalEditor ? 'block' : 'none');
         document.getElementById('silo-admin-tools').style.display = isGlobalEditor ? 'block' : 'none';
 
@@ -491,10 +495,20 @@
     }
 
     function setupPresence() {
-        presenceChannel = supabaseClient.channel('workspace_presence');
+        if (presenceChannel) {
+            presenceChannel.untrack();
+            supabaseClient.removeChannel(presenceChannel);
+        }
+        
+        // Group presence by email so multi-tab users sort correctly
+        presenceChannel = supabaseClient.channel('workspace_presence', {
+            config: {
+                presence: { key: currentUser.email }
+            }
+        });
+        
         presenceChannel.on('presence', { event: 'sync' }, () => {
             onlineUsers = presenceChannel.presenceState();
-            // Re-render directory if it is currently open
             if (document.getElementById('silo-users-container').style.display === 'block') renderUsersDirectory('silo');
             if (document.getElementById('hub-users-container').style.display === 'block') renderUsersDirectory('hub');
         });
@@ -508,19 +522,20 @@
 
     async function updatePresenceLocation() {
         if(!currentUser || !presenceChannel) return;
-        await presenceChannel.track({
-            email: currentUser.email,
-            role: userRole,
-            location: currentAppLocation,
-            online_at: new Date().toISOString(),
-        });
+        try {
+            await presenceChannel.track({
+                email: currentUser.email,
+                role: userRole,
+                location: currentAppLocation,
+                online_at: new Date().toISOString(),
+            });
+        } catch(e) { console.error("Presence sync error:", e); }
     }
 
     // --- 5. UI NAVIGATION ---
     function switchApp(appName) {
       document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
       
-      // Close user directories when switching apps
       document.getElementById('silo-users-container').style.display = 'none';
       document.getElementById('hub-users-container').style.display = 'none';
       document.getElementById('notes-container').style.display = 'grid';
@@ -544,6 +559,9 @@
     async function openUsersDirectory(appContext) {
         if (userRole !== 'Editor') return;
         
+        currentAppLocation = 'Viewing Directory';
+        updatePresenceLocation();
+        
         if (appContext === 'silo') {
             siloCurrentView = 'Users';
             document.getElementById('silo-editor-panel').style.display = 'none';
@@ -565,13 +583,8 @@
         if(!uiList) return;
         uiList.innerHTML = '<p>Loading directory...</p>';
 
-        const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*');
-        if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users.</p>';
-
-        const activePresence = [];
-        for (const key in onlineUsers) {
-            activePresence.push(onlineUsers[key][0]); 
-        }
+        const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
+        if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure RLS allows select.</p>';
 
         uiList.innerHTML = '';
         const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
@@ -581,11 +594,18 @@
             if (!profile.email.toLowerCase().includes(searchQuery)) return;
             count++;
 
-            const presenceData = activePresence.find(p => p.email === profile.email);
-            const isOnline = !!presenceData;
+            const userPresenceArray = onlineUsers[profile.email];
+            let isOnline = false;
+            let locationText = 'Offline';
+
+            if (userPresenceArray && userPresenceArray.length > 0) {
+                isOnline = true;
+                // If they have multiple tabs, sort by newest online_at timestamp to find exactly where they are
+                const latestPresence = userPresenceArray.sort((a,b) => new Date(b.online_at) - new Date(a.online_at))[0];
+                locationText = `Viewing: ${latestPresence.location}`;
+            }
             
             const dotClass = isOnline ? 'status-online' : 'status-offline';
-            const locationText = isOnline ? `Viewing: ${presenceData.location}` : 'Offline';
 
             uiList.innerHTML += `
                 <div class="user-row">
@@ -605,9 +625,8 @@
             `;
         });
         
-        if (count === 0) uiList.innerHTML = "<p>No users found matching your search.</p>";
+        if (count === 0) uiList.innerHTML = "<p style='color:var(--text-main);'>No users found matching your search.</p>";
     }
-
 
     // --- 7. SILO FUNCTIONS ---
     async function loadSiloNotes(silent = false) {
@@ -639,10 +658,11 @@
             siloSetView('All'); 
         }
     }
+    
     function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
     
     function siloSetView(view, id = null, presetLabel = null) { 
-        document.getElementById('silo-users-container').style.display = 'none'; // Ensure users dir closes
+        document.getElementById('silo-users-container').style.display = 'none';
 
         siloCurrentView = view; 
         siloActiveId = id; 
@@ -754,10 +774,8 @@
     }
 
     function siloRenderUI() {
-        if (siloCurrentView === 'Users') return; // Do not override if currently viewing directory
+        if (siloCurrentView === 'Users') return; 
 
-        document.getElementById('silo-mode-indicator').innerText = siloEditor ? 'Editor Mode' : 'Viewer Mode';
-        
         document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
         document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
         document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
@@ -809,7 +827,7 @@
                   </div>`;
             });
 
-            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center;'>No notes found.</p>";
+            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:var(--text-main);'>No notes found.</p>";
             
             initSortableGrid();
         } else {
@@ -865,14 +883,12 @@
     }
     
     function hubRenderAuth() {
-        document.getElementById('hub-mode-indicator').innerText = hubEditor ? 'Editor Mode' : 'Viewer Mode';
         if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex);
     }
     
     function hubRender() {
         const feed = document.getElementById('hub-feed'); 
         
-        // Hijack render if users search
         if (document.getElementById('hub-users-container').style.display === 'block') {
             return renderUsersDirectory('hub');
         }
@@ -914,7 +930,7 @@
             count++;
         });
 
-        if(count === 0) feed.innerHTML = "<p style='text-align:center;'>No updates found.</p>";
+        if(count === 0) feed.innerHTML = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
 
         const badge = document.getElementById('dashboard-hub-badge');
         const banner = document.getElementById('hub-banner');
@@ -930,7 +946,6 @@
         }
     }
 
-    // Attach search event to Hub's search input
     document.querySelector('#app-updates .silo-search').addEventListener('input', hubRender);
 
     function hubOpenView(index) {
@@ -972,11 +987,6 @@
     // --- 9. STARTUP ---
     window.onload = () => {
         checkSession();
-        // Fallback loads if users are logged in but session takes a moment
-        if (!currentUser) {
-            loadSiloNotes(true);
-            loadHubUpdates(true);
-        }
     };
 
     if (supabaseClient) {
