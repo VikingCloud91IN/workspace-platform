@@ -16,7 +16,7 @@
       --bg-color: #f1f5f9; 
       --panel-bg: #ffffff; 
       --card-bg: #ffffff; 
-      --text-main: #0f172a; 
+      --text-main: #000000; /* Fixed: Absolute Black */
       --text-muted: #64748b; 
       --primary-btn: #1e3a8a; /* Viking Deep Blue */
       --primary-hover: #1e40af; 
@@ -125,13 +125,13 @@
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    /* Selection Fixes */
+    /* Selection & Paste Fixes (Forces absolute black on white backgrounds) */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
-    .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; }
+    .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
   </style>
 </head>
-<body class="theme-light">
+<body>
 
   <div id="global-login-overlay">
       <div class="login-box">
@@ -219,7 +219,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <h2 class="topbar-app-title">Silo</h2>
-          <input type="text" id="silo-search" class="silo-search" placeholder="Search notes, users, or logs..." oninput="siloSearch(event)">
+          <input type="text" id="silo-search" class="silo-search" placeholder="Search notes or users..." oninput="siloSearch(event)">
         </div>
         <div style="display:flex; gap:10px; margin-left: 15px;">
             <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('silo', 'users')">Users</button>
@@ -392,7 +392,6 @@
 
     // --- NEW: CONTENT ENHANCER (NON-AI) & IMAGE HANDLERS ---
     function formatCleanup(editorId) {
-        // Native browser command to strip inline CSS formats (colors, bad fonts) from pasted text
         document.execCommand('removeFormat', false, null);
         alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
     }
@@ -521,7 +520,12 @@
             presenceChannel.untrack();
             supabaseClient.removeChannel(presenceChannel);
         }
-        presenceChannel = supabaseClient.channel('workspace_presence', { config: { presence: { key: currentUser.email } }});
+        
+        presenceChannel = supabaseClient.channel('workspace_presence', {
+            config: {
+                presence: { key: currentUser.email }
+            }
+        });
         
         presenceChannel.on('presence', { event: 'sync' }, () => {
             onlineUsers = presenceChannel.presenceState();
@@ -643,7 +647,6 @@
                 if (!searchString.includes(searchQuery)) return;
                 count++;
                 
-                // Convert to IST
                 const dateIST = new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
                 
                 let actionColor = 'var(--text-muted)';
@@ -1007,7 +1010,7 @@
             count++;
         });
 
-        if(count === 0) feed.innerHTML = "<p style='text-align:center;'>No updates found.</p>";
+        if(count === 0) feed.innerHTML = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
 
         const badge = document.getElementById('dashboard-hub-badge');
         const banner = document.getElementById('hub-banner');
