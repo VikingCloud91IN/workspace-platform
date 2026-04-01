@@ -77,11 +77,13 @@
     .hub-nav-btn:hover { background: rgba(255,255,255,0.1); }
     .hub-nav-btn.active { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); }
 
-    /* Silo Lists */
+    /* Silo Lists (Updated for Drag Handles) */
     #label-list { list-style: none; padding: 0; margin: 0; }
-    #label-list li { padding: 10px 20px; cursor: pointer; color: inherit; font-size: 14px; transition: 0.2s; }
+    #label-list li { display: flex; align-items: center; padding: 10px 20px; color: inherit; font-size: 14px; transition: 0.2s; }
     #label-list li:hover { background: rgba(255,255,255,0.1); }
     #label-list li.active { background: rgba(255,255,255,0.2); font-weight: 600; border-left: 3px solid var(--accent);}
+    .label-drag-handle { cursor: grab; margin-right: 10px; opacity: 0.4; font-size: 16px; font-weight: bold; }
+    .label-drag-handle:hover { opacity: 1; }
 
     /* Notes Grid */
     #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
@@ -125,29 +127,14 @@
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    /* Selection & Paste Fixes (Forces absolute black on white backgrounds) */
+    /* Selection & Paste Fixes */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
     .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
 
-    /* =========================================
-       NEW: SILO HEAVY BORDER ENHANCEMENTS
-       ========================================= */
-    #app-silo .note-card {
-        border: 2px solid #0f172a !important;
-    }
-    #app-silo .silo-search {
-        border: 2px solid #0f172a !important;
-    }
-    #silo-create-section .silo-btn {
-        border: 2px solid #0f172a !important;
-    }
-    #app-silo #label-list li {
-        border: 2px solid #0f172a !important;
-        margin-bottom: 8px;
-        border-radius: 6px;
-        background-color: var(--panel-bg);
-    }
+    /* Specific Heavy Borders for Silo Search and Create Note Only */
+    #app-silo .silo-search { border: 2px solid #0f172a !important; }
+    #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
   </style>
 </head>
 <body>
@@ -223,8 +210,8 @@
         <button class="silo-btn" onclick="siloSetView('Create')">+ Create Note</button>
       </div>
       
-      <div style="flex: 1; overflow-y: auto; padding: 15px 20px;">
-        <div style="font-size: 12px; text-transform: uppercase; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 10px;">Labels</div>
+      <div style="flex: 1; overflow-y: auto; padding: 15px 0;">
+        <div style="padding: 0 20px; font-size: 12px; text-transform: uppercase; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 10px;">Labels</div>
         <ul id="label-list"></ul>
       </div>
       
@@ -275,7 +262,6 @@
         </div>
 
         <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
-
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
       </main>
     </div>
@@ -817,10 +803,14 @@
             return idxA - idxB;
         });
 
-        lblList.innerHTML += `<li class="static-label ${siloCurrentView==='All'?'active':''}" onclick="siloSetView('All')">All Notes</li>`;
+        lblList.innerHTML += `<li class="static-label ${siloCurrentView==='All'?'active':''}" onclick="siloSetView('All')"><span style="margin-right:10px; opacity:0; width:16px;"></span><span style="flex:1;">All Notes</span></li>`;
         
         uniqueLabels.forEach(lbl => {
-            lblList.innerHTML += `<li class="drag-label ${siloCurrentView===lbl?'active':''}" data-id="${lbl}" onclick="siloSetView('${lbl}')">${lbl}</li>`;
+            // FIXED: Added a discrete drag handle specifically to prevent click conflicts
+            lblList.innerHTML += `<li class="drag-label ${siloCurrentView===lbl?'active':''}" data-id="${lbl}">
+                <span class="label-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⋮⋮</span>
+                <span style="flex:1; cursor:pointer;" onclick="siloSetView('${lbl}')">${lbl}</span>
+            </li>`;
         });
 
         if (window.labelSortableInstance) {
@@ -832,6 +822,7 @@
                 animation: 150,
                 filter: ".static-label",
                 draggable: ".drag-label",
+                handle: ".label-drag-handle", // FIXED: Only the icon triggers the drag
                 onEnd: function() {
                     const items = Array.from(lblList.querySelectorAll('.drag-label'));
                     const newOrder = items.map(li => li.getAttribute('data-id'));
