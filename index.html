@@ -155,9 +155,9 @@
     /* =========================================
        REMINDERS APP UI
        ========================================= */
-    .rem-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .rem-row input, .rem-row select { border: 2px solid #0f172a; padding: 10px; border-radius: 6px; font-weight: 600; font-family: inherit; color: var(--text-main); outline: none; background: var(--input-bg); }
-    .rem-label { font-weight: bold; width: 80px; color: var(--text-main); }
+    .rem-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .rem-row input, .rem-row select { border: 2px solid #0f172a; padding: 8px; border-radius: 6px; font-weight: 600; font-size: 13px; font-family: inherit; color: var(--text-main); outline: none; background: var(--input-bg); }
+    .rem-label { font-weight: bold; width: 60px; font-size: 13px; color: var(--text-main); }
     
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -180,9 +180,6 @@
     .pos-center.slideIn { animation: popCenter 0.3s ease-out; }
     @keyframes popCenter { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
-    /* Layout for Reminders Main Area */
-    .rem-layout { display: flex; gap: 30px; max-width: 1400px; margin: 0 auto; width: 100%; align-items: flex-start;}
-    .rem-panel { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; }
   </style>
 </head>
 <body>
@@ -212,6 +209,11 @@
         <h1 style="margin:0; font-size:1.3rem; line-height:1.2;">Viking Cloud</h1>
       </div>
       <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin:0;">Corporate Ecosystem Launcher</p>
+
+      <div id="dashboard-quotes-board" style="margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: none;">
+          <div style="font-size: 24px; color: var(--accent); margin-bottom: 5px; line-height: 0.5;">"</div>
+          <div id="dashboard-quote-text" style="font-style: italic; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.9); transition: opacity 0.4s;">Your expertise is the bridge between a merchant's hard work and their customers' trust.</div>
+      </div>
 
       <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
           <div id="user-display-info" style="font-size: 13px; font-weight:bold; margin-bottom: 15px; color:white; word-break: break-all;"></div>
@@ -449,12 +451,13 @@
           <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
       </header>
       
-      <main style="flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 30px; background: var(--bg-color); overflow-y: auto;">
-          <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+      <main style="flex: 1; padding: 20px 40px; display: flex; flex-direction: column; gap: 20px; background: var(--bg-color); overflow: hidden;">
+          
+          <div style="background: var(--card-bg); padding: 20px 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1.2; display: flex; flex-direction: column; justify-content: center;">
               <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Global Sync Window</h3>
-              <p style="margin: 0 0 30px 0; font-size: 14px; color: var(--text-muted);">Ensure the merchant's local time lands within the green safe zones (09:00 to 17:00).</p>
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: var(--text-muted);">Ensure the merchant's local time lands within the green safe zones (09:00 to 17:00).</p>
               
-              <div style="margin-bottom: 40px;">
+              <div style="margin-bottom: 25px;">
                   <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
                       <span style="color: var(--text-main);">GMT / UTC (UK)</span>
                       <span id="gmt-result-time" style="color: var(--accent); font-size:18px;">--:--</span>
@@ -483,16 +486,16 @@
               </div>
           </div>
 
-          <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+          <div style="background: var(--card-bg); padding: 20px 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 0.8; display: flex; flex-direction: column; justify-content: center;">
               
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                   <div>
-                      <h3 style="margin: 0 0 10px 0; color: var(--text-main);">Merchant Local Time</h3>
-                      <div style="font-size: 14px; color: var(--accent); font-weight: bold;" id="selected-tz-display">Currently Selected: USA/Canada - Eastern (EST/EDT)</div>
+                      <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Merchant Local Time</h3>
+                      <div style="font-size: 13px; color: var(--accent); font-weight: bold;" id="selected-tz-display">Currently Selected: USA/Canada - Eastern (EST/EDT)</div>
                   </div>
                   
                   <div style="position: relative; width: 350px;">
-                      <input type="text" id="tz-search" class="silo-input" style="margin: 0; font-weight:600; border: 2px solid #0f172a;" placeholder="Search Country or Time Zone..." oninput="filterTzOptions()" onfocus="showTzOptions()" value="USA/Canada - Eastern (EST/EDT)">
+                      <input type="text" id="tz-search" class="silo-input" style="margin: 0; font-weight:600; border: 2px solid #0f172a; padding: 8px 10px;" placeholder="Search Country or Time Zone..." oninput="filterTzOptions()" onfocus="showTzOptions()" value="USA/Canada - Eastern (EST/EDT)">
                       <div id="tz-dropdown" class="tz-dropdown-list"></div>
                   </div>
               </div>
@@ -500,11 +503,11 @@
               <div style="display: flex; align-items: center; gap: 30px;">
                   <div style="flex: 1;">
                       <input type="range" id="merchant-time-slider" min="0" max="1440" step="15" value="720" oninput="handleSliderChange()">
-                      <div class="tz-labels" style="margin-top: 15px;">
+                      <div class="tz-labels" style="margin-top: 10px;">
                           <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
                       </div>
                   </div>
-                  <input type="text" id="merchant-time-input" value="12:00" maxlength="5" placeholder="HH:MM" onchange="handleTextTimeChange()" onkeyup="formatTimeInput(event)" style="width: 150px; text-align: center; font-family: inherit; font-size: 32px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 10px; border-radius: 8px; border: 2px solid #0f172a; outline: none; transition: 0.2s;">
+                  <input type="text" id="merchant-time-input" value="12:00" maxlength="5" placeholder="HH:MM" onchange="handleTextTimeChange()" onkeyup="formatTimeInput(event)" style="width: 140px; text-align: center; font-family: inherit; font-size: 28px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 8px; border-radius: 8px; border: 2px solid #0f172a; outline: none; transition: 0.2s;">
               </div>
           </div>
       </main>
@@ -527,33 +530,28 @@
           </div>
       </header>
       
-      <main style="flex: 1; padding: 40px; overflow-y: auto; background: var(--bg-color);">
-          <div class="rem-layout">
+      <main style="flex: 1; padding: 30px; background: var(--bg-color); overflow: hidden; display: flex; flex-direction: column;">
+          <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; width: 100%; height: 100%;">
               
-              <div class="rem-panel" style="flex: 0.5; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                  <h3 style="margin: 0 0 10px 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Current Time (IST)</h3>
-                  <div id="reminders-ist-clock-display" style="font-size: 48px; font-weight: bold; color: var(--primary-btn); font-variant-numeric: tabular-nums;">00:00:00</div>
+              <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center;">
+                  <h3 style="margin: 0 0 5px 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Current Time (IST)</h3>
+                  <div id="reminders-ist-clock-display" style="font-size: 42px; font-weight: bold; color: var(--primary-btn); font-variant-numeric: tabular-nums;">00:00:00</div>
               </div>
 
-              <div style="flex: 1.5; display: flex; flex-direction: column; gap: 30px;">
-                  <div class="rem-panel">
+              <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+                  
+                  <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
-                      <p style="margin: 0 0 25px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
+                      <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
                       <div id="standard-reminders-list"></div>
                   </div>
 
-                  <div class="rem-panel">
+                  <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
-                      <p style="margin: 0 0 25px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
+                      <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
                       <div id="custom-reminders-list"></div>
                   </div>
-              </div>
 
-              <div class="rem-panel" style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: var(--primary-btn); color: white; border-color: var(--primary-btn);">
-                  <div style="font-size: 40px; margin-bottom: 20px; opacity: 0.5;">"</div>
-                  <h3 id="reminders-quote-display" style="margin: 0; font-size: 18px; font-weight: 400; line-height: 1.5; font-style: italic;">
-                      Your expertise is the bridge between a merchant's hard work and their customers' trust.
-                  </h3>
               </div>
               
           </div>
@@ -593,6 +591,56 @@
             if (Array.isArray(parsed)) hubReadIds = parsed;
         }
     } catch (e) {}
+
+    // --- GLOBAL QUOTES LOGIC ---
+    const corporateQuotes = [
+        "Your expertise is the bridge between a merchant's hard work and their customers' trust.",
+        "Every compliance step you guide is a shield against global cyber threats.",
+        "You aren't just ticking boxes; you are securing the future of global commerce.",
+        "Helping a merchant achieve compliance today means preventing a breach tomorrow.",
+        "You are the silent guardians of the digital wallet. Your impact is felt worldwide.",
+        "Patience is your superpower. Your calm guidance turns a 'daunting' process into a success story.",
+        "To the merchant, you are the expert who makes the impossible, possible.",
+        "Empathy is the key: when you understand their struggle, you become their greatest ally.",
+        "A merchant's success is your success. Thank you for being their guiding light.",
+        "Your clarity simplifies complexity. You turn technical jargon into merchant confidence.",
+        "Compliance is a journey, not a destination. Thank you for staying the course.",
+        "Expertise pays off: your knowledge protects millions of transactions every single day.",
+        "Strive for value, not just success. Your guidance is invaluable to global businesses.",
+        "Quality service wins the game. You are the MVP of merchant compliance!",
+        "Every resolved query is a step toward a more secure world.",
+        "None of us is as smart as all of us. Together, we secure the globe.",
+        "Your dedication to learning keeps our team ahead of evolving threats.",
+        "A supportive team makes any compliance challenge manageable. Lean on each other!",
+        "Celebrate the wins—every merchant certified is a victory for our team.",
+        "Your progress matters. Continuous improvement is better than delayed perfection.",
+        "When the going gets tough, remember: you are building a safer internet for everyone.",
+        "Your focus today protects a reputation built over 20 years.",
+        "Trust is built in drops. Your consistent support is the ocean that merchants rely on.",
+        "Keep calm and comply on. You have the skills to handle any technical curveball.",
+        "You make a difference. Thank you for your tireless work in securing global payments."
+    ];
+    let currentQuoteIndex = 0;
+    let quotesInitialized = false;
+
+    function initQuotes() {
+        if(quotesInitialized) return;
+        quotesInitialized = true;
+        const board = document.getElementById('dashboard-quotes-board');
+        const textEl = document.getElementById('dashboard-quote-text');
+        if(board) board.style.display = 'block';
+        
+        setInterval(() => {
+            currentQuoteIndex = (currentQuoteIndex + 1) % corporateQuotes.length;
+            if (textEl) {
+                textEl.style.opacity = 0;
+                setTimeout(() => {
+                    textEl.innerText = corporateQuotes[currentQuoteIndex];
+                    textEl.style.opacity = 1;
+                }, 400);
+            }
+        }, 60000);
+    }
 
     function handleImageUpload(event, editorId) {
         const file = event.target.files[0];
@@ -646,6 +694,7 @@
             document.getElementById('app-workspace').classList.add('active');
             
             setupPresence();
+            initQuotes();
             loadSiloNotes(true);
             loadHubUpdates(true);
             initTimezoneApp();
@@ -668,7 +717,7 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          setupPresence(); loadSiloNotes(true); loadHubUpdates(true); initTimezoneApp(); initRemindersApp();
+          setupPresence(); initQuotes(); loadSiloNotes(true); loadHubUpdates(true); initTimezoneApp(); initRemindersApp();
       }
     }
 
@@ -746,7 +795,7 @@
       updatePresenceLocation();
     }
 
-    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
+    // --- TIMEZONE APP LOGIC ---
     const tzs = [
         { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
         { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
@@ -954,37 +1003,7 @@
         }
     }
 
-    // --- REMINDERS APP LOGIC (OS Notifications & Quotes) ---
-    const corporateQuotes = [
-        "Your expertise is the bridge between a merchant's hard work and their customers' trust.",
-        "Every compliance step you guide is a shield against global cyber threats.",
-        "You aren't just ticking boxes; you are securing the future of global commerce.",
-        "Helping a merchant achieve compliance today means preventing a breach tomorrow.",
-        "You are the silent guardians of the digital wallet. Your impact is felt worldwide.",
-        "Patience is your superpower. Your calm guidance turns a 'daunting' process into a success story.",
-        "To the merchant, you are the expert who makes the impossible, possible.",
-        "Empathy is the key: when you understand their struggle, you become their greatest ally.",
-        "A merchant's success is your success. Thank you for being their guiding light.",
-        "Your clarity simplifies complexity. You turn technical jargon into merchant confidence.",
-        "Compliance is a journey, not a destination. Thank you for staying the course.",
-        "Expertise pays off: your knowledge protects millions of transactions every single day.",
-        "Strive for value, not just success. Your guidance is invaluable to global businesses.",
-        "Quality service wins the game. You are the MVP of merchant compliance!",
-        "Every resolved query is a step toward a more secure world.",
-        "None of us is as smart as all of us. Together, we secure the globe.",
-        "Your dedication to learning keeps our team ahead of evolving threats.",
-        "A supportive team makes any compliance challenge manageable. Lean on each other!",
-        "Celebrate the wins—every merchant certified is a victory for our team.",
-        "Your progress matters. Continuous improvement is better than delayed perfection.",
-        "When the going gets tough, remember: you are building a safer internet for everyone.",
-        "Your focus today protects a reputation built over 20 years.",
-        "Trust is built in drops. Your consistent support is the ocean that merchants rely on.",
-        "Keep calm and comply on. You have the skills to handle any technical curveball.",
-        "You make a difference. Thank you for your tireless work in securing global payments."
-    ];
-
-    let currentQuoteIndex = 0;
-
+    // --- REMINDERS APP LOGIC ---
     let remindersData = {
         active: true,
         standard: [
@@ -1010,20 +1029,6 @@
         
         document.getElementById('reminders-toggle').checked = remindersData.active;
         buildRemindersUI();
-        
-        // Quote Rotator (60 Seconds)
-        setInterval(() => {
-            currentQuoteIndex = (currentQuoteIndex + 1) % corporateQuotes.length;
-            const qEl = document.getElementById('reminders-quote-display');
-            if (qEl) {
-                qEl.style.opacity = 0;
-                setTimeout(() => {
-                    qEl.innerText = corporateQuotes[currentQuoteIndex];
-                    qEl.style.opacity = 1;
-                }, 300);
-            }
-        }, 60000);
-
         setInterval(checkReminders, 5000);
     }
 
@@ -1182,8 +1187,8 @@
         if ("Notification" in window && Notification.permission === "granted") {
             new Notification("Viking Cloud Workspace", {
                 body: msg,
-                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png", // Alarm clock icon
-                requireInteraction: true  // <--- KEEPS NOTIFICATION ON SCREEN UNTIL DISMISSED
+                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png",
+                requireInteraction: true 
             });
         }
         
