@@ -166,9 +166,11 @@
     input:checked + .slider-toggle { background-color: #22c55e; }
     input:checked + .slider-toggle:before { transform: translateX(20px); }
 
-    /* In-App DOM Toast Fallback */
-    #reminder-toast { position: fixed; background: var(--card-bg); border: 2px solid var(--primary-btn); padding: 25px 35px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 10000; color: var(--text-main); font-weight: bold; text-align: center; display: none; flex-direction: column; gap: 15px; min-width: 250px; animation: slideIn 0.3s ease-out; }
-    @keyframes slideIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    /* SUPER-SIZED TOAST NOTIFICATION */
+    #reminder-toast { position: fixed; background: var(--card-bg); border: 4px solid var(--primary-btn); padding: 40px 60px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); z-index: 10000; color: var(--text-main); font-weight: bold; text-align: center; display: none; flex-direction: column; gap: 25px; min-width: 400px; animation: slideIn 0.3s ease-out; }
+    #reminder-toast-msg { font-size: 22px !important; line-height: 1.4; }
+    #reminder-toast div:first-child { font-size: 48px !important; }
+    #reminder-toast .silo-btn { font-size: 18px; padding: 12px 24px; }
     
     .pos-br { bottom: 30px; right: 30px; }
     .pos-bl { bottom: 30px; left: 30px; }
@@ -196,8 +198,8 @@
   </div>
 
   <div id="reminder-toast">
-      <div style="font-size: 24px; margin-bottom: -5px;">⏰</div>
-      <div id="reminder-toast-msg" style="font-size: 16px;">Time to Wrap up and get a break 😊</div>
+      <div>⏰</div>
+      <div id="reminder-toast-msg">Time to Wrap up and get a break 😊</div>
       <button class="silo-btn" style="margin: 0;" onclick="closeReminderToast()">OK</button>
   </div>
 
@@ -313,8 +315,8 @@
             <button class="rt-btn" onclick="siloFormat('insertUnorderedList')">• Bullet</button>
             <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
             <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
-            <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('silo-note-content')" title="Clears messy formatting">🧹 Format Cleanup</button>
           </div>
+          
           <div id="silo-note-content" class="rt-area" contenteditable="true" spellcheck="true"></div>
           
           <div style="display: flex; gap: 10px;">
@@ -416,7 +418,6 @@
         <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
-        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
       <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -739,13 +740,13 @@
       else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
       else if (appName === 'reminders') {
           currentAppLocation = 'Reminders';
-          requestNotificationPermission(); // Ask for OS notification permissions if they haven't already
+          requestNotificationPermission();
       }
       
       updatePresenceLocation();
     }
 
-    // --- TIMEZONE APP LOGIC ---
+    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
     const tzs = [
         { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
         { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
@@ -822,7 +823,6 @@
             document.getElementById('live-gmt').innerText = now.toLocaleTimeString('en-US', {timeZone: 'UTC', hour12: false});
             document.getElementById('live-ist').innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
             
-            // Sync Reminders IST Clock
             const istClock = document.getElementById('reminders-ist-clock-display');
             if(istClock) istClock.innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
         }, 1000);
@@ -1096,7 +1096,6 @@
             localStorage.setItem('viking_reminders_' + currentUser.email, JSON.stringify(remindersData));
         }
         
-        // If they activate, ensure they gave OS permissions
         if (remindersData.active) requestNotificationPermission();
         
         updateCountdownDisplay();
@@ -1183,11 +1182,12 @@
         if ("Notification" in window && Notification.permission === "granted") {
             new Notification("Viking Cloud Workspace", {
                 body: msg,
-                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png" // Alarm clock icon
+                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png", // Alarm clock icon
+                requireInteraction: true  // <--- KEEPS NOTIFICATION ON SCREEN UNTIL DISMISSED
             });
         }
         
-        // 2. Always show DOM modal as fallback/in-app visual
+        // 2. Always show DOM modal as fallback/in-app visual (Super-Sized)
         const toast = document.getElementById('reminder-toast');
         const msgEl = document.getElementById('reminder-toast-msg');
         msgEl.innerText = msg;
