@@ -136,20 +136,21 @@
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
     /* =========================================
-       NEW: TIME ZONE SCALE APP UI
+       TIME ZONE SCALE APP UI
        ========================================= */
     .tz-scale-container { position: relative; height: 24px; background: #e2e8f0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);}
-    /* 9:00 to 17:00 highlight */
     .tz-highlight { position: absolute; top: 0; height: 100%; background: rgba(34, 197, 94, 0.2); border-left: 2px solid #22c55e; border-right: 2px solid #22c55e; box-sizing: border-box;}
-    /* Moving Needle */
     .tz-marker { position: absolute; top: -2px; bottom: -2px; width: 4px; background: var(--danger-btn); left: 50%; transform: translateX(-50%); border-radius: 2px; transition: left 0.1s linear, background-color 0.2s; z-index: 2; box-shadow: 0 0 5px rgba(0,0,0,0.3);}
     .tz-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 600; padding: 0 5px;}
     
-    /* Custom Range Slider */
     input[type=range] { -webkit-appearance: none; width: 100%; background: #e2e8f0; height: 10px; border-radius: 5px; outline: none; border: 1px solid var(--border-color);}
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: var(--primary-btn); border-radius: 50%; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.1s;}
     input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
     input[type=range]::-webkit-slider-thumb:active { background: var(--accent); }
+    
+    /* Native Time Input Override */
+    input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: 0.2s; }
+    input[type="time"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -374,7 +375,6 @@
         <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
-        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
       <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -418,7 +418,8 @@
                       <span id="gmt-result-time" style="color: var(--accent); font-size:18px;">--:--</span>
                   </div>
                   <div class="tz-scale-container">
-                      <div class="tz-highlight" style="left: 37.5%; width: 33.33%;"></div> <div class="tz-marker" id="gmt-marker"></div>
+                      <div class="tz-highlight" style="left: 37.5%; width: 33.33%;"></div> 
+                      <div class="tz-marker" id="gmt-marker"></div>
                   </div>
                   <div class="tz-labels">
                       <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
@@ -443,20 +444,19 @@
           <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                   <h3 style="margin: 0; color: var(--text-main);">Merchant Local Time</h3>
-                  <select id="merchant-tz-select" class="silo-input" style="width: 350px; margin: 0; font-weight:600; cursor:pointer;" onchange="updateTimezoneScales()">
-                      </select>
+                  
+                  <input type="text" id="merchant-tz-input" list="tz-options" class="silo-input" style="width: 350px; margin: 0; font-weight:600; border: 2px solid #0f172a;" placeholder="Search Country or Time Zone..." onchange="updateTimezoneScales()" value="USA/Canada - Eastern (EST/EDT)">
+                  <datalist id="tz-options"></datalist>
               </div>
               
               <div style="display: flex; align-items: center; gap: 30px;">
                   <div style="flex: 1;">
-                      <input type="range" id="merchant-time-slider" min="0" max="1440" step="15" value="720" oninput="updateTimezoneScales()">
+                      <input type="range" id="merchant-time-slider" min="0" max="1440" step="15" value="720" oninput="handleSliderChange()">
                       <div class="tz-labels" style="margin-top: 15px;">
                           <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
                       </div>
                   </div>
-                  <div style="width: 120px; text-align: center; font-size: 32px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);" id="merchant-display-time">
-                      12:00
-                  </div>
+                  <input type="time" id="merchant-time-input" value="12:00" onchange="handleTimeInputChange()" style="width: 150px; text-align: center; font-family: inherit; font-size: 32px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 10px; border-radius: 8px; border: 2px solid #0f172a; outline: none; cursor:text;">
               </div>
           </div>
       </main>
@@ -550,7 +550,7 @@
             setupPresence();
             loadSiloNotes(true);
             loadHubUpdates(true);
-            initTimezoneApp(); // Initialize new app
+            initTimezoneApp();
         }
     }
 
@@ -643,36 +643,66 @@
       updatePresenceLocation();
     }
 
-    // --- TIMEZONE APP LOGIC ---
+    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
+    const tzs = [
+        // North America
+        { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
+        { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
+        { name: 'USA/Canada - Mountain (MST/MDT)', val: 'America/Denver' },
+        { name: 'USA/Canada - Pacific (PST/PDT)', val: 'America/Los_Angeles' },
+        { name: 'USA - Alaska (AKST/AKDT)', val: 'America/Anchorage' },
+        { name: 'USA - Hawaii (HST)', val: 'Pacific/Honolulu' },
+        { name: 'Canada - Atlantic (AST/ADT)', val: 'America/Halifax' },
+        { name: 'Mexico - Mexico City', val: 'America/Mexico_City' },
+        // Europe
+        { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
+        { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
+        { name: 'France - Paris (CET/CEST)', val: 'Europe/Paris' },
+        { name: 'Italy - Rome (CET/CEST)', val: 'Europe/Rome' },
+        { name: 'Spain - Madrid (CET/CEST)', val: 'Europe/Madrid' },
+        { name: 'Greece - Athens (CET/CEST)', val: 'Europe/Athens' },
+        { name: 'Russia - Moscow (MSK)', val: 'Europe/Moscow' },
+        { name: 'Ukraine - Kyiv (EET/EEST)', val: 'Europe/Kyiv' },
+        { name: 'Turkey - Istanbul (+03)', val: 'Europe/Istanbul' },
+        // Africa
+        { name: 'South Africa - Johannesburg (SAST)', val: 'Africa/Johannesburg' },
+        { name: 'Egypt - Cairo (EET/EEST)', val: 'Africa/Cairo' },
+        { name: 'Kenya - Nairobi (EAT)', val: 'Africa/Nairobi' },
+        { name: 'Nigeria - Lagos (WAT)', val: 'Africa/Lagos' },
+        { name: 'Morocco - Casablanca (+01)', val: 'Africa/Casablanca' },
+        // Asia
+        { name: 'India (IST)', val: 'Asia/Kolkata' },
+        { name: 'Japan - Tokyo (JST)', val: 'Asia/Tokyo' },
+        { name: 'China - Beijing (CST)', val: 'Asia/Shanghai' },
+        { name: 'UAE - Dubai (GST)', val: 'Asia/Dubai' },
+        { name: 'Singapore (SGT)', val: 'Asia/Singapore' },
+        { name: 'South Korea - Seoul (KST)', val: 'Asia/Seoul' },
+        { name: 'Saudi Arabia - Riyadh (AST)', val: 'Asia/Riyadh' },
+        { name: 'Pakistan - Karachi (PKT)', val: 'Asia/Karachi' },
+        { name: 'Bangladesh - Dhaka (BST)', val: 'Asia/Dhaka' },
+        // Australia & Pacific
+        { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
+        { name: 'Australia - Melbourne (AEST/AEDT)', val: 'Australia/Melbourne' },
+        { name: 'Australia - Brisbane (AEST)', val: 'Australia/Brisbane' },
+        { name: 'Australia - Adelaide (ACST/ACDT)', val: 'Australia/Adelaide' },
+        { name: 'Australia - Darwin (ACST)', val: 'Australia/Darwin' },
+        { name: 'Australia - Perth (AWST)', val: 'Australia/Perth' },
+        { name: 'New Zealand - Auckland (NZST/NZDT)', val: 'Pacific/Auckland' }
+    ];
+
+    let tzMap = new Map();
+
     function initTimezoneApp() {
-        // Populate specific dropdown
-        const tzs = [
-            { name: 'USA - Eastern Time (EST/EDT)', val: 'America/New_York' },
-            { name: 'USA - Central Time (CST/CDT)', val: 'America/Chicago' },
-            { name: 'USA - Mountain Time (MST/MDT)', val: 'America/Denver' },
-            { name: 'USA - Pacific Time (PST/PDT)', val: 'America/Los_Angeles' },
-            { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
-            { name: 'India (IST)', val: 'Asia/Kolkata' },
-            { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
-            { name: 'Japan - Tokyo (JST)', val: 'Asia/Tokyo' },
-            { name: 'UAE - Dubai (GST)', val: 'Asia/Dubai' },
-            { name: 'Singapore (SGT)', val: 'Asia/Singapore' },
-            { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
-            { name: 'Brazil - São Paulo (BRT/BRST)', val: 'America/Sao_Paulo' },
-            { name: 'South Africa - Dubai (SAST)', val: 'Africa/Johannesburg' },
-            { name: 'Canada - Toronto (EST/EDT)', val: 'America/Toronto' }
-        ];
-        
-        const sel = document.getElementById('merchant-tz-select');
-        if (sel.options.length === 0) {
+        const dl = document.getElementById('tz-options');
+        if (dl.options.length === 0) {
             tzs.forEach(tz => {
                 let opt = document.createElement('option');
-                opt.value = tz.val; opt.innerText = tz.name;
-                sel.appendChild(opt);
+                opt.value = tz.name;
+                dl.appendChild(opt);
+                tzMap.set(tz.name, tz.val);
             });
         }
         
-        // Start live clocks
         setInterval(() => {
             const now = new Date();
             document.getElementById('live-est').innerText = now.toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour12: false});
@@ -683,49 +713,65 @@
         updateTimezoneScales();
     }
 
-    function updateTimezoneScales() {
+    function handleSliderChange() {
         const slider = document.getElementById('merchant-time-slider');
         const totalMins = parseInt(slider.value);
         const hours = Math.floor(totalMins / 60);
         const mins = totalMins % 60;
-        
-        // Update Local Display
         const displayHH = String(hours).padStart(2, '0');
         const displayMM = String(mins).padStart(2, '0');
-        document.getElementById('merchant-display-time').innerText = `${displayHH}:${displayMM}`;
+        
+        // Sync back to the input typing box
+        document.getElementById('merchant-time-input').value = `${displayHH}:${displayMM}`;
+        updateTimezoneScales();
+    }
 
-        const tz = document.getElementById('merchant-tz-select').value;
+    function handleTimeInputChange() {
+        const timeInput = document.getElementById('merchant-time-input').value; // "HH:MM"
+        if(timeInput) {
+            const parts = timeInput.split(':');
+            const totalMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            document.getElementById('merchant-time-slider').value = totalMins;
+            updateTimezoneScales();
+        }
+    }
 
-        // Calculate offset natively
+    function updateTimezoneScales() {
+        const slider = document.getElementById('merchant-time-slider');
+        const totalMins = parseInt(slider.value);
+
+        const inputName = document.getElementById('merchant-tz-input').value;
+        // Default to EST safely if the user types something invalid
+        const tz = tzMap.has(inputName) ? tzMap.get(inputName) : 'America/New_York';
+
         const getOffset = (timeZone, date = new Date()) => {
-            const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
-            const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-            return (tzDate.getTime() - utcDate.getTime()) / 60000;
+            try {
+                const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+                const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+                return (tzDate.getTime() - utcDate.getTime()) / 60000;
+            } catch(e) { return 0; }
         };
 
         const selectedOffset = getOffset(tz);
-        const gmtOffset = 0; // UTC
+        const gmtOffset = 0; 
         const estOffset = getOffset('America/New_York');
 
-        // Convert local minutes to UTC and EST equivalent minutes
         let gmtMins = totalMins - selectedOffset + gmtOffset;
         let estMins = totalMins - selectedOffset + estOffset;
 
-        // Wrap around 24 hours (1440 mins) to keep needle on screen
+        // Wrap mathematically
         gmtMins = (gmtMins % 1440 + 1440) % 1440;
         estMins = (estMins % 1440 + 1440) % 1440;
 
-        // Move the needles
         document.getElementById('gmt-marker').style.left = `${(gmtMins / 1440) * 100}%`;
         document.getElementById('est-marker').style.left = `${(estMins / 1440) * 100}%`;
 
-        // Update the text results
         const gH = String(Math.floor(gmtMins/60)).padStart(2, '0');
         const gM = String(gmtMins%60).padStart(2, '0');
         const eH = String(Math.floor(estMins/60)).padStart(2, '0');
         const eM = String(estMins%60).padStart(2, '0');
 
-        const isGmtGood = gmtMins >= 540 && gmtMins <= 1020; // 9 * 60 = 540, 17 * 60 = 1020
+        const isGmtGood = gmtMins >= 540 && gmtMins <= 1020; 
         const isEstGood = estMins >= 540 && estMins <= 1020;
 
         const gmtEl = document.getElementById('gmt-result-time');
@@ -736,8 +782,6 @@
         estEl.innerText = `${eH}:${eM} ${isEstGood ? '✓' : ''}`;
         estEl.style.color = isEstGood ? '#22c55e' : 'var(--danger-btn)';
     }
-
-    // --- END TIMEZONE APP ---
 
     async function openDataView(appContext, viewType) {
         if (userRole !== 'Editor') return;
