@@ -206,7 +206,7 @@
         <button class="burger-btn" onclick="document.getElementById('app-workspace').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <h1 style="margin:0; font-size:1.3rem; line-height:1.2;">Viking Cloud</h1>
+        <h1 style="margin:0; font-size:1.1rem; line-height:1.2;">Viking Cloud Workspace Hub</h1>
       </div>
       <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin:0;">Corporate Ecosystem Launcher</p>
 
@@ -582,15 +582,7 @@
     let currentAppLocation = 'Dashboard';
     let onlineUsers = {};
     let presenceChannel = null;
-
     let hubReadIds = [];
-    try {
-        const storedIds = localStorage.getItem('hubReadIds');
-        if (storedIds) {
-            const parsed = JSON.parse(storedIds);
-            if (Array.isArray(parsed)) hubReadIds = parsed;
-        }
-    } catch (e) {}
 
     // --- GLOBAL QUOTES LOGIC ---
     const corporateQuotes = [
@@ -640,6 +632,18 @@
                 }, 400);
             }
         }, 60000);
+    }
+
+    function initHubReadReceipts() {
+        if (!currentUser) return;
+        hubReadIds = [];
+        try {
+            const storedIds = localStorage.getItem('hubReadIds_' + currentUser.email);
+            if (storedIds) {
+                const parsed = JSON.parse(storedIds);
+                if (Array.isArray(parsed)) hubReadIds = parsed;
+            }
+        } catch (e) {}
     }
 
     function handleImageUpload(event, editorId) {
@@ -695,6 +699,7 @@
             
             setupPresence();
             initQuotes();
+            initHubReadReceipts();
             loadSiloNotes(true);
             loadHubUpdates(true);
             initTimezoneApp();
@@ -717,7 +722,13 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          setupPresence(); initQuotes(); loadSiloNotes(true); loadHubUpdates(true); initTimezoneApp(); initRemindersApp();
+          setupPresence(); 
+          initQuotes(); 
+          initHubReadReceipts();
+          loadSiloNotes(true); 
+          loadHubUpdates(true); 
+          initTimezoneApp(); 
+          initRemindersApp();
       }
     }
 
@@ -795,7 +806,7 @@
       updatePresenceLocation();
     }
 
-    // --- TIMEZONE APP LOGIC ---
+    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
     const tzs = [
         { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
         { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
@@ -1687,7 +1698,7 @@
         
         if (!hubReadIds.includes(item.id)) {
             hubReadIds.push(item.id);
-            try { localStorage.setItem('hubReadIds', JSON.stringify(hubReadIds)); } catch(e) {} 
+            try { localStorage.setItem('hubReadIds_' + currentUser.email, JSON.stringify(hubReadIds)); } catch(e) {} 
             hubRender(); 
         }
 
