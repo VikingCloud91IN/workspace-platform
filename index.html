@@ -77,7 +77,7 @@
     .hub-nav-btn:hover { background: rgba(255,255,255,0.1); }
     .hub-nav-btn.active { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); }
 
-    /* Silo Lists (Updated for Drag Handles) */
+    /* Silo Lists */
     #label-list { list-style: none; padding: 0; margin: 0; }
     #label-list li { display: flex; align-items: center; padding: 10px 20px; color: inherit; font-size: 14px; transition: 0.2s; }
     #label-list li:hover { background: rgba(255,255,255,0.1); }
@@ -87,24 +87,8 @@
 
     /* Notes Grid */
     #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
-    
-    /* UPDATED: Silo Note Cards (3D/Popped Up Effect) */
-    .note-card { 
-        background: #f8fafc; /* Subtle off-white */
-        border: 1px solid var(--border-color); 
-        border-radius: 8px; 
-        height: 120px; 
-        display: flex; justify-content: center; align-items: center; text-align: center; 
-        cursor: pointer; 
-        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; 
-        position: relative; overflow: hidden;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02); /* Base 3D shadow */
-    }
-    .note-card:hover { 
-        border-color: var(--accent); 
-        transform: translateY(-2px); /* Physical lift on hover */
-        box-shadow: 0 6px 15px rgba(0,0,0,0.08); /* Deepened shadow */
-    }
+    .note-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);}
+    .note-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
     .note-card.sortable-ghost { opacity: 0.2; background: var(--hover-bg); border: 2px dashed var(--accent); box-shadow: none; transform: none; } 
 
     /* Editor */
@@ -127,7 +111,7 @@
     .hub-strip-right { display: flex; align-items: center; gap: 15px; text-align: right; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; padding-left: 20px; }
     .unread-dot { display: inline-block; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
 
-    /* Full Screens & Modals (Used for Logs, Users, Notes, and Hub Updates) */
+    /* Full Screens & Modals */
     .full-screen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
     .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
@@ -137,13 +121,12 @@
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     
-    /* Fixed Full Screen Data Lists */
     .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    /* Selection & Paste Fixes (Forces absolute black on white backgrounds) */
+    /* Selection & Paste Fixes */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
     .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
@@ -151,6 +134,22 @@
     /* Specific Heavy Borders for Silo Search and Create Note Only */
     #app-silo .silo-search { border: 2px solid #0f172a !important; }
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
+
+    /* =========================================
+       NEW: TIME ZONE SCALE APP UI
+       ========================================= */
+    .tz-scale-container { position: relative; height: 24px; background: #e2e8f0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);}
+    /* 9:00 to 17:00 highlight */
+    .tz-highlight { position: absolute; top: 0; height: 100%; background: rgba(34, 197, 94, 0.2); border-left: 2px solid #22c55e; border-right: 2px solid #22c55e; box-sizing: border-box;}
+    /* Moving Needle */
+    .tz-marker { position: absolute; top: -2px; bottom: -2px; width: 4px; background: var(--danger-btn); left: 50%; transform: translateX(-50%); border-radius: 2px; transition: left 0.1s linear, background-color 0.2s; z-index: 2; box-shadow: 0 0 5px rgba(0,0,0,0.3);}
+    .tz-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 600; padding: 0 5px;}
+    
+    /* Custom Range Slider */
+    input[type=range] { -webkit-appearance: none; width: 100%; background: #e2e8f0; height: 10px; border-radius: 5px; outline: none; border: 1px solid var(--border-color);}
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: var(--primary-btn); border-radius: 50%; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.1s;}
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+    input[type=range]::-webkit-slider-thumb:active { background: var(--accent); }
   </style>
 </head>
 <body>
@@ -204,6 +203,11 @@
           <h3>Updates Hub</h3>
           <p>Latest News</p>
         </div>
+        <div class="app-card" onclick="switchApp('timezone')">
+          <span class="icon">🌍</span>
+          <h3>Time Zone Scale</h3>
+          <p>Global Call Sync</p>
+        </div>
       </div>
     </div>
   </div>
@@ -245,7 +249,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <h2 class="topbar-app-title">Silo</h2>
-          <input type="text" id="silo-search" class="silo-search" placeholder="Search notes or users..." oninput="siloSearch(event)">
+          <input type="text" id="silo-search" class="silo-search" placeholder="Search notes, users, or logs..." oninput="siloSearch(event)">
         </div>
         <div style="display:flex; gap:10px; margin-left: 15px;">
             <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('silo', 'users')">Users</button>
@@ -370,6 +374,7 @@
         <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
+        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
       <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -377,6 +382,84 @@
         <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
       </div>
     </div>
+  </div>
+
+  <div id="app-timezone" class="app-container" style="flex-direction: column;">
+      <header style="background: var(--topbar-bg); height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px;">
+          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Time Zone Scale</h2>
+          
+          <div style="display: flex; gap: 40px; font-weight: 600; font-variant-numeric: tabular-nums;">
+              <div style="text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">EST (USA)</div>
+                  <div id="live-est" style="font-size: 18px; color: var(--text-main);">00:00:00</div>
+              </div>
+              <div style="text-align: center; padding: 0 40px; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">GMT (UK)</div>
+                  <div id="live-gmt" style="font-size: 18px; color: var(--text-main);">00:00:00</div>
+              </div>
+              <div style="text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">IST (India)</div>
+                  <div id="live-ist" style="font-size: 18px; color: var(--text-main);">00:00:00</div>
+              </div>
+          </div>
+          
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+      </header>
+      
+      <main style="flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 30px; background: var(--bg-color); overflow-y: auto;">
+          
+          <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+              <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Global Sync Window</h3>
+              <p style="margin: 0 0 30px 0; font-size: 14px; color: var(--text-muted);">Ensure the merchant's local time lands within the green safe zones (09:00 to 17:00).</p>
+              
+              <div style="margin-bottom: 40px;">
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
+                      <span style="color: var(--text-main);">GMT / UTC (UK)</span>
+                      <span id="gmt-result-time" style="color: var(--accent); font-size:18px;">--:--</span>
+                  </div>
+                  <div class="tz-scale-container">
+                      <div class="tz-highlight" style="left: 37.5%; width: 33.33%;"></div> <div class="tz-marker" id="gmt-marker"></div>
+                  </div>
+                  <div class="tz-labels">
+                      <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+                  </div>
+              </div>
+
+              <div>
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
+                      <span style="color: var(--text-main);">EST / EDT (USA)</span>
+                      <span id="est-result-time" style="color: var(--accent); font-size:18px;">--:--</span>
+                  </div>
+                  <div class="tz-scale-container">
+                      <div class="tz-highlight" style="left: 37.5%; width: 33.33%;"></div>
+                      <div class="tz-marker" id="est-marker"></div>
+                  </div>
+                  <div class="tz-labels">
+                      <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+                  </div>
+              </div>
+          </div>
+
+          <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                  <h3 style="margin: 0; color: var(--text-main);">Merchant Local Time</h3>
+                  <select id="merchant-tz-select" class="silo-input" style="width: 350px; margin: 0; font-weight:600; cursor:pointer;" onchange="updateTimezoneScales()">
+                      </select>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 30px;">
+                  <div style="flex: 1;">
+                      <input type="range" id="merchant-time-slider" min="0" max="1440" step="15" value="720" oninput="updateTimezoneScales()">
+                      <div class="tz-labels" style="margin-top: 15px;">
+                          <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+                      </div>
+                  </div>
+                  <div style="width: 120px; text-align: center; font-size: 32px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);" id="merchant-display-time">
+                      12:00
+                  </div>
+              </div>
+          </div>
+      </main>
   </div>
 
   <script>
@@ -467,6 +550,7 @@
             setupPresence();
             loadSiloNotes(true);
             loadHubUpdates(true);
+            initTimezoneApp(); // Initialize new app
         }
     }
 
@@ -485,7 +569,7 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          setupPresence(); loadSiloNotes(true); loadHubUpdates(true);
+          setupPresence(); loadSiloNotes(true); loadHubUpdates(true); initTimezoneApp();
       }
     }
 
@@ -551,9 +635,109 @@
       let targetApp = appName === 'workspace' ? 'app-workspace' : `app-${appName}`;
       document.getElementById(targetApp).classList.add('active');
       
-      currentAppLocation = appName === 'workspace' ? 'Dashboard' : (appName === 'silo' ? 'Silo Notes' : 'Updates Hub');
+      if (appName === 'workspace') currentAppLocation = 'Dashboard';
+      else if (appName === 'silo') currentAppLocation = 'Silo Notes';
+      else if (appName === 'updates') currentAppLocation = 'Updates Hub';
+      else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
+      
       updatePresenceLocation();
     }
+
+    // --- TIMEZONE APP LOGIC ---
+    function initTimezoneApp() {
+        // Populate specific dropdown
+        const tzs = [
+            { name: 'USA - Eastern Time (EST/EDT)', val: 'America/New_York' },
+            { name: 'USA - Central Time (CST/CDT)', val: 'America/Chicago' },
+            { name: 'USA - Mountain Time (MST/MDT)', val: 'America/Denver' },
+            { name: 'USA - Pacific Time (PST/PDT)', val: 'America/Los_Angeles' },
+            { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
+            { name: 'India (IST)', val: 'Asia/Kolkata' },
+            { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
+            { name: 'Japan - Tokyo (JST)', val: 'Asia/Tokyo' },
+            { name: 'UAE - Dubai (GST)', val: 'Asia/Dubai' },
+            { name: 'Singapore (SGT)', val: 'Asia/Singapore' },
+            { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
+            { name: 'Brazil - São Paulo (BRT/BRST)', val: 'America/Sao_Paulo' },
+            { name: 'South Africa - Dubai (SAST)', val: 'Africa/Johannesburg' },
+            { name: 'Canada - Toronto (EST/EDT)', val: 'America/Toronto' }
+        ];
+        
+        const sel = document.getElementById('merchant-tz-select');
+        if (sel.options.length === 0) {
+            tzs.forEach(tz => {
+                let opt = document.createElement('option');
+                opt.value = tz.val; opt.innerText = tz.name;
+                sel.appendChild(opt);
+            });
+        }
+        
+        // Start live clocks
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-est').innerText = now.toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour12: false});
+            document.getElementById('live-gmt').innerText = now.toLocaleTimeString('en-US', {timeZone: 'UTC', hour12: false});
+            document.getElementById('live-ist').innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
+        }, 1000);
+        
+        updateTimezoneScales();
+    }
+
+    function updateTimezoneScales() {
+        const slider = document.getElementById('merchant-time-slider');
+        const totalMins = parseInt(slider.value);
+        const hours = Math.floor(totalMins / 60);
+        const mins = totalMins % 60;
+        
+        // Update Local Display
+        const displayHH = String(hours).padStart(2, '0');
+        const displayMM = String(mins).padStart(2, '0');
+        document.getElementById('merchant-display-time').innerText = `${displayHH}:${displayMM}`;
+
+        const tz = document.getElementById('merchant-tz-select').value;
+
+        // Calculate offset natively
+        const getOffset = (timeZone, date = new Date()) => {
+            const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+            const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+            return (tzDate.getTime() - utcDate.getTime()) / 60000;
+        };
+
+        const selectedOffset = getOffset(tz);
+        const gmtOffset = 0; // UTC
+        const estOffset = getOffset('America/New_York');
+
+        // Convert local minutes to UTC and EST equivalent minutes
+        let gmtMins = totalMins - selectedOffset + gmtOffset;
+        let estMins = totalMins - selectedOffset + estOffset;
+
+        // Wrap around 24 hours (1440 mins) to keep needle on screen
+        gmtMins = (gmtMins % 1440 + 1440) % 1440;
+        estMins = (estMins % 1440 + 1440) % 1440;
+
+        // Move the needles
+        document.getElementById('gmt-marker').style.left = `${(gmtMins / 1440) * 100}%`;
+        document.getElementById('est-marker').style.left = `${(estMins / 1440) * 100}%`;
+
+        // Update the text results
+        const gH = String(Math.floor(gmtMins/60)).padStart(2, '0');
+        const gM = String(gmtMins%60).padStart(2, '0');
+        const eH = String(Math.floor(estMins/60)).padStart(2, '0');
+        const eM = String(estMins%60).padStart(2, '0');
+
+        const isGmtGood = gmtMins >= 540 && gmtMins <= 1020; // 9 * 60 = 540, 17 * 60 = 1020
+        const isEstGood = estMins >= 540 && estMins <= 1020;
+
+        const gmtEl = document.getElementById('gmt-result-time');
+        gmtEl.innerText = `${gH}:${gM} ${isGmtGood ? '✓' : ''}`;
+        gmtEl.style.color = isGmtGood ? '#22c55e' : 'var(--danger-btn)';
+
+        const estEl = document.getElementById('est-result-time');
+        estEl.innerText = `${eH}:${eM} ${isEstGood ? '✓' : ''}`;
+        estEl.style.color = isEstGood ? '#22c55e' : 'var(--danger-btn)';
+    }
+
+    // --- END TIMEZONE APP ---
 
     async function openDataView(appContext, viewType) {
         if (userRole !== 'Editor') return;
@@ -822,16 +1006,11 @@
             </li>`;
         });
 
-        if (window.labelSortableInstance) {
-            window.labelSortableInstance.destroy();
-        }
+        if (window.labelSortableInstance) { window.labelSortableInstance.destroy(); }
         
         if (currentUser && typeof Sortable !== 'undefined') {
             window.labelSortableInstance = new Sortable(lblList, {
-                animation: 150,
-                filter: ".static-label",
-                draggable: ".drag-label",
-                handle: ".label-drag-handle",
+                animation: 150, filter: ".static-label", draggable: ".drag-label", handle: ".label-drag-handle",
                 onEnd: function() {
                     const items = Array.from(lblList.querySelectorAll('.drag-label'));
                     const newOrder = items.map(li => li.getAttribute('data-id'));
