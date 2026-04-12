@@ -121,6 +121,7 @@
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     
+    /* Fixed Full Screen Data Lists */
     .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
@@ -131,7 +132,7 @@
     .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
 
-    /* Specific Heavy Borders for Silo Search and Create Note Only */
+    /* Specific Heavy Borders */
     #app-silo .silo-search { border: 2px solid #0f172a !important; }
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
@@ -148,7 +149,6 @@
     input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
     input[type=range]::-webkit-slider-thumb:active { background: var(--accent); }
     
-    /* Custom Dropdown for Timezones */
     .tz-dropdown-list { display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 250px; overflow-y: auto; background: var(--card-bg); border: 2px solid #0f172a; border-top: none; border-radius: 0 0 8px 8px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .tz-dropdown-list div { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
     .tz-dropdown-list div:hover { background: var(--hover-bg); }
@@ -273,8 +273,8 @@
             <button class="rt-btn" onclick="siloFormat('insertUnorderedList')">• Bullet</button>
             <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
             <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
-            <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('silo-note-content')" title="Clears messy formatting">🧹 Format Cleanup</button>
           </div>
+          
           <div id="silo-note-content" class="rt-area" contenteditable="true" spellcheck="true"></div>
           
           <div style="display: flex; gap: 10px;">
@@ -452,7 +452,7 @@
                   </div>
                   
                   <div style="position: relative; width: 350px;">
-                      <input type="text" id="tz-search" class="silo-input" style="margin: 0; font-weight:600; border: 2px solid #0f172a;" placeholder="Search Country or Time Zone..." oninput="filterTzOptions()" onfocus="showTzOptions()">
+                      <input type="text" id="tz-search" class="silo-input" style="margin: 0; font-weight:600; border: 2px solid #0f172a;" placeholder="Search Country or Time Zone..." oninput="filterTzOptions()" onfocus="showTzOptions()" value="USA/Canada - Eastern (EST/EDT)">
                       <div id="tz-dropdown" class="tz-dropdown-list"></div>
                   </div>
               </div>
@@ -503,6 +503,11 @@
             if (Array.isArray(parsed)) hubReadIds = parsed;
         }
     } catch (e) {}
+
+    function formatCleanup(editorId) {
+        document.execCommand('removeFormat', false, null);
+        alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
+    }
 
     function handleImageUpload(event, editorId) {
         const file = event.target.files[0];
@@ -651,7 +656,7 @@
       updatePresenceLocation();
     }
 
-    // --- TIMEZONE APP LOGIC (Updated for 24h Text Input & Custom Search) ---
+    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
     const tzs = [
         // North America
         { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
@@ -664,10 +669,21 @@
         { name: 'Mexico - Mexico City', val: 'America/Mexico_City' },
         // Europe
         { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
+        { name: 'Ireland - Dublin (GMT/IST)', val: 'Europe/Dublin' },
         { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
         { name: 'France - Paris (CET/CEST)', val: 'Europe/Paris' },
         { name: 'Italy - Rome (CET/CEST)', val: 'Europe/Rome' },
         { name: 'Spain - Madrid (CET/CEST)', val: 'Europe/Madrid' },
+        { name: 'Portugal - Lisbon (WET/WEST)', val: 'Europe/Lisbon' },
+        { name: 'Switzerland - Zurich (CET/CEST)', val: 'Europe/Zurich' },
+        { name: 'Netherlands - Amsterdam (CET/CEST)', val: 'Europe/Amsterdam' },
+        { name: 'Austria - Vienna (CET/CEST)', val: 'Europe/Vienna' },
+        { name: 'Denmark - Copenhagen (CET/CEST)', val: 'Europe/Copenhagen' },
+        { name: 'Sweden - Stockholm (CET/CEST)', val: 'Europe/Stockholm' },
+        { name: 'Norway - Oslo (CET/CEST)', val: 'Europe/Oslo' },
+        { name: 'Finland - Helsinki (EET/EEST)', val: 'Europe/Helsinki' },
+        { name: 'Poland - Warsaw (CET/CEST)', val: 'Europe/Warsaw' },
+        { name: 'Hungary - Budapest (CET/CEST)', val: 'Europe/Budapest' },
         { name: 'Greece - Athens (CET/CEST)', val: 'Europe/Athens' },
         { name: 'Russia - Moscow (MSK)', val: 'Europe/Moscow' },
         { name: 'Ukraine - Kyiv (EET/EEST)', val: 'Europe/Kyiv' },
@@ -702,13 +718,19 @@
         { name: 'Solomon Islands - Honiara (SBT)', val: 'Pacific/Guadalcanal' },
         { name: 'Samoa - Apia (WST)', val: 'Pacific/Apia' },
         { name: 'Tonga - Nukuʻalofa (TOT)', val: 'Pacific/Tongatapu' },
-        { name: 'French Polynesia - Tahiti (TAHT)', val: 'Pacific/Tahiti' }
+        { name: 'French Polynesia - Tahiti (TAHT)', val: 'Pacific/Tahiti' },
+        { name: 'Palau (PWT)', val: 'Pacific/Palau' }
     ];
 
+    let tzMap = new Map();
     let selectedTzValue = 'America/New_York';
 
     function initTimezoneApp() {
-        renderTzDropdown(tzs);
+        const dl = document.getElementById('tz-dropdown');
+        if (dl.innerHTML === '') {
+            tzs.forEach(tz => { tzMap.set(tz.name, tz.val); });
+            renderTzDropdown(tzs);
+        }
         
         setInterval(() => {
             const now = new Date();
@@ -717,7 +739,6 @@
             document.getElementById('live-ist').innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
         }, 1000);
         
-        // Hide dropdown if clicked outside
         document.addEventListener('click', function(e) {
             const searchInput = document.getElementById('tz-search');
             const dropdown = document.getElementById('tz-dropdown');
@@ -729,7 +750,6 @@
         updateTimezoneScales();
     }
 
-    // Dropdown Render Logic
     function renderTzDropdown(list) {
         const container = document.getElementById('tz-dropdown');
         container.innerHTML = '';
@@ -753,7 +773,7 @@
     }
 
     function showTzOptions() {
-        filterTzOptions(); // Re-render in case they deleted text
+        filterTzOptions();
         document.getElementById('tz-dropdown').style.display = 'block';
     }
 
@@ -765,12 +785,9 @@
         updateTimezoneScales();
     }
 
-    // Strict 24-Hour Input Handlers
     function formatTimeInput(e) {
-        let val = e.target.value.replace(/\D/g, ''); // Strip non-numbers
-        if (val.length > 2) {
-            val = val.substring(0,2) + ':' + val.substring(2,4);
-        }
+        let val = e.target.value.replace(/\D/g, ''); 
+        if (val.length > 2) val = val.substring(0,2) + ':' + val.substring(2,4);
         e.target.value = val;
     }
 
@@ -778,8 +795,7 @@
         let timeInput = document.getElementById('merchant-time-input').value;
         const parts = timeInput.split(':');
         if(parts.length === 2) {
-            let h = parseInt(parts[0]);
-            let m = parseInt(parts[1]);
+            let h = parseInt(parts[0]); let m = parseInt(parts[1]);
             if(isNaN(h) || h < 0 || h > 23) h = 0;
             if(isNaN(m) || m < 0 || m > 59) m = 0;
             
@@ -788,7 +804,6 @@
             document.getElementById('merchant-time-input').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
             updateTimezoneScales();
         } else {
-            // Reset to default if typed incorrectly
             document.getElementById('merchant-time-input').value = "12:00";
             document.getElementById('merchant-time-slider').value = 720;
             updateTimezoneScales();
@@ -798,19 +813,13 @@
     function handleSliderChange() {
         const slider = document.getElementById('merchant-time-slider');
         const totalMins = parseInt(slider.value);
-        const hours = Math.floor(totalMins / 60);
-        const mins = totalMins % 60;
-        
-        const displayHH = String(hours).padStart(2, '0');
-        const displayMM = String(mins).padStart(2, '0');
-        document.getElementById('merchant-time-input').value = `${displayHH}:${displayMM}`;
-
+        const hours = Math.floor(totalMins / 60); const mins = totalMins % 60;
+        document.getElementById('merchant-time-input').value = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
         updateTimezoneScales();
     }
 
     function updateTimezoneScales() {
-        const slider = document.getElementById('merchant-time-slider');
-        const totalMins = parseInt(slider.value);
+        const totalMins = parseInt(document.getElementById('merchant-time-slider').value);
         const tz = selectedTzValue;
 
         const getOffset = (timeZone, date = new Date()) => {
@@ -850,7 +859,6 @@
         estEl.innerText = `${eH}:${eM} ${isEstGood ? '✓' : ''}`;
         estEl.style.color = isEstGood ? '#22c55e' : 'var(--danger-btn)';
         
-        // Dynamic border glow for the time input box if it matches a safe zone
         const timeInputEl = document.getElementById('merchant-time-input');
         if (isGmtGood || isEstGood) {
             timeInputEl.style.borderColor = '#22c55e';
