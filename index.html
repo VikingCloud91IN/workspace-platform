@@ -121,7 +121,6 @@
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     
-    /* Fixed Full Screen Data Lists */
     .data-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 15px 25px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
     .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
@@ -152,6 +151,33 @@
     .tz-dropdown-list { display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 250px; overflow-y: auto; background: var(--card-bg); border: 2px solid #0f172a; border-top: none; border-radius: 0 0 8px 8px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .tz-dropdown-list div { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
     .tz-dropdown-list div:hover { background: var(--hover-bg); }
+
+    /* =========================================
+       NEW: REMINDERS APP UI
+       ========================================= */
+    .rem-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .rem-row input, .rem-row select { border: 2px solid #0f172a; padding: 10px; border-radius: 6px; font-weight: 600; font-family: inherit; color: var(--text-main); outline: none; background: var(--input-bg); }
+    .rem-label { font-weight: bold; width: 80px; color: var(--text-main); }
+    
+    /* Toggle Switch */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--text-muted); transition: .3s; border-radius: 24px; }
+    .slider-toggle:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider-toggle { background-color: #22c55e; }
+    input:checked + .slider-toggle:before { transform: translateX(20px); }
+
+    /* Toast Notification Modal */
+    #reminder-toast { position: fixed; background: var(--card-bg); border: 2px solid var(--primary-btn); padding: 25px 35px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 10000; color: var(--text-main); font-weight: bold; text-align: center; display: none; flex-direction: column; gap: 15px; min-width: 250px; animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    
+    .pos-br { bottom: 30px; right: 30px; }
+    .pos-bl { bottom: 30px; left: 30px; }
+    .pos-tr { top: 30px; right: 30px; }
+    .pos-tl { top: 30px; left: 30px; }
+    .pos-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .pos-center.slideIn { animation: popCenter 0.3s ease-out; }
+    @keyframes popCenter { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
   </style>
 </head>
 <body>
@@ -164,6 +190,12 @@
           <input type="password" id="auth-password" class="silo-input" placeholder="Password" onkeydown="if(event.key === 'Enter') handleAuthLogin()">
           <button class="silo-btn" onclick="handleAuthLogin()">Secure Login</button>
       </div>
+  </div>
+
+  <div id="reminder-toast">
+      <div style="font-size: 24px; margin-bottom: -5px;">⏰</div>
+      <div id="reminder-toast-msg" style="font-size: 16px;">Time to Wrap up and get a break 😊</div>
+      <button class="silo-btn" style="margin: 0;" onclick="closeReminderToast()">OK</button>
   </div>
 
   <div id="app-workspace" class="app-container">
@@ -209,6 +241,11 @@
           <span class="icon">🌍</span>
           <h3>Time Zone Scale</h3>
           <p>Global Call Sync</p>
+        </div>
+        <div class="app-card" onclick="switchApp('reminders')">
+          <span class="icon">⏰</span>
+          <h3>Reminders</h3>
+          <p>Shift Break Sync</p>
         </div>
       </div>
     </div>
@@ -376,7 +413,6 @@
         <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
-        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
       <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -409,7 +445,6 @@
       </header>
       
       <main style="flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 30px; background: var(--bg-color); overflow-y: auto;">
-          
           <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
               <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Global Sync Window</h3>
               <p style="margin: 0 0 30px 0; font-size: 14px; color: var(--text-muted);">Ensure the merchant's local time lands within the green safe zones (09:00 to 17:00).</p>
@@ -470,6 +505,46 @@
       </main>
   </div>
 
+  <div id="app-reminders" class="app-container" style="flex-direction: column;">
+      <header style="background: var(--topbar-bg); height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px;">
+          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Reminders</h2>
+          
+          <div style="display: flex; align-items: center; gap: 30px;">
+              <div id="next-break-display" style="font-weight: bold; color: var(--accent); font-size: 14px; background: rgba(59, 130, 246, 0.1); padding: 6px 12px; border-radius: 20px;">Next Break: --:--</div>
+              <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--text-main);">
+                  <span>Active</span>
+                  <label class="switch">
+                    <input type="checkbox" id="reminders-toggle" checked onchange="saveRemindersConfig()">
+                    <span class="slider-toggle"></span>
+                  </label>
+              </div>
+              <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+          </div>
+      </header>
+      
+      <main style="flex: 1; padding: 40px; overflow-y: auto; background: var(--bg-color);">
+          <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px;">
+              
+              <div style="background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                  <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
+                  <p style="margin: 0 0 25px 0; font-size: 13px; color: var(--text-muted);">Pop-ups will automatically trigger 10 minutes before the designated time.</p>
+                  
+                  <div id="standard-reminders-list">
+                      </div>
+              </div>
+
+              <div style="background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                  <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
+                  <p style="margin: 0 0 25px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
+                  
+                  <div id="custom-reminders-list">
+                      </div>
+              </div>
+              
+          </div>
+      </main>
+  </div>
+
   <script>
     const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
@@ -503,11 +578,6 @@
             if (Array.isArray(parsed)) hubReadIds = parsed;
         }
     } catch (e) {}
-
-    function formatCleanup(editorId) {
-        document.execCommand('removeFormat', false, null);
-        alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
-    }
 
     function handleImageUpload(event, editorId) {
         const file = event.target.files[0];
@@ -564,6 +634,7 @@
             loadSiloNotes(true);
             loadHubUpdates(true);
             initTimezoneApp();
+            initRemindersApp(); // Init New App
         }
     }
 
@@ -582,7 +653,7 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          setupPresence(); loadSiloNotes(true); loadHubUpdates(true); initTimezoneApp();
+          setupPresence(); loadSiloNotes(true); loadHubUpdates(true); initTimezoneApp(); initRemindersApp();
       }
     }
 
@@ -652,13 +723,13 @@
       else if (appName === 'silo') currentAppLocation = 'Silo Notes';
       else if (appName === 'updates') currentAppLocation = 'Updates Hub';
       else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
+      else if (appName === 'reminders') currentAppLocation = 'Reminders';
       
       updatePresenceLocation();
     }
 
-    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
+    // --- TIMEZONE APP LOGIC ---
     const tzs = [
-        // North America
         { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
         { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
         { name: 'USA/Canada - Mountain (MST/MDT)', val: 'America/Denver' },
@@ -667,7 +738,6 @@
         { name: 'USA - Hawaii (HST)', val: 'Pacific/Honolulu' },
         { name: 'Canada - Atlantic (AST/ADT)', val: 'America/Halifax' },
         { name: 'Mexico - Mexico City', val: 'America/Mexico_City' },
-        // Europe
         { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
         { name: 'Ireland - Dublin (GMT/IST)', val: 'Europe/Dublin' },
         { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
@@ -688,13 +758,11 @@
         { name: 'Russia - Moscow (MSK)', val: 'Europe/Moscow' },
         { name: 'Ukraine - Kyiv (EET/EEST)', val: 'Europe/Kyiv' },
         { name: 'Turkey - Istanbul (+03)', val: 'Europe/Istanbul' },
-        // Africa
         { name: 'South Africa - Johannesburg (SAST)', val: 'Africa/Johannesburg' },
         { name: 'Egypt - Cairo (EET/EEST)', val: 'Africa/Cairo' },
         { name: 'Kenya - Nairobi (EAT)', val: 'Africa/Nairobi' },
         { name: 'Nigeria - Lagos (WAT)', val: 'Africa/Lagos' },
         { name: 'Morocco - Casablanca (+01)', val: 'Africa/Casablanca' },
-        // Asia
         { name: 'India (IST)', val: 'Asia/Kolkata' },
         { name: 'Japan - Tokyo (JST)', val: 'Asia/Tokyo' },
         { name: 'China - Beijing (CST)', val: 'Asia/Shanghai' },
@@ -704,7 +772,6 @@
         { name: 'Saudi Arabia - Riyadh (AST)', val: 'Asia/Riyadh' },
         { name: 'Pakistan - Karachi (PKT)', val: 'Asia/Karachi' },
         { name: 'Bangladesh - Dhaka (BST)', val: 'Asia/Dhaka' },
-        // Australia & Oceania
         { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
         { name: 'Australia - Melbourne (AEST/AEDT)', val: 'Australia/Melbourne' },
         { name: 'Australia - Brisbane (AEST)', val: 'Australia/Brisbane' },
@@ -742,9 +809,7 @@
         document.addEventListener('click', function(e) {
             const searchInput = document.getElementById('tz-search');
             const dropdown = document.getElementById('tz-dropdown');
-            if (e.target !== searchInput && e.target !== dropdown && !dropdown.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
+            if (e.target !== searchInput && e.target !== dropdown && !dropdown.contains(e.target)) { dropdown.style.display = 'none'; }
         });
 
         updateTimezoneScales();
@@ -753,10 +818,7 @@
     function renderTzDropdown(list) {
         const container = document.getElementById('tz-dropdown');
         container.innerHTML = '';
-        if (list.length === 0) {
-            container.innerHTML = '<div style="color:var(--text-muted); cursor:default;">No countries found.</div>';
-            return;
-        }
+        if (list.length === 0) { container.innerHTML = '<div style="color:var(--text-muted); cursor:default;">No countries found.</div>'; return; }
         list.forEach(tz => {
             const div = document.createElement('div');
             div.innerText = tz.name;
@@ -867,6 +929,202 @@
             timeInputEl.style.borderColor = '#0f172a';
             timeInputEl.style.boxShadow = 'none';
         }
+    }
+
+    // --- NEW: REMINDERS APP LOGIC ---
+    let remindersData = {
+        active: true,
+        standard: [
+            { id: "std_1", label: "Break 1", time: "", pos: "pos-br" },
+            { id: "std_2", label: "Lunch", time: "", pos: "pos-br" },
+            { id: "std_3", label: "Break 2", time: "", pos: "pos-br" }
+        ],
+        custom: [
+            { id: "cst_1", msg: "", time: "", pos: "pos-br" },
+            { id: "cst_2", msg: "", time: "", pos: "pos-br" },
+            { id: "cst_3", msg: "", time: "", pos: "pos-br" }
+        ]
+    };
+    
+    // Tracks if a reminder has been shown today to prevent spam loops
+    let triggeredLog = {};
+
+    function initRemindersApp() {
+        if (!currentUser) return;
+        const stored = localStorage.getItem('viking_reminders_' + currentUser.email);
+        if (stored) {
+            try { remindersData = JSON.parse(stored); } catch(e) {}
+        }
+        
+        document.getElementById('reminders-toggle').checked = remindersData.active;
+        buildRemindersUI();
+        
+        // Scan every 5 seconds
+        setInterval(checkReminders, 5000);
+    }
+
+    function getPositionDropdown(id, currentVal) {
+        const options = [
+            { val: "pos-bl", txt: "Bottom Left" },
+            { val: "pos-tl", txt: "Top Left" },
+            { val: "pos-tr", txt: "Top Right" },
+            { val: "pos-br", txt: "Bottom Right" },
+            { val: "pos-center", txt: "Center" }
+        ];
+        let html = `<select id="pos_${id}" onchange="saveRemindersConfig()">`;
+        options.forEach(o => {
+            html += `<option value="${o.val}" ${currentVal === o.val ? 'selected' : ''}>${o.txt}</option>`;
+        });
+        html += `</select>`;
+        return html;
+    }
+
+    function buildRemindersUI() {
+        const stdList = document.getElementById('standard-reminders-list');
+        stdList.innerHTML = '';
+        remindersData.standard.forEach(rem => {
+            stdList.innerHTML += `
+                <div class="rem-row">
+                    <div class="rem-label">${rem.label}</div>
+                    <input type="time" id="time_${rem.id}" value="${rem.time}" onchange="saveRemindersConfig()">
+                    ${getPositionDropdown(rem.id, rem.pos)}
+                </div>
+            `;
+        });
+
+        const cstList = document.getElementById('custom-reminders-list');
+        cstList.innerHTML = '';
+        remindersData.custom.forEach((rem, idx) => {
+            cstList.innerHTML += `
+                <div class="rem-row">
+                    <input type="text" id="msg_${rem.id}" placeholder="Custom Message ${idx + 1}" value="${rem.msg}" oninput="saveRemindersConfig()" style="flex:1;">
+                    <input type="time" id="time_${rem.id}" value="${rem.time}" onchange="saveRemindersConfig()">
+                    ${getPositionDropdown(rem.id, rem.pos)}
+                </div>
+            `;
+        });
+        
+        updateCountdownDisplay();
+    }
+
+    function saveRemindersConfig() {
+        remindersData.active = document.getElementById('reminders-toggle').checked;
+        
+        remindersData.standard.forEach(rem => {
+            rem.time = document.getElementById(`time_${rem.id}`).value;
+            rem.pos = document.getElementById(`pos_${rem.id}`).value;
+        });
+        
+        remindersData.custom.forEach(rem => {
+            rem.msg = document.getElementById(`msg_${rem.id}`).value;
+            rem.time = document.getElementById(`time_${rem.id}`).value;
+            rem.pos = document.getElementById(`pos_${rem.id}`).value;
+        });
+
+        if (currentUser) {
+            localStorage.setItem('viking_reminders_' + currentUser.email, JSON.stringify(remindersData));
+        }
+        
+        updateCountdownDisplay();
+    }
+
+    function checkReminders() {
+        if (!remindersData.active) {
+            document.getElementById('next-break-display').innerText = "Reminders Paused";
+            return;
+        }
+
+        const now = new Date();
+        // Convert strict to IST string components
+        const istDateStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
+        const istDateObj = new Date(istDateStr);
+        
+        const currentMins = istDateObj.getHours() * 60 + istDateObj.getMinutes();
+        const todayKey = istDateObj.toDateString();
+
+        // Check all reminders
+        const allRems = [...remindersData.standard, ...remindersData.custom];
+        
+        allRems.forEach(rem => {
+            if (!rem.time) return;
+            const parts = rem.time.split(':');
+            const targetMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            
+            // Pop-up triggers EXACTLY 10 mins before
+            let triggerMins = targetMins - 10;
+            if (triggerMins < 0) triggerMins += 1440; // Wrap midnight
+            
+            const logKey = `${rem.id}_${todayKey}`;
+
+            if (currentMins === triggerMins && !triggeredLog[logKey]) {
+                // Fire Pop-up!
+                triggeredLog[logKey] = true;
+                let msg = (rem.label) ? "Time to Wrap up and get a break 😊" : (rem.msg || "Custom Reminder! 😊");
+                showReminderToast(msg, rem.pos);
+            }
+        });
+
+        updateCountdownDisplay(currentMins);
+    }
+
+    function updateCountdownDisplay(currentMins = null) {
+        if (!remindersData.active) {
+            document.getElementById('next-break-display').innerText = "Reminders Paused";
+            return;
+        }
+        
+        if (currentMins === null) {
+            const now = new Date();
+            const istDateObj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            currentMins = istDateObj.getHours() * 60 + istDateObj.getMinutes();
+        }
+
+        const allRems = [...remindersData.standard, ...remindersData.custom].filter(r => r.time);
+        
+        let nextTargetMins = null;
+        let minDiff = 1440;
+
+        allRems.forEach(rem => {
+            const parts = rem.time.split(':');
+            const targetMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            
+            let diff = targetMins - currentMins;
+            // Only look forward in time for today
+            if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nextTargetMins = targetMins;
+            }
+        });
+
+        const displayEl = document.getElementById('next-break-display');
+        if (nextTargetMins !== null) {
+            const hrs = Math.floor(minDiff / 60);
+            const mns = minDiff % 60;
+            let timeStr = "";
+            if (hrs > 0) timeStr += `${hrs}h `;
+            timeStr += `${mns}m`;
+            displayEl.innerText = `Next Break in: ${timeStr}`;
+        } else {
+            displayEl.innerText = "All Breaks Completed";
+        }
+    }
+
+    function showReminderToast(msg, positionClass) {
+        const toast = document.getElementById('reminder-toast');
+        const msgEl = document.getElementById('reminder-toast-msg');
+        
+        msgEl.innerText = msg;
+        
+        // Reset classes
+        toast.className = '';
+        toast.classList.add(positionClass);
+        if (positionClass === 'pos-center') toast.classList.add('slideIn');
+        
+        toast.style.display = 'flex';
+    }
+
+    function closeReminderToast() {
+        document.getElementById('reminder-toast').style.display = 'none';
     }
 
     // --- SHARED DATA VIEWS (Users & Logs) ---
