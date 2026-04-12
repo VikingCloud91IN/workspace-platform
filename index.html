@@ -96,7 +96,7 @@
     .rt-toolbar { display: flex; gap: 5px; background-color: var(--toolbar-bg); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; padding: 8px; flex-wrap: wrap; }
     .rt-btn { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 5px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; }
     .rt-btn:hover { background: var(--border-color); }
-    .rt-area { width: 100%; min-height: 250px; max-height: 40vh; overflow-y: auto; padding: 15px; border: 1px solid var(--border-color); border-radius: 0 0 4px 4px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); line-height: 1.6; margin-bottom: 12px; outline: none; }
+    .rt-area { width: 100%; min-height: 250px; max-height: 40vh; overflow-y: auto; padding: 15px; border: 1px solid var(--border-color); border-radius: 0 0 4px 4px; box-sizing: border-box; background: var(--input-bg); color: var(--text-main); line-height: 1.6; margin-bottom: 12px; outline: none; }
     .view-note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
     .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
     .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
@@ -148,9 +148,10 @@
     input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
     input[type=range]::-webkit-slider-thumb:active { background: var(--accent); }
     
-    /* Native Time Input Override */
-    input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; transition: 0.2s; }
-    input[type="time"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+    /* Custom Dropdown for Timezones */
+    .tz-dropdown-list { display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 250px; overflow-y: auto; background: var(--card-bg); border: 2px solid #0f172a; border-top: none; border-radius: 0 0 8px 8px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .tz-dropdown-list div { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); }
+    .tz-dropdown-list div:hover { background: var(--hover-bg); }
   </style>
 </head>
 <body>
@@ -272,8 +273,8 @@
             <button class="rt-btn" onclick="siloFormat('insertUnorderedList')">• Bullet</button>
             <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
             <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
+            <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('silo-note-content')" title="Clears messy formatting">🧹 Format Cleanup</button>
           </div>
-          
           <div id="silo-note-content" class="rt-area" contenteditable="true" spellcheck="true"></div>
           
           <div style="display: flex; gap: 10px;">
@@ -375,6 +376,7 @@
         <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
+        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('hubRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
       </div>
       <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
@@ -442,11 +444,17 @@
           </div>
 
           <div style="background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                  <h3 style="margin: 0; color: var(--text-main);">Merchant Local Time</h3>
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+                  <div>
+                      <h3 style="margin: 0 0 10px 0; color: var(--text-main);">Merchant Local Time</h3>
+                      <div style="font-size: 14px; color: var(--accent); font-weight: bold;" id="selected-tz-display">Currently Selected: USA/Canada - Eastern (EST/EDT)</div>
+                  </div>
                   
-                  <input type="text" id="merchant-tz-input" list="tz-options" class="silo-input" style="width: 350px; margin: 0; font-weight:600; border: 2px solid #0f172a;" placeholder="Search Country or Time Zone..." onchange="updateTimezoneScales()" value="USA/Canada - Eastern (EST/EDT)">
-                  <datalist id="tz-options"></datalist>
+                  <div style="position: relative; width: 350px;">
+                      <input type="text" id="tz-search" class="silo-input" style="margin: 0; font-weight:600; border: 2px solid #0f172a;" placeholder="Search Country or Time Zone..." oninput="filterTzOptions()" onfocus="showTzOptions()">
+                      <div id="tz-dropdown" class="tz-dropdown-list"></div>
+                  </div>
               </div>
               
               <div style="display: flex; align-items: center; gap: 30px;">
@@ -456,7 +464,7 @@
                           <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
                       </div>
                   </div>
-                  <input type="time" id="merchant-time-input" value="12:00" onchange="handleTimeInputChange()" style="width: 150px; text-align: center; font-family: inherit; font-size: 32px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 10px; border-radius: 8px; border: 2px solid #0f172a; outline: none; cursor:text;">
+                  <input type="text" id="merchant-time-input" value="12:00" maxlength="5" placeholder="HH:MM" onchange="handleTextTimeChange()" onkeyup="formatTimeInput(event)" style="width: 150px; text-align: center; font-family: inherit; font-size: 32px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 10px; border-radius: 8px; border: 2px solid #0f172a; outline: none; transition: 0.2s;">
               </div>
           </div>
       </main>
@@ -643,7 +651,7 @@
       updatePresenceLocation();
     }
 
-    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
+    // --- TIMEZONE APP LOGIC (Updated for 24h Text Input & Custom Search) ---
     const tzs = [
         // North America
         { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
@@ -680,28 +688,27 @@
         { name: 'Saudi Arabia - Riyadh (AST)', val: 'Asia/Riyadh' },
         { name: 'Pakistan - Karachi (PKT)', val: 'Asia/Karachi' },
         { name: 'Bangladesh - Dhaka (BST)', val: 'Asia/Dhaka' },
-        // Australia & Pacific
+        // Australia & Oceania
         { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
         { name: 'Australia - Melbourne (AEST/AEDT)', val: 'Australia/Melbourne' },
         { name: 'Australia - Brisbane (AEST)', val: 'Australia/Brisbane' },
         { name: 'Australia - Adelaide (ACST/ACDT)', val: 'Australia/Adelaide' },
         { name: 'Australia - Darwin (ACST)', val: 'Australia/Darwin' },
         { name: 'Australia - Perth (AWST)', val: 'Australia/Perth' },
-        { name: 'New Zealand - Auckland (NZST/NZDT)', val: 'Pacific/Auckland' }
+        { name: 'New Zealand - Auckland (NZST/NZDT)', val: 'Pacific/Auckland' },
+        { name: 'Fiji - Suva (FJT)', val: 'Pacific/Fiji' },
+        { name: 'Papua New Guinea - Port Moresby (PGT)', val: 'Pacific/Port_Moresby' },
+        { name: 'Vanuatu - Port Vila (VUT)', val: 'Pacific/Efate' },
+        { name: 'Solomon Islands - Honiara (SBT)', val: 'Pacific/Guadalcanal' },
+        { name: 'Samoa - Apia (WST)', val: 'Pacific/Apia' },
+        { name: 'Tonga - Nukuʻalofa (TOT)', val: 'Pacific/Tongatapu' },
+        { name: 'French Polynesia - Tahiti (TAHT)', val: 'Pacific/Tahiti' }
     ];
 
-    let tzMap = new Map();
+    let selectedTzValue = 'America/New_York';
 
     function initTimezoneApp() {
-        const dl = document.getElementById('tz-options');
-        if (dl.options.length === 0) {
-            tzs.forEach(tz => {
-                let opt = document.createElement('option');
-                opt.value = tz.name;
-                dl.appendChild(opt);
-                tzMap.set(tz.name, tz.val);
-            });
-        }
+        renderTzDropdown(tzs);
         
         setInterval(() => {
             const now = new Date();
@@ -710,7 +717,82 @@
             document.getElementById('live-ist').innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
         }, 1000);
         
+        // Hide dropdown if clicked outside
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('tz-search');
+            const dropdown = document.getElementById('tz-dropdown');
+            if (e.target !== searchInput && e.target !== dropdown && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
         updateTimezoneScales();
+    }
+
+    // Dropdown Render Logic
+    function renderTzDropdown(list) {
+        const container = document.getElementById('tz-dropdown');
+        container.innerHTML = '';
+        if (list.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted); cursor:default;">No countries found.</div>';
+            return;
+        }
+        list.forEach(tz => {
+            const div = document.createElement('div');
+            div.innerText = tz.name;
+            div.onclick = () => selectTz(tz);
+            container.appendChild(div);
+        });
+    }
+
+    function filterTzOptions() {
+        const query = document.getElementById('tz-search').value.toLowerCase();
+        const filtered = tzs.filter(tz => tz.name.toLowerCase().includes(query));
+        renderTzDropdown(filtered);
+        document.getElementById('tz-dropdown').style.display = 'block';
+    }
+
+    function showTzOptions() {
+        filterTzOptions(); // Re-render in case they deleted text
+        document.getElementById('tz-dropdown').style.display = 'block';
+    }
+
+    function selectTz(tz) {
+        selectedTzValue = tz.val;
+        document.getElementById('selected-tz-display').innerText = `Currently Selected: ${tz.name}`;
+        document.getElementById('tz-search').value = ''; 
+        document.getElementById('tz-dropdown').style.display = 'none';
+        updateTimezoneScales();
+    }
+
+    // Strict 24-Hour Input Handlers
+    function formatTimeInput(e) {
+        let val = e.target.value.replace(/\D/g, ''); // Strip non-numbers
+        if (val.length > 2) {
+            val = val.substring(0,2) + ':' + val.substring(2,4);
+        }
+        e.target.value = val;
+    }
+
+    function handleTextTimeChange() {
+        let timeInput = document.getElementById('merchant-time-input').value;
+        const parts = timeInput.split(':');
+        if(parts.length === 2) {
+            let h = parseInt(parts[0]);
+            let m = parseInt(parts[1]);
+            if(isNaN(h) || h < 0 || h > 23) h = 0;
+            if(isNaN(m) || m < 0 || m > 59) m = 0;
+            
+            const totalMins = h * 60 + m;
+            document.getElementById('merchant-time-slider').value = totalMins;
+            document.getElementById('merchant-time-input').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            updateTimezoneScales();
+        } else {
+            // Reset to default if typed incorrectly
+            document.getElementById('merchant-time-input').value = "12:00";
+            document.getElementById('merchant-time-slider').value = 720;
+            updateTimezoneScales();
+        }
     }
 
     function handleSliderChange() {
@@ -718,31 +800,18 @@
         const totalMins = parseInt(slider.value);
         const hours = Math.floor(totalMins / 60);
         const mins = totalMins % 60;
+        
         const displayHH = String(hours).padStart(2, '0');
         const displayMM = String(mins).padStart(2, '0');
-        
-        // Sync back to the input typing box
         document.getElementById('merchant-time-input').value = `${displayHH}:${displayMM}`;
-        updateTimezoneScales();
-    }
 
-    function handleTimeInputChange() {
-        const timeInput = document.getElementById('merchant-time-input').value; // "HH:MM"
-        if(timeInput) {
-            const parts = timeInput.split(':');
-            const totalMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-            document.getElementById('merchant-time-slider').value = totalMins;
-            updateTimezoneScales();
-        }
+        updateTimezoneScales();
     }
 
     function updateTimezoneScales() {
         const slider = document.getElementById('merchant-time-slider');
         const totalMins = parseInt(slider.value);
-
-        const inputName = document.getElementById('merchant-tz-input').value;
-        // Default to EST safely if the user types something invalid
-        const tz = tzMap.has(inputName) ? tzMap.get(inputName) : 'America/New_York';
+        const tz = selectedTzValue;
 
         const getOffset = (timeZone, date = new Date()) => {
             try {
@@ -759,7 +828,6 @@
         let gmtMins = totalMins - selectedOffset + gmtOffset;
         let estMins = totalMins - selectedOffset + estOffset;
 
-        // Wrap mathematically
         gmtMins = (gmtMins % 1440 + 1440) % 1440;
         estMins = (estMins % 1440 + 1440) % 1440;
 
@@ -781,8 +849,19 @@
         const estEl = document.getElementById('est-result-time');
         estEl.innerText = `${eH}:${eM} ${isEstGood ? '✓' : ''}`;
         estEl.style.color = isEstGood ? '#22c55e' : 'var(--danger-btn)';
+        
+        // Dynamic border glow for the time input box if it matches a safe zone
+        const timeInputEl = document.getElementById('merchant-time-input');
+        if (isGmtGood || isEstGood) {
+            timeInputEl.style.borderColor = '#22c55e';
+            timeInputEl.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.2)';
+        } else {
+            timeInputEl.style.borderColor = '#0f172a';
+            timeInputEl.style.boxShadow = 'none';
+        }
     }
 
+    // --- SHARED DATA VIEWS (Users & Logs) ---
     async function openDataView(appContext, viewType) {
         if (userRole !== 'Editor') return;
         currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; updatePresenceLocation();
