@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viking Cloud Workspace Platform</title>
   
-  <link rel="icon" type="image/png" href="./logo.png">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e3a8a">
-  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   
@@ -664,19 +660,16 @@
               </div>
 
               <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
-                  
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
                       <div id="standard-reminders-list"></div>
                   </div>
-
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
                       <div id="custom-reminders-list"></div>
                   </div>
-
               </div>
               
           </div>
@@ -929,7 +922,7 @@
       else if (appName === 'updates') currentAppLocation = 'Updates Hub';
       else if (appName === 'protocol') currentAppLocation = 'Process Protocol';
       else if (appName === 'timezone') currentAppLocation = 'Time Zone Scan';
-      else if (appName === 'reminders') { currentAppLocation = 'Reminders'; requestNotificationPermission(); }
+      else if (appName === 'reminders') { currentAppLocation = 'Reminders'; }
       
       updatePresenceLocation();
     }
@@ -1316,13 +1309,6 @@
         setInterval(checkReminders, 5000);
     }
 
-    function requestNotificationPermission() {
-        if (!("Notification" in window)) return;
-        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-            Notification.requestPermission();
-        }
-    }
-
     function getPositionDropdown(id, currentVal) {
         const options = [
             { val: "pos-bl", txt: "Bottom Left" },
@@ -1384,8 +1370,6 @@
         if (currentUser) {
             localStorage.setItem('viking_reminders_' + currentUser.email, JSON.stringify(remindersData));
         }
-        
-        if (remindersData.active) requestNotificationPermission();
         
         updateCountdownDisplay();
     }
@@ -1467,14 +1451,6 @@
     }
 
     function showReminderToast(msg, positionClass) {
-        if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Viking Cloud Workspace", {
-                body: msg,
-                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png",
-                requireInteraction: true 
-            });
-        }
-        
         const toast = document.getElementById('reminder-toast');
         const msgEl = document.getElementById('reminder-toast-msg');
         msgEl.innerText = msg;
@@ -1609,14 +1585,10 @@
         uiList.innerHTML = htmlContent;
     }
 
-    // --- 9. STARTUP & PWA REGISTRATION ---
+    // --- 9. STARTUP ---
     window.onload = () => { 
-        // AGGRESSIVE CACHE BUSTING: Forces the browser to load this new, fixed code
-        if ('caches' in window) {
-            caches.keys().then((names) => {
-                names.forEach((name) => caches.delete(name));
-            });
-        }
+        
+        // KILL SWITCH: Force browser to delete any lingering PWA Service Workers that broke the login
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
@@ -1638,12 +1610,6 @@
                      if (document.getElementById('protocol-data-container').style.display === 'block') renderDataView('protocol', 'logs');
                  }
             }).subscribe();
-        }
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-            .then(registration => console.log('PWA ServiceWorker registered'))
-            .catch(err => console.log('PWA ServiceWorker failed: ', err));
         }
     };
 
