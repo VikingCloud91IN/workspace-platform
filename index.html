@@ -91,14 +91,14 @@
     .label-drag-handle { cursor: grab; margin-right: 10px; opacity: 0.4; font-size: 16px; font-weight: bold; }
     .label-drag-handle:hover { opacity: 1; }
 
-    /* Notes Grid */
-    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto;}
+    /* Notes Grid - Fixed Box Sizing */
+    #notes-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; width: 100%; max-width: 1200px; padding: 10px 30px 30px 30px; margin: 0 auto; box-sizing: border-box; }
     .note-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; height: 120px; display: flex; justify-content: center; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);}
     .note-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
     .note-card.sortable-ghost { opacity: 0.2; background: var(--hover-bg); border: 2px dashed var(--accent); box-shadow: none; transform: none; } 
 
     /* Editor Core Styles */
-    .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+    .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); box-sizing: border-box; }
     .view-note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
     .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
     .note-content-display ul, .note-content-display ol { padding-left: 25px; margin: 10px 0; }
@@ -110,7 +110,7 @@
 
     /* Hub Email Strip UI */
     #hub-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
-    #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+    #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; box-sizing: border-box; }
     .hub-strip { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 25px; border-radius: 50px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
     .hub-strip:hover { transform: translateX(4px); border-color: var(--accent); }
     .hub-strip-left { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; flex: 1;}
@@ -121,7 +121,7 @@
     .full-screen-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--main-bg); z-index: 1000; padding: 50px; box-sizing: border-box; overflow-y: auto; }
     .silo-view-inner { max-width: 800px; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .hub-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; justify-content: center; align-items: center; }
-    .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.2);}
+    .hub-modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 700px; max-width: 90%; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.2); box-sizing: border-box; }
 
     /* Auth, Users & Logs UI */
     #global-login-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -276,7 +276,7 @@
           <div id="dashboard-hub-badge" class="dashboard-badge">0</div>
           <span class="icon">📣</span>
           <h3>Updates Hub</h3>
-          <p>Latest News</p>
+          <p>Latest compliance Updates</p>
         </div>
         <div class="app-card" onclick="switchApp('protocol')">
           <span class="icon">🛡️</span>
@@ -286,12 +286,12 @@
         <div class="app-card" onclick="switchApp('timezone')">
           <span class="icon">🌍</span>
           <h3>Time Zone Scale</h3>
-          <p>Global Call Sync</p>
+          <p>To schedule technical call for scan issue</p>
         </div>
         <div class="app-card" onclick="switchApp('reminders')">
           <span class="icon">⏰</span>
           <h3>Reminders</h3>
-          <p>Shift Break Sync</p>
+          <p>Shift Breaks Reminder</p>
         </div>
       </div>
     </div>
@@ -357,7 +357,7 @@
           </div>
         </div>
 
-        <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none;"></div>
+        <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none; box-sizing: border-box;"></div>
         <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
       </main>
     </div>
