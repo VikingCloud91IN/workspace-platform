@@ -98,7 +98,7 @@
     .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
     .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
 
-    /* Hub & Feed Strip UI */
+    /* Hub Email Strip UI */
     #hub-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
     #hub-banner:hover { opacity: 0.9; }
     #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
@@ -123,10 +123,12 @@
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
-    .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
-    .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
+    /* Selection & Paste Fixes */
+    input, textarea, .rt-area, .note-content-display, #hub-fv-body, #protocol-fv-body { user-select: text; -webkit-user-select: text; }
+    .note-content-display *, .rt-area *, #hub-fv-body *, #protocol-fv-body * { background-color: transparent !important; color: #000000 !important; }
+    .note-content-display img, .rt-area img, #hub-fv-body img, #protocol-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
 
+    /* Specific Heavy Borders */
     #app-silo .silo-search, #app-protocol .silo-search { border: 2px solid #0f172a !important; }
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
@@ -1034,13 +1036,8 @@
         const title = document.getElementById('protocolPostTitle').value; 
         const folder = document.getElementById('protocolFolderInput').value; 
         const body = document.getElementById('protocolRichText').innerHTML;
-        
         if(!title || !title.trim()) return alert("Title is required.");
         if(!folder || !folder.trim()) return alert("Folder category is required.");
-        
-        if(folder.trim().toLowerCase() === 'all' || folder.trim().toLowerCase() === 'all protocols') {
-             return alert("You cannot name a folder 'All'. Please choose a different category name.");
-        }
 
         let result;
         if(protocolOpenIndex !== null) {
@@ -1495,7 +1492,7 @@
             document.getElementById('hub-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Hub Activity Logs';
             document.getElementById('hub-data-container').style.display = 'block';
             renderDataView('hub', viewType);
-
+            
         } else if (appContext === 'protocol') {
             document.getElementById('protocol-feed').style.display = 'none';
             document.getElementById('protocol-full-view').style.display = 'none';
