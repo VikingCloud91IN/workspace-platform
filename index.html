@@ -38,7 +38,6 @@
     .dashboard-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
     .dashboard-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-    /* Burger Menu & Dynamic Top Bar Title CSS */
     .burger-btn { background: transparent; border: none; color: inherit; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .burger-btn:hover { background: rgba(128, 128, 128, 0.2); }
     .main-burger { display: none; color: var(--text-main); }
@@ -58,8 +57,6 @@
     .app-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
     .app-card h3 { margin: 0 0 5px 0; }
     .app-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
-    
-    /* Dashboard Unread Badge */
     .dashboard-badge { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; line-height: 28px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: none; text-align: center; }
 
     /* UI Layouts */
@@ -101,7 +98,7 @@
     .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
     .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
 
-    /* Hub Email Strip UI */
+    /* Hub & Feed Strip UI */
     #hub-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
     #hub-banner:hover { opacity: 0.9; }
     #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
@@ -126,12 +123,10 @@
     .status-online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .status-offline { background: #94a3b8; }
 
-    /* Selection & Paste Fixes */
     input, textarea, .rt-area, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
     .note-content-display *, .rt-area *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
 
-    /* Specific Heavy Borders */
     #app-silo .silo-search, #app-protocol .silo-search { border: 2px solid #0f172a !important; }
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
@@ -323,7 +318,7 @@
       </div>
     </aside>
 
-    <div id="silo-right">
+    <div id="silo-right" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: var(--main-bg);">
       <header class="silo-topbar">
         <div style="display:flex; align-items:center; flex:1; gap:15px;">
           <button class="burger-btn main-burger" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
@@ -1039,8 +1034,13 @@
         const title = document.getElementById('protocolPostTitle').value; 
         const folder = document.getElementById('protocolFolderInput').value; 
         const body = document.getElementById('protocolRichText').innerHTML;
+        
         if(!title || !title.trim()) return alert("Title is required.");
         if(!folder || !folder.trim()) return alert("Folder category is required.");
+        
+        if(folder.trim().toLowerCase() === 'all' || folder.trim().toLowerCase() === 'all protocols') {
+             return alert("You cannot name a folder 'All'. Please choose a different category name.");
+        }
 
         let result;
         if(protocolOpenIndex !== null) {
@@ -1451,6 +1451,14 @@
     }
 
     function showReminderToast(msg, positionClass) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Viking Cloud Workspace", {
+                body: msg,
+                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png",
+                requireInteraction: true 
+            });
+        }
+        
         const toast = document.getElementById('reminder-toast');
         const msgEl = document.getElementById('reminder-toast-msg');
         msgEl.innerText = msg;
@@ -1594,6 +1602,11 @@
                 for(let registration of registrations) {
                     registration.unregister();
                 }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then((names) => {
+                names.forEach((name) => caches.delete(name));
             });
         }
 
