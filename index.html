@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viking Cloud Workspace Platform</title>
   
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e3a8a">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
   
@@ -104,7 +108,7 @@
     /* Hub Email Strip UI */
     #hub-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
     #hub-banner:hover { opacity: 0.9; }
-    #hub-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+    #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
     .hub-strip { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 25px; border-radius: 50px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
     .hub-strip:hover { transform: translateX(4px); border-color: var(--accent); }
     .hub-strip-left { display: flex; flex-direction: column; gap: 4px; text-align: left; overflow: hidden; flex: 1;}
@@ -132,7 +136,7 @@
     .note-content-display img, .rt-area img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
 
     /* Specific Heavy Borders */
-    #app-silo .silo-search { border: 2px solid #0f172a !important; }
+    #app-silo .silo-search, #app-protocol .silo-search { border: 2px solid #0f172a !important; }
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
     /* =========================================
@@ -166,7 +170,6 @@
     input:checked + .slider-toggle { background-color: #22c55e; }
     input:checked + .slider-toggle:before { transform: translateX(20px); }
 
-    /* SUPER-SIZED TOAST NOTIFICATION */
     #reminder-toast { position: fixed; background: var(--card-bg); border: 4px solid var(--primary-btn); padding: 40px 60px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.3); z-index: 10000; color: var(--text-main); font-weight: bold; text-align: center; display: none; flex-direction: column; gap: 25px; min-width: 400px; animation: slideIn 0.3s ease-out; }
     #reminder-toast-msg { font-size: 22px !important; line-height: 1.4; }
     #reminder-toast div:first-child { font-size: 48px !important; }
@@ -180,6 +183,35 @@
     .pos-center.slideIn { animation: popCenter 0.3s ease-out; }
     @keyframes popCenter { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
+    /* =========================================
+       PROCESS PROTOCOL UI
+       ========================================= */
+    .protocol-folder-btn {
+        background: var(--primary-btn);
+        color: white;
+        border: none;
+        border-bottom: 4px solid var(--primary-hover);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+        transition: 0.1s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    .protocol-folder-btn:active {
+        border-bottom: 0px;
+        transform: translateY(4px);
+        margin-bottom: 14px; 
+    }
+    .protocol-folder-btn.active {
+        background: var(--accent);
+        border-bottom-color: #2563eb;
+    }
   </style>
 </head>
 <body>
@@ -243,6 +275,11 @@
           <span class="icon">📣</span>
           <h3>Updates Hub</h3>
           <p>Latest News</p>
+        </div>
+        <div class="app-card" onclick="switchApp('protocol')">
+          <span class="icon">🛡️</span>
+          <h3>Process Protocol</h3>
+          <p>Standard Operating Procedures</p>
         </div>
         <div class="app-card" onclick="switchApp('timezone')">
           <span class="icon">🌍</span>
@@ -323,7 +360,7 @@
           
           <div style="display: flex; gap: 10px;">
             <button class="silo-btn" style="width:auto;" onclick="siloSaveNote()">Save Note</button>
-            <button class="silo-btn secondary" style="width:auto;" onclick="siloSetView('All')">Cancel</button>
+            <button class="silo-btn secondary" style="width:auto;" onclick="siloSetView(siloCurrentFolder)">Cancel</button>
           </div>
         </div>
 
@@ -344,6 +381,93 @@
       </div>
   </div>
 
+  <div id="app-protocol" class="app-container">
+    <aside id="protocol-sidebar">
+      <div style="padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.2); display:flex; align-items:center; gap:10px;">
+        <button class="burger-btn" onclick="document.getElementById('app-protocol').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div>
+          <h1 style="margin:0; font-size:1.6rem; line-height:1;">Process Protocol</h1>
+          <div id="protocol-mode-indicator" style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 5px;">Viewer Mode</div>
+        </div>
+      </div>
+      
+      <div style="padding: 25px; flex-grow: 1; overflow-y: auto;">
+        <button class="silo-btn admin-only" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="protocolOpenEditor(false)">➕ Create Protocol</button>
+        
+        <div style="font-size: 12px; text-transform: uppercase; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 10px;">Folders</div>
+        <div id="protocol-folder-list"></div>
+      </div>
+    </aside>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
+      <header class="silo-topbar" style="background: var(--topbar-bg);">
+        <div style="display:flex; align-items:center; flex:1; gap:15px;">
+          <button class="burger-btn main-burger" onclick="document.getElementById('app-protocol').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <h2 class="topbar-app-title">Process Protocol</h2>
+          <input type="text" id="protocol-search" class="silo-search" placeholder="Search protocols, users, or logs..." onkeyup="protocolRender()">
+        </div>
+        <div style="display: flex; gap: 10px; margin-left: 15px;">
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('protocol', 'users')">Users</button>
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('protocol', 'logs')">Activity Logs</button>
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+        </div>
+      </header>
+
+      <div id="protocol-folder-actions" style="padding: 25px 30px 0; display: none;"></div>
+      <div id="protocol-feed"><p style="text-align: center;">Loading Protocol Database...</p></div>
+    </div>
+  </div>
+
+  <div id="protocol-data-container" class="full-screen-overlay">
+      <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="closeDataView('protocol')">← Back to Feed</button>
+      <div class="silo-view-inner" style="max-width: 1000px;">
+          <h1 id="protocol-data-title" style="margin: 0 0 20px 0; color: var(--text-main);">Platform Directory</h1>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+          <div id="protocol-data-list"></div>
+      </div>
+  </div>
+
+  <div id="protocol-full-view" class="full-screen-overlay">
+    <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="document.getElementById('protocol-full-view').style.display='none'">← Back to Protocols</button>
+    <div class="silo-view-inner">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <small id="protocol-fv-folder" style="color: var(--accent); font-weight: bold; text-transform: uppercase;"></small>
+          <h1 id="protocol-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
+          <div style="font-size:12px; color:var(--text-muted);" id="protocol-fv-date"></div>
+        </div>
+        <div id="protocol-fv-actions"></div>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+      <div id="protocol-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
+    </div>
+  </div>
+
+  <div id="protocolEditorModal" class="hub-modal">
+    <div class="hub-modal-content">
+      <h3 id="protocolModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Protocol</h3>
+      <input type="text" id="protocolPostTitle" class="silo-input" placeholder="Protocol Title">
+      <input type="text" id="protocolFolderInput" class="silo-input" placeholder="Folder Category (e.g., Security, Compliance)">
+      <div class="rt-toolbar">
+        <button class="rt-btn" onclick="hubFormat('bold', 'protocolRichText')"><b>B</b></button>
+        <button class="rt-btn" onclick="hubFormat('italic', 'protocolRichText')"><i>I</i></button>
+        <button class="rt-btn" onclick="hubFormat('insertUnorderedList', 'protocolRichText')">• Bullet</button>
+        <input type="file" id="protocol-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'protocolRichText')">
+        <button class="rt-btn" onclick="document.getElementById('protocol-img-upload').click()">🖼️ Image</button>
+        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('protocolRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
+      </div>
+      <div id="protocolRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
+      <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="silo-btn secondary" style="width:auto;" onclick="document.getElementById('protocolEditorModal').style.display='none'">Cancel</button>
+        <button id="protocolSaveBtn" class="dashboard-btn" onclick="protocolSavePost()">Publish</button>
+      </div>
+    </div>
+  </div>
+
   <div id="app-updates" class="app-container">
     <aside id="hub-sidebar">
       <div style="padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.2); display:flex; align-items:center; gap:10px;">
@@ -359,12 +483,8 @@
         
         <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
         <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
-        
         <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
-        
-        <button class="hub-nav-btn" id="hub-btn-protocol" onclick="hubSwitchFolder('protocol')">🛡️ Protocol</button>
-        
-      </div>
+        </div>
     </aside>
 
     <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
@@ -384,7 +504,7 @@
       </header>
 
       <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread updates!</div>
-      <div id="hub-feed" style="flex:1; overflow-y:auto; padding: 30px;"><p style="text-align: center;">Loading Updates Database...</p></div>
+      <div id="hub-feed"><p style="text-align: center;">Loading Updates Database...</p></div>
     </div>
   </div>
 
@@ -417,9 +537,9 @@
       <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
       <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
       <div class="rt-toolbar">
-        <button class="rt-btn" onclick="hubFormat('bold')"><b>B</b></button>
-        <button class="rt-btn" onclick="hubFormat('italic')"><i>I</i></button>
-        <button class="rt-btn" onclick="hubFormat('insertUnorderedList')">• Bullet</button>
+        <button class="rt-btn" onclick="hubFormat('bold', 'hubRichText')"><b>B</b></button>
+        <button class="rt-btn" onclick="hubFormat('italic', 'hubRichText')"><i>I</i></button>
+        <button class="rt-btn" onclick="hubFormat('insertUnorderedList', 'hubRichText')">• Bullet</button>
         <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
         <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
       </div>
@@ -570,21 +690,30 @@
     } catch (e) { console.error("Supabase Error:", e); }
 
     let isGlobalEditor = false;
-    let siloNotes = [];
-    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
-    let sortableInstance = null;
-    let isSorting = false;
-    let activeDataView = ''; 
-
-    let hubUpdates = [];
-    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
-    
     let currentUser = null;
     let userRole = 'Viewer';
     let currentAppLocation = 'Dashboard';
     let onlineUsers = {};
     let presenceChannel = null;
+
+    // Silo States
+    let siloNotes = [];
+    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
+    let siloCurrentFolder = 'All'; // FIXED BUG
+    let sortableInstance = null;
+    let isSorting = false;
+
+    // Hub States
+    let hubUpdates = [];
+    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
     let hubReadIds = [];
+
+    // Protocol States
+    let processProtocols = [];
+    let protocolFolder = 'All';
+    let protocolOpenIndex = null;
+
+    let activeDataView = ''; 
 
     // --- GLOBAL QUOTES LOGIC ---
     const corporateQuotes = [
@@ -648,6 +777,11 @@
         } catch (e) {}
     }
 
+    function formatCleanup(editorId) {
+        document.execCommand('removeFormat', false, null);
+        alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
+    }
+
     function handleImageUpload(event, editorId) {
         const file = event.target.files[0];
         if (!file) return;
@@ -661,25 +795,27 @@
         event.target.value = ''; 
     }
 
+    function hubFormat(cmd, editorId) { 
+        document.execCommand(cmd, false, null); 
+        document.getElementById(editorId).focus(); 
+    }
+
     async function logActivity(app, action, title) {
         if (!supabaseClient || !currentUser) return;
-        try {
-            await supabaseClient.from('app_logs').insert([{
-                app: app, action: action, item_title: title, user_email: currentUser.email
-            }]);
-        } catch(e) {}
+        try { await supabaseClient.from('app_logs').insert([{ app: app, action: action, item_title: title, user_email: currentUser.email }]); } catch(e) {}
     }
 
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'a') {
             const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
             const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable);
-            
             if (!isInput) {
                 const siloView = document.getElementById('silo-view-panel');
                 const hubView = document.getElementById('hub-full-view');
+                const protocolView = document.getElementById('protocol-full-view');
                 if (siloView && siloView.style.display === 'block') { e.preventDefault(); selectElementContents(document.querySelector('#silo-view-panel .note-content-display')); } 
                 else if (hubView && hubView.style.display === 'block') { e.preventDefault(); selectElementContents(document.getElementById('hub-fv-body')); }
+                else if (protocolView && protocolView.style.display === 'block') { e.preventDefault(); selectElementContents(document.getElementById('protocol-fv-body')); }
             }
         }
     });
@@ -699,13 +835,9 @@
             document.getElementById('global-login-overlay').style.display = 'none';
             document.getElementById('app-workspace').classList.add('active');
             
-            setupPresence();
-            initQuotes();
-            initHubReadReceipts();
-            loadSiloNotes(true);
-            loadHubUpdates(true);
-            initTimezoneApp();
-            initRemindersApp();
+            setupPresence(); initQuotes(); initHubReadReceipts();
+            loadSiloNotes(true); loadHubUpdates(true); loadProtocols(true);
+            initTimezoneApp(); initRemindersApp();
         }
     }
 
@@ -724,13 +856,9 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          setupPresence(); 
-          initQuotes(); 
-          initHubReadReceipts();
-          loadSiloNotes(true); 
-          loadHubUpdates(true); 
-          initTimezoneApp(); 
-          initRemindersApp();
+          setupPresence(); initQuotes(); initHubReadReceipts();
+          loadSiloNotes(true); loadHubUpdates(true); loadProtocols(true);
+          initTimezoneApp(); initRemindersApp();
       }
     }
 
@@ -742,27 +870,22 @@
 
     async function fetchUserProfile() {
         const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', currentUser.id).single();
-        
         let displayName = currentUser.email; 
-        if (data) {
-            userRole = data.role || 'Viewer';
-            if (data.display_name) displayName = data.display_name;
-        }
+        if (data) { userRole = data.role || 'Viewer'; if (data.display_name) displayName = data.display_name; }
 
         isGlobalEditor = (userRole.trim().toLowerCase() === 'editor');
         userRole = isGlobalEditor ? 'Editor' : 'Viewer';
-        siloEditor = isGlobalEditor;
-        hubEditor = isGlobalEditor;
+        siloEditor = isGlobalEditor; hubEditor = isGlobalEditor;
         
         document.getElementById('user-display-info').innerText = `${displayName}\nRole: ${userRole}`;
         document.getElementById('silo-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
         document.getElementById('hub-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('protocol-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
         
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = isGlobalEditor ? 'block' : 'none');
         document.getElementById('silo-admin-tools').style.display = isGlobalEditor ? 'block' : 'none';
 
-        siloRenderUI();
-        hubRenderAuth();
+        siloRenderUI(); hubRenderAuth(); protocolRender();
     }
 
     function setupPresence() {
@@ -774,6 +897,7 @@
             if (activeDataView === 'users') {
                 if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'users');
                 if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'users');
+                if (document.getElementById('protocol-data-container').style.display === 'block') renderDataView('protocol', 'users');
             }
         });
         presenceChannel.subscribe(async (status) => { if (status === 'SUBSCRIBED') await updatePresenceLocation(); });
@@ -789,8 +913,10 @@
       
       document.getElementById('silo-data-container').style.display = 'none';
       document.getElementById('hub-data-container').style.display = 'none';
+      document.getElementById('protocol-data-container').style.display = 'none';
       document.getElementById('notes-container').style.display = 'grid';
       document.getElementById('hub-feed').style.display = 'flex';
+      document.getElementById('protocol-feed').style.display = 'flex';
       activeDataView = '';
 
       let targetApp = appName === 'workspace' ? 'app-workspace' : `app-${appName}`;
@@ -799,14 +925,152 @@
       if (appName === 'workspace') currentAppLocation = 'Dashboard';
       else if (appName === 'silo') currentAppLocation = 'Silo Notes';
       else if (appName === 'updates') currentAppLocation = 'Updates Hub';
+      else if (appName === 'protocol') currentAppLocation = 'Process Protocol';
       else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
-      else if (appName === 'reminders') {
-          currentAppLocation = 'Reminders';
-          requestNotificationPermission();
-      }
+      else if (appName === 'reminders') { currentAppLocation = 'Reminders'; requestNotificationPermission(); }
       
       updatePresenceLocation();
     }
+
+    // --- NEW: PROCESS PROTOCOL LOGIC ---
+    async function loadProtocols(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('process_protocols').select('*').order('time', { ascending: false });
+            if (error) throw error;
+            processProtocols = data || [];
+            if (document.getElementById('protocol-data-container').style.display !== 'block') { protocolRender(); }
+        } catch (err) { 
+            if(!silent) document.getElementById('protocol-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> Ensure 'process_protocols' table is created.</p>`; 
+        }
+    }
+
+    function protocolSetFolder(folder) {
+        protocolFolder = folder;
+        protocolRender();
+    }
+
+    function protocolRender() {
+        if (activeDataView !== '') return renderDataView('protocol', activeDataView);
+
+        // Sidebar 3D Folders
+        const folderListEl = document.getElementById('protocol-folder-list');
+        folderListEl.innerHTML = '';
+        let uniqueFolders = [...new Set(processProtocols.map(p => p.folder).filter(Boolean))].sort();
+
+        folderListEl.innerHTML += `<button class="protocol-folder-btn ${protocolFolder==='All'?'active':''}" onclick="protocolSetFolder('All')">All Protocols</button>`;
+        uniqueFolders.forEach(folder => {
+            folderListEl.innerHTML += `<button class="protocol-folder-btn ${protocolFolder===folder?'active':''}" onclick="protocolSetFolder('${folder}')">${folder}</button>`;
+        });
+
+        // Contextual Create Button in Main View
+        const folderActions = document.getElementById('protocol-folder-actions');
+        if (isGlobalEditor && protocolFolder !== 'All') {
+            folderActions.style.display = 'block';
+            folderActions.innerHTML = `<button class="silo-btn" style="width:auto;" onclick="protocolOpenEditor(false, null, '${protocolFolder}')">➕ Create Protocol in ${protocolFolder}</button>`;
+        } else {
+            folderActions.style.display = 'none';
+        }
+
+        // Feed Render
+        const feed = document.getElementById('protocol-feed');
+        const query = document.querySelector('#app-protocol .silo-search').value.toLowerCase();
+        let htmlContent = "";
+        let count = 0;
+
+        processProtocols.forEach((item, idx) => {
+            if (protocolFolder !== 'All' && item.folder !== protocolFolder) return;
+            if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
+
+            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
+            let actionBtns = '';
+            
+            if (isGlobalEditor) {
+                const safeTitle = (item.title || '').replace(/'/g, "\\'");
+                actionBtns = `<div style="display:flex; gap:5px;">
+                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); protocolOpenEditor(true, ${idx})">Edit</button>
+                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); protocolDeleteById(${item.id}, '${safeTitle}')">Delete</button>
+                              </div>`;
+            }
+
+            htmlContent += `
+              <div class="hub-strip" onclick="protocolOpenView(${idx})" style="margin-bottom: 15px;">
+                <div class="hub-strip-left">
+                   <div style="font-size:11px; color:var(--accent); font-weight:bold; text-transform:uppercase;">${item.folder || 'Uncategorized'}</div>
+                   <h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3>
+                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
+              </div>`;
+            count++;
+        });
+
+        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No protocols found.</p>";
+        feed.innerHTML = htmlContent;
+    }
+
+    function protocolOpenView(index) {
+        if(index === null || !processProtocols[index]) return;
+        protocolOpenIndex = index; const item = processProtocols[index];
+
+        document.getElementById('protocol-fv-folder').innerText = item.folder || 'Uncategorized'; 
+        document.getElementById('protocol-fv-title').innerText = item.title || 'Untitled'; 
+        document.getElementById('protocol-fv-date').innerText = item.datestr || ''; 
+        document.getElementById('protocol-fv-body').innerHTML = item.body || '';
+        
+        const safeTitle = (item.title || '').replace(/'/g, "\\'");
+        document.getElementById('protocol-fv-actions').innerHTML = isGlobalEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="protocolOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="protocolDeleteById(${item.id}, '${safeTitle}')">Delete</button></div>` : '';
+        document.getElementById('protocol-full-view').style.display = 'block';
+    }
+
+    function protocolOpenEditor(isEdit, index = null, presetFolder = null) {
+        protocolOpenIndex = index;
+        if (isEdit && index !== null && processProtocols[index]) { 
+            document.getElementById('protocolModalTitle').innerText = "Edit Protocol"; 
+            document.getElementById('protocolPostTitle').value = processProtocols[index].title || ''; 
+            document.getElementById('protocolFolderInput').value = processProtocols[index].folder || ''; 
+            document.getElementById('protocolRichText').innerHTML = processProtocols[index].body || ''; 
+            document.getElementById('protocolSaveBtn').innerText = "Update Changes"; 
+        } else { 
+            document.getElementById('protocolModalTitle').innerText = "Create New Protocol"; 
+            document.getElementById('protocolPostTitle').value = ""; 
+            document.getElementById('protocolFolderInput').value = presetFolder || ""; 
+            document.getElementById('protocolRichText').innerHTML = ""; 
+            document.getElementById('protocolSaveBtn').innerText = "Publish"; 
+            protocolOpenIndex = null; 
+        }
+        document.getElementById('protocolEditorModal').style.display = 'flex';
+    }
+
+    async function protocolSavePost() {
+        if (!supabaseClient) return;
+        const title = document.getElementById('protocolPostTitle').value; 
+        const folder = document.getElementById('protocolFolderInput').value; 
+        const body = document.getElementById('protocolRichText').innerHTML;
+        if(!title || !title.trim()) return alert("Title is required.");
+        if(!folder || !folder.trim()) return alert("Folder category is required.");
+
+        if(protocolOpenIndex !== null) {
+            await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
+            logActivity('protocol', 'Edited', title);
+        } else {
+            await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+            logActivity('protocol', 'Created', title);
+        }
+        
+        document.getElementById('protocolEditorModal').style.display = 'none'; document.getElementById('protocol-full-view').style.display = 'none'; loadProtocols();
+    }
+
+    async function protocolDeleteById(id, title) {
+        if(!supabaseClient) return;
+        if(confirm("Delete this protocol permanently?")) { 
+            await supabaseClient.from('process_protocols').delete().eq('id', id); 
+            document.getElementById('protocol-full-view').style.display = 'none'; 
+            logActivity('protocol', 'Deleted', title);
+            loadProtocols(); 
+        }
+    }
+
 
     // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
     const tzs = [
@@ -1196,7 +1460,6 @@
     }
 
     function showReminderToast(msg, positionClass) {
-        // 1. Try OS Notification (Pops over Zendesk/other apps)
         if ("Notification" in window && Notification.permission === "granted") {
             new Notification("Viking Cloud Workspace", {
                 body: msg,
@@ -1205,7 +1468,6 @@
             });
         }
         
-        // 2. Always show DOM modal as fallback/in-app visual (Super-Sized)
         const toast = document.getElementById('reminder-toast');
         const msgEl = document.getElementById('reminder-toast-msg');
         msgEl.innerText = msg;
@@ -1243,14 +1505,24 @@
             document.getElementById('hub-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Hub Activity Logs';
             document.getElementById('hub-data-container').style.display = 'block';
             renderDataView('hub', viewType);
+
+        } else if (appContext === 'protocol') {
+            document.getElementById('protocol-feed').style.display = 'none';
+            document.getElementById('protocol-full-view').style.display = 'none';
+            document.getElementById('protocol-folder-actions').style.display = 'none';
+            
+            document.getElementById('protocol-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Protocol Activity Logs';
+            document.getElementById('protocol-data-container').style.display = 'block';
+            renderDataView('protocol', viewType);
         }
     }
     
     function closeDataView(appContext) {
         document.getElementById(`${appContext}-data-container`).style.display = 'none';
         activeDataView = '';
-        if (appContext === 'silo') siloSetView('All');
+        if (appContext === 'silo') siloSetView(siloCurrentFolder);
         else if (appContext === 'hub') hubSwitchFolder(hubFolder);
+        else if (appContext === 'protocol') protocolSetFolder(protocolFolder);
     }
 
     async function renderDataView(appContext, viewType) {
@@ -1299,7 +1571,7 @@
             if (count === 0) htmlContent = "<p>No users found.</p>";
             
         } else if (viewType === 'logs') {
-            const appFilter = appContext === 'silo' ? 'silo' : 'hub';
+            const appFilter = appContext; 
             const { data: logs, error } = await supabaseClient.from('app_logs').select('*').eq('app', appFilter).order('created_at', { ascending: false }).limit(100);
             if (error || !logs) return uiList.innerHTML = '<p>Error loading logs.</p>';
 
@@ -1340,7 +1612,7 @@
             
             if (siloCurrentView === 'ViewNote' && siloActiveId) {
                 const stillExists = siloNotes.find(n => n.id === siloActiveId);
-                if (!stillExists) { alert("This note was just deleted by an administrator."); siloCurrentView = 'All'; siloActiveId = null; }
+                if (!stillExists) { alert("This note was just deleted by an administrator."); siloCurrentView = siloCurrentFolder; siloActiveId = null; }
             }
             if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'DataView')) siloRenderUI();
         } catch (err) { if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
@@ -1351,11 +1623,17 @@
         if (activeDataView !== '') renderDataView('silo', activeDataView);
         else siloSetView('All'); 
     }
-    function siloFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('silo-note-content').focus(); }
     
     function siloSetView(view, id = null, presetLabel = null) { 
         document.getElementById('silo-data-container').style.display = 'none'; activeDataView = '';
-        siloCurrentView = view; siloActiveId = id; 
+        
+        // FIXED BUG: Track the previous folder we were looking at
+        if (view !== 'Create' && view !== 'ViewNote' && view !== 'DataView') {
+            siloCurrentFolder = view;
+        }
+        
+        siloCurrentView = view; 
+        siloActiveId = id; 
 
         if (view === 'Create') {
             document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-content').innerHTML = '';
@@ -1383,7 +1661,7 @@
             logActivity('silo', 'Created', title);
         }
         document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-content').innerHTML = '';
-        siloSetView('All'); loadSiloNotes(); 
+        siloSetView(siloCurrentFolder); loadSiloNotes(); 
     }
 
     async function siloDeleteNote(id) {
@@ -1392,7 +1670,7 @@
         if(confirm("Delete this note permanently?")) { 
             await supabaseClient.from('silo_notes').delete().eq('id', id); 
             if(note) logActivity('silo', 'Deleted', note.title);
-            siloSetView('All'); loadSiloNotes(); 
+            siloSetView(siloCurrentFolder); loadSiloNotes(); 
         }
     }
     
@@ -1417,7 +1695,7 @@
                     if (error) throw error;
                     alert("Notes restored successfully!");
                     logActivity('silo', 'Restored Backup', 'Multiple Notes');
-                    siloSetView('All'); loadSiloNotes();
+                    siloSetView(siloCurrentFolder); loadSiloNotes();
                 } else alert("Invalid backup format.");
             } catch (err) { alert("Failed to restore backup: " + err.message); }
             event.target.value = ''; 
@@ -1508,7 +1786,7 @@
             if(note) {
                 let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);">Delete</button>` : '';
                 document.getElementById('silo-view-panel').innerHTML = `
-                    <button onclick="siloSetView('All')" class="silo-btn secondary" style="width:auto; margin-bottom:20px; border:1px solid var(--border-color);">← Back to Notes</button>
+                    <button onclick="siloSetView('${siloCurrentFolder}')" class="silo-btn secondary" style="width:auto; margin-bottom:20px; border:1px solid var(--border-color);">← Back to Notes</button>
                     <div class="silo-view-inner">
                         <div class="view-note-header">
                             <div>
@@ -1587,8 +1865,6 @@
         }
     }
     
-    function hubFormat(cmd) { document.execCommand(cmd, false, null); document.getElementById('hubRichText').focus(); }
-    
     function hubSwitchFolder(folder) { 
         document.getElementById('hub-data-container').style.display = 'none';
         document.getElementById('hub-feed').style.display = 'flex';
@@ -1598,13 +1874,6 @@
     }
     
     function hubRenderAuth() { if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex); }
-    
-    async function setProtocol(id, status, title) {
-        if(!supabaseClient) return;
-        await supabaseClient.from('updates_hub').update({ is_protocol: status }).eq('id', id);
-        logActivity('hub', status ? 'Moved to Protocol' : 'Moved to History', title);
-        loadHubUpdates();
-    }
     
     async function hubDeleteById(id, title) {
         if(!supabaseClient) return;
@@ -1625,48 +1894,34 @@
         
         document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
         document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
-        document.getElementById('hub-btn-protocol').classList.toggle('active', hubFolder === 'protocol');
         
         let count = 0; let unreadCount = 0;
         const now = Date.now(); const fifteenDays = 15 * 24 * 60 * 60 * 1000;
 
         hubUpdates.forEach((item, idx) => {
             const isProtocol = item.is_protocol === true;
+            if (isProtocol) return; // HIDDEN FROM HUB NOW
+
             const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
             
-            if (!hubReadIds.includes(item.id) && !isProtocol) unreadCount++;
+            if (!hubReadIds.includes(item.id)) unreadCount++;
 
-            if (hubFolder === 'protocol' && !isProtocol) return;
-            if (hubFolder !== 'protocol' && isProtocol) return; 
             if (hubFolder === 'latest' && belongsTo !== 'latest') return;
             if (hubFolder === 'history' && belongsTo !== 'history') return;
 
             if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
             
             const isRead = hubReadIds.includes(item.id);
-            const unreadDot = (!isRead && !isProtocol) ? `<span class="unread-dot"></span>` : '';
+            const unreadDot = (!isRead) ? `<span class="unread-dot"></span>` : '';
             const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
 
             let actionBtns = '';
             if (hubEditor) {
                 const safeTitle = (item.title || '').replace(/'/g, "\\'");
-                if (hubFolder === 'latest') {
-                    actionBtns = `<div style="display:flex; gap:5px;">
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
-                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
-                                  </div>`;
-                } else if (hubFolder === 'history') {
-                    actionBtns = `<div style="display:flex; gap:5px;">
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); setProtocol(${item.id}, true, '${safeTitle}')">Move to Protocol</button>
-                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
-                                  </div>`;
-                } else if (hubFolder === 'protocol') {
-                    actionBtns = `<div style="display:flex; gap:5px;">
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
-                                    <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--hover-bg);" onclick="event.stopPropagation(); setProtocol(${item.id}, false, '${safeTitle}')">Move to History</button>
-                                    <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
-                                  </div>`;
-                }
+                actionBtns = `<div style="display:flex; gap:5px;">
+                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
+                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
+                              </div>`;
             }
 
             htmlContent += `
@@ -1723,14 +1978,11 @@
         const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
         if(!title || !title.trim()) return alert("Title is required.");
         
-        let currentIsProtocol = false;
-        if (hubOpenIndex !== null && hubUpdates[hubOpenIndex]) currentIsProtocol = hubUpdates[hubOpenIndex].is_protocol || false;
-
         if(hubOpenIndex !== null) {
             await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
             logActivity('hub', 'Edited', title);
         } else {
-            await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: currentIsProtocol }]);
+            await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: false }]);
             logActivity('hub', 'Created', title);
         }
         
@@ -1747,19 +1999,15 @@
         }
     }
 
-    // --- 9. STARTUP ---
-    window.onload = () => { checkSession(); };
-
-    if (supabaseClient) {
-        supabaseClient.channel('public:silo_notes').on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => { if (!isSorting) loadSiloNotes(true); }).subscribe();
-        supabaseClient.channel('public:updates_hub').on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => { loadHubUpdates(true); }).subscribe();
-        supabaseClient.channel('public:app_logs').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_logs' }, payload => {
-             if (activeDataView === 'logs') {
-                 if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'logs');
-                 if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'logs');
-             }
-        }).subscribe();
-    }
+    // --- 9. STARTUP & PWA REGISTRATION ---
+    window.onload = () => { 
+        checkSession(); 
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+            .then(registration => console.log('PWA ServiceWorker registered'))
+            .catch(err => console.log('PWA ServiceWorker failed: ', err));
+        }
+    };
 
   </script>
 </body>
