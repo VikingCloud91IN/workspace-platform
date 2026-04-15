@@ -1018,7 +1018,11 @@
     }
 
     async function protocolSavePost() {
-        if (!supabaseClient) return;
+        if (!supabaseClient) {
+            alert("Cannot connect to the database. Please check your network or credentials.");
+            return;
+        }
+
         const title = document.getElementById('protocolPostTitle').value; 
         const folder = document.getElementById('protocolFolderInput').value; 
         const body = protocolQuill.root.innerHTML;
@@ -1027,14 +1031,24 @@
         if(!folder || !folder.trim()) return alert("Folder category is required.");
 
         if(protocolOpenIndex !== null) {
-            await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
+            const { error } = await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
+            if (error) {
+                alert("Failed to update protocol: " + error.message);
+                return; 
+            }
             logActivity('protocol', 'Edited', title);
         } else {
-            await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+            const { error } = await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+            if (error) {
+                alert("Failed to save protocol: " + error.message);
+                return; 
+            }
             logActivity('protocol', 'Created', title);
         }
         
-        document.getElementById('protocolEditorModal').style.display = 'none'; document.getElementById('protocol-full-view').style.display = 'none'; loadProtocols();
+        document.getElementById('protocolEditorModal').style.display = 'none'; 
+        document.getElementById('protocol-full-view').style.display = 'none'; 
+        loadProtocols();
     }
 
     async function protocolDeleteById(id, title) {
@@ -1621,7 +1635,7 @@
     }
     
     async function siloSaveNote() {
-        if (!supabaseClient) return;
+        if (!supabaseClient) return alert("Database connection error.");
         const title = document.getElementById('silo-note-title').value;
         const labelBox = document.getElementById('silo-note-label');
         const label = labelBox.value;
@@ -1631,10 +1645,12 @@
         if (labelBox.style.display !== 'none' && !label.trim()) return alert("Label is required!");
 
         if (siloActiveId) {
-            await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+            const { error } = await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+            if (error) return alert("Failed to update note: " + error.message);
             logActivity('silo', 'Edited', title);
         } else {
-            await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+            const { error } = await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+            if (error) return alert("Failed to save note: " + error.message);
             logActivity('silo', 'Created', title);
         }
         document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; siloQuill.root.innerHTML = '';
@@ -1963,17 +1979,19 @@
     }
     
     async function hubSavePost() {
-        if (!supabaseClient) return;
+        if (!supabaseClient) return alert("Database connection error.");
         const title = document.getElementById('hubPostTitle').value; 
         const body = hubQuill.root.innerHTML;
         
         if(!title || !title.trim()) return alert("Title is required.");
         
         if(hubOpenIndex !== null) {
-            await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+            const { error } = await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+            if (error) return alert("Failed to update: " + error.message);
             logActivity('hub', 'Edited', title);
         } else {
-            await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: false }]);
+            const { error } = await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: false }]);
+            if (error) return alert("Failed to save: " + error.message);
             logActivity('hub', 'Created', title);
         }
         
