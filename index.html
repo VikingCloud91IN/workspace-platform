@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viking Cloud Workspace Platform</title>
   
+  <link rel="icon" type="image/png" href="./logo.png">
+  <meta name="theme-color" content="#1e3a8a">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+  
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
   
   <style>
     /* =========================================
@@ -38,6 +44,7 @@
     .dashboard-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
     .dashboard-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
+    /* Burger Menu & Dynamic Top Bar Title CSS */
     .burger-btn { background: transparent; border: none; color: inherit; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .burger-btn:hover { background: rgba(128, 128, 128, 0.2); }
     .main-burger { display: none; color: var(--text-main); }
@@ -57,6 +64,8 @@
     .app-card .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
     .app-card h3 { margin: 0 0 5px 0; }
     .app-card p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+    
+    /* Dashboard Unread Badge */
     .dashboard-badge { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; line-height: 28px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: none; text-align: center; }
 
     /* UI Layouts */
@@ -88,19 +97,19 @@
     .note-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
     .note-card.sortable-ghost { opacity: 0.2; background: var(--hover-bg); border: 2px dashed var(--accent); box-shadow: none; transform: none; } 
 
-    /* Editor */
+    /* Editor Core Styles */
     .silo-content-panel { background: var(--card-bg); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 100%; max-width: 800px; display: none; margin: 0 auto; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
-    .rt-toolbar { display: flex; gap: 5px; background-color: var(--toolbar-bg); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; padding: 8px; flex-wrap: wrap; }
-    .rt-btn { background: transparent; border: 1px solid transparent; color: var(--text-main); padding: 5px 10px; font-size: 14px; border-radius: 4px; cursor: pointer; }
-    .rt-btn:hover { background: var(--border-color); }
-    .rt-area { width: 100%; min-height: 250px; max-height: 40vh; overflow-y: auto; padding: 15px; border: 1px solid var(--border-color); border-radius: 0 0 4px 4px; box-sizing: border-box; background: var(--input-bg); color: var(--text-main); line-height: 1.6; margin-bottom: 12px; outline: none; }
     .view-note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
     .note-content-display { font-size: 16px; line-height: 1.6; color: var(--text-main); padding-right: 15px; }
-    .note-content-display ul, .note-content-display ol, .rt-area ul, .rt-area ol { padding-left: 25px; margin: 10px 0; }
+    .note-content-display ul, .note-content-display ol { padding-left: 25px; margin: 10px 0; }
+    
+    /* Quill Editor Custom Theme Integrations */
+    .ql-toolbar.ql-snow { background-color: var(--toolbar-bg); border-color: var(--border-color); border-radius: 4px 4px 0 0; font-family: inherit; }
+    .ql-container.ql-snow { border-color: var(--border-color); border-radius: 0 0 4px 4px; min-height: 250px; max-height: 40vh; overflow-y: auto; background: var(--input-bg); font-family: inherit; font-size: 16px; margin-bottom: 12px; }
+    .ql-editor { color: var(--text-main); line-height: 1.6; }
 
-    /* Hub & Protocol UI */
+    /* Hub Email Strip UI */
     #hub-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
-    #hub-banner:hover { opacity: 0.9; }
     #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
     .hub-strip { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 25px; border-radius: 50px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
     .hub-strip:hover { transform: translateX(4px); border-color: var(--accent); }
@@ -124,16 +133,16 @@
     .status-offline { background: #94a3b8; }
 
     /* Selection & Paste Fixes */
-    input, textarea, .rt-area, .note-content-display, #hub-fv-body, #protocol-fv-body { user-select: text; -webkit-user-select: text; }
-    .note-content-display *, .rt-area *, #hub-fv-body *, #protocol-fv-body * { background-color: transparent !important; color: #000000 !important; }
-    .note-content-display img, .rt-area img, #hub-fv-body img, #protocol-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
+    input, textarea, .note-content-display, #hub-fv-body { user-select: text; -webkit-user-select: text; }
+    .note-content-display *, #hub-fv-body * { background-color: transparent !important; color: #000000 !important; }
+    .note-content-display img, #hub-fv-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;}
 
     /* Specific Heavy Borders */
     #app-silo .silo-search, #app-protocol .silo-search { border: 2px solid #0f172a !important; }
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
     /* =========================================
-       TIME ZONE SCAN APP UI
+       TIME ZONE SCALE APP UI
        ========================================= */
     .tz-scale-container { position: relative; height: 24px; background: #e2e8f0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);}
     .tz-highlight { position: absolute; top: 0; height: 100%; background: rgba(34, 197, 94, 0.2); border-left: 2px solid #22c55e; border-right: 2px solid #22c55e; box-sizing: border-box;}
@@ -195,8 +204,6 @@
         align-items: center;
         font-size: 14px;
         margin-bottom: 10px;
-        width: 100%;
-        box-sizing: border-box;
     }
     .protocol-folder-btn:active {
         border-bottom: 0px;
@@ -278,7 +285,7 @@
         </div>
         <div class="app-card" onclick="switchApp('timezone')">
           <span class="icon">🌍</span>
-          <h3>Time Zone Scan</h3>
+          <h3>Time Zone Scale</h3>
           <p>Global Call Sync</p>
         </div>
         <div class="app-card" onclick="switchApp('reminders')">
@@ -320,7 +327,7 @@
       </div>
     </aside>
 
-    <div id="silo-right" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: var(--main-bg);">
+    <div id="silo-right">
       <header class="silo-topbar">
         <div style="display:flex; align-items:center; flex:1; gap:15px;">
           <button class="burger-btn main-burger" onclick="document.getElementById('app-silo').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
@@ -342,16 +349,7 @@
           <input type="text" id="silo-note-title" class="silo-input" placeholder="Note Title">
           <input type="text" id="silo-note-label" class="silo-input" placeholder="Label (e.g., Meeting)">
           
-          <div class="rt-toolbar">
-            <button class="rt-btn" onclick="hubFormat('bold', 'silo-note-content')"><b>B</b></button>
-            <button class="rt-btn" onclick="hubFormat('italic', 'silo-note-content')"><i>I</i></button>
-            <button class="rt-btn" onclick="hubFormat('underline', 'silo-note-content')"><u>U</u></button>
-            <button class="rt-btn" onclick="hubFormat('insertUnorderedList', 'silo-note-content')">• Bullet</button>
-            <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
-            <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
-          </div>
-          
-          <div id="silo-note-content" class="rt-area" contenteditable="true" spellcheck="true"></div>
+          <div id="silo-editor-container"></div>
           
           <div style="display: flex; gap: 10px;">
             <button class="silo-btn" style="width:auto;" onclick="siloSaveNote()">Save Note</button>
@@ -447,15 +445,9 @@
       <h3 id="protocolModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Protocol</h3>
       <input type="text" id="protocolPostTitle" class="silo-input" placeholder="Protocol Title">
       <input type="text" id="protocolFolderInput" class="silo-input" placeholder="Folder Category (e.g., Security, Compliance)">
-      <div class="rt-toolbar">
-        <button class="rt-btn" onclick="hubFormat('bold', 'protocolRichText')"><b>B</b></button>
-        <button class="rt-btn" onclick="hubFormat('italic', 'protocolRichText')"><i>I</i></button>
-        <button class="rt-btn" onclick="hubFormat('insertUnorderedList', 'protocolRichText')">• Bullet</button>
-        <input type="file" id="protocol-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'protocolRichText')">
-        <button class="rt-btn" onclick="document.getElementById('protocol-img-upload').click()">🖼️ Image</button>
-        <button class="rt-btn" style="color:var(--accent); font-weight:bold;" onclick="formatCleanup('protocolRichText')" title="Clears messy formatting">🧹 Format Cleanup</button>
-      </div>
-      <div id="protocolRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
+      
+      <div id="protocol-editor-container"></div>
+      
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
         <button class="silo-btn secondary" style="width:auto;" onclick="document.getElementById('protocolEditorModal').style.display='none'">Cancel</button>
         <button id="protocolSaveBtn" class="dashboard-btn" onclick="protocolSavePost()">Publish</button>
@@ -479,8 +471,7 @@
         <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
         <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
         <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
-        
-      </div>
+        </div>
     </aside>
 
     <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
@@ -532,14 +523,9 @@
     <div class="hub-modal-content">
       <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
       <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
-      <div class="rt-toolbar">
-        <button class="rt-btn" onclick="hubFormat('bold', 'hubRichText')"><b>B</b></button>
-        <button class="rt-btn" onclick="hubFormat('italic', 'hubRichText')"><i>I</i></button>
-        <button class="rt-btn" onclick="hubFormat('insertUnorderedList', 'hubRichText')">• Bullet</button>
-        <input type="file" id="hub-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'hubRichText')">
-        <button class="rt-btn" onclick="document.getElementById('hub-img-upload').click()">🖼️ Image</button>
-      </div>
-      <div id="hubRichText" class="rt-area" contenteditable="true" spellcheck="true"></div>
+      
+      <div id="hub-editor-container"></div>
+      
       <div style="text-align:right; margin-top:20px; display: flex; justify-content: flex-end; gap: 10px;">
         <button class="silo-btn secondary" style="width:auto;" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
         <button id="hubSaveBtn" class="dashboard-btn" onclick="hubSavePost()">Publish</button>
@@ -549,7 +535,7 @@
 
   <div id="app-timezone" class="app-container" style="flex-direction: column;">
       <header style="background: var(--topbar-bg); height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px;">
-          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Time Zone Scan</h2>
+          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Time Zone Scale</h2>
           
           <div style="display: flex; gap: 40px; font-weight: 600; font-variant-numeric: tabular-nums;">
               <div style="text-align: center;">
@@ -657,16 +643,19 @@
               </div>
 
               <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+                  
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
                       <div id="standard-reminders-list"></div>
                   </div>
+
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
                       <div id="custom-reminders-list"></div>
                   </div>
+
               </div>
               
           </div>
@@ -689,10 +678,26 @@
     let onlineUsers = {};
     let presenceChannel = null;
 
+    // --- QUILL EDITOR INITIALIZATION ---
+    const quillConfig = {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'bullet' }],
+                ['image', 'clean']
+            ]
+        }
+    };
+    
+    const siloQuill = new Quill('#silo-editor-container', quillConfig);
+    const protocolQuill = new Quill('#protocol-editor-container', quillConfig);
+    const hubQuill = new Quill('#hub-editor-container', quillConfig);
+
     // Silo States
     let siloNotes = [];
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
-    let siloCurrentFolder = 'All';
+    let siloCurrentFolder = 'All'; 
     let sortableInstance = null;
     let isSorting = false;
 
@@ -708,6 +713,7 @@
 
     let activeDataView = ''; 
 
+    // --- GLOBAL QUOTES LOGIC ---
     const corporateQuotes = [
         "Your expertise is the bridge between a merchant's hard work and their customers' trust.",
         "Every compliance step you guide is a shield against global cyber threats.",
@@ -769,29 +775,6 @@
         } catch (e) {}
     }
 
-    function formatCleanup(editorId) {
-        document.execCommand('removeFormat', false, null);
-        alert("🧹 Formatting Cleaned!\n\nPro Tip: Native spellcheck is enabled. Right-click any highlighted word to fix grammar or spelling.");
-    }
-
-    function handleImageUpload(event, editorId) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const editor = document.getElementById(editorId);
-            editor.focus();
-            document.execCommand('insertImage', false, e.target.result);
-        };
-        reader.readAsDataURL(file);
-        event.target.value = ''; 
-    }
-
-    function hubFormat(cmd, editorId = 'hubRichText') { 
-        document.execCommand(cmd, false, null); 
-        document.getElementById(editorId).focus(); 
-    }
-
     async function logActivity(app, action, title) {
         if (!supabaseClient || !currentUser) return;
         try { await supabaseClient.from('app_logs').insert([{ app: app, action: action, item_title: title, user_email: currentUser.email }]); } catch(e) {}
@@ -800,7 +783,7 @@
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'a') {
             const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-            const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable);
+            const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable) || document.activeElement.classList.contains('ql-editor');
             if (!isInput) {
                 const siloView = document.getElementById('silo-view-panel');
                 const hubView = document.getElementById('hub-full-view');
@@ -918,8 +901,8 @@
       else if (appName === 'silo') currentAppLocation = 'Silo Notes';
       else if (appName === 'updates') currentAppLocation = 'Updates Hub';
       else if (appName === 'protocol') currentAppLocation = 'Process Protocol';
-      else if (appName === 'timezone') currentAppLocation = 'Time Zone Scan';
-      else if (appName === 'reminders') { currentAppLocation = 'Reminders'; }
+      else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
+      else if (appName === 'reminders') { currentAppLocation = 'Reminders'; requestNotificationPermission(); }
       
       updatePresenceLocation();
     }
@@ -945,6 +928,7 @@
     function protocolRender() {
         if (activeDataView !== '') return renderDataView('protocol', activeDataView);
 
+        // Sidebar Folders
         const folderListEl = document.getElementById('protocol-folder-list');
         folderListEl.innerHTML = '';
         let uniqueFolders = [...new Set(processProtocols.map(p => p.folder).filter(Boolean))].sort();
@@ -954,6 +938,7 @@
             folderListEl.innerHTML += `<button class="protocol-folder-btn ${protocolFolder===folder?'active':''}" onclick="protocolSetFolder('${folder}')">${folder}</button>`;
         });
 
+        // Contextual Create Button in Main View
         const folderActions = document.getElementById('protocol-folder-actions');
         if (isGlobalEditor && protocolFolder !== 'All') {
             folderActions.style.display = 'block';
@@ -962,6 +947,7 @@
             folderActions.style.display = 'none';
         }
 
+        // Feed Render
         const feed = document.getElementById('protocol-feed');
         const query = document.querySelector('#app-protocol .silo-search').value.toLowerCase();
         let htmlContent = "";
@@ -975,4 +961,1040 @@
             let actionBtns = '';
             
             if (isGlobalEditor) {
-                const safeTitle = (item.title
+                const safeTitle = (item.title || '').replace(/'/g, "\\'");
+                actionBtns = `<div style="display:flex; gap:5px;">
+                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); protocolOpenEditor(true, ${idx})">Edit</button>
+                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); protocolDeleteById(${item.id}, '${safeTitle}')">Delete</button>
+                              </div>`;
+            }
+
+            htmlContent += `
+              <div class="hub-strip" onclick="protocolOpenView(${idx})" style="margin-bottom: 15px;">
+                <div class="hub-strip-left">
+                   <div style="font-size:11px; color:var(--accent); font-weight:bold; text-transform:uppercase;">${item.folder || 'Uncategorized'}</div>
+                   <h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3>
+                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
+              </div>`;
+            count++;
+        });
+
+        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No protocols found.</p>";
+        feed.innerHTML = htmlContent;
+    }
+
+    function protocolOpenView(index) {
+        if(index === null || !processProtocols[index]) return;
+        protocolOpenIndex = index; const item = processProtocols[index];
+
+        document.getElementById('protocol-fv-folder').innerText = item.folder || 'Uncategorized'; 
+        document.getElementById('protocol-fv-title').innerText = item.title || 'Untitled'; 
+        document.getElementById('protocol-fv-date').innerText = item.datestr || ''; 
+        document.getElementById('protocol-fv-body').innerHTML = item.body || '';
+        
+        const safeTitle = (item.title || '').replace(/'/g, "\\'");
+        document.getElementById('protocol-fv-actions').innerHTML = isGlobalEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="protocolOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="protocolDeleteById(${item.id}, '${safeTitle}')">Delete</button></div>` : '';
+        document.getElementById('protocol-full-view').style.display = 'block';
+    }
+
+    function protocolOpenEditor(isEdit, index = null, presetFolder = null) {
+        protocolOpenIndex = index;
+        if (isEdit && index !== null && processProtocols[index]) { 
+            document.getElementById('protocolModalTitle').innerText = "Edit Protocol"; 
+            document.getElementById('protocolPostTitle').value = processProtocols[index].title || ''; 
+            document.getElementById('protocolFolderInput').value = processProtocols[index].folder || ''; 
+            protocolQuill.clipboard.dangerouslyPasteHTML(processProtocols[index].body || '');
+            document.getElementById('protocolSaveBtn').innerText = "Update Changes"; 
+        } else { 
+            document.getElementById('protocolModalTitle').innerText = "Create New Protocol"; 
+            document.getElementById('protocolPostTitle').value = ""; 
+            document.getElementById('protocolFolderInput').value = presetFolder || ""; 
+            protocolQuill.root.innerHTML = ""; 
+            document.getElementById('protocolSaveBtn').innerText = "Publish"; 
+            protocolOpenIndex = null; 
+        }
+        document.getElementById('protocolEditorModal').style.display = 'flex';
+    }
+
+    async function protocolSavePost() {
+        if (!supabaseClient) return;
+        const title = document.getElementById('protocolPostTitle').value; 
+        const folder = document.getElementById('protocolFolderInput').value; 
+        const body = protocolQuill.root.innerHTML;
+        
+        if(!title || !title.trim()) return alert("Title is required.");
+        if(!folder || !folder.trim()) return alert("Folder category is required.");
+
+        if(protocolOpenIndex !== null) {
+            await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
+            logActivity('protocol', 'Edited', title);
+        } else {
+            await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+            logActivity('protocol', 'Created', title);
+        }
+        
+        document.getElementById('protocolEditorModal').style.display = 'none'; document.getElementById('protocol-full-view').style.display = 'none'; loadProtocols();
+    }
+
+    async function protocolDeleteById(id, title) {
+        if(!supabaseClient) return;
+        if(confirm("Delete this protocol permanently?")) { 
+            await supabaseClient.from('process_protocols').delete().eq('id', id); 
+            document.getElementById('protocol-full-view').style.display = 'none'; 
+            logActivity('protocol', 'Deleted', title);
+            loadProtocols(); 
+        }
+    }
+
+
+    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
+    const tzs = [
+        { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
+        { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
+        { name: 'USA/Canada - Mountain (MST/MDT)', val: 'America/Denver' },
+        { name: 'USA/Canada - Pacific (PST/PDT)', val: 'America/Los_Angeles' },
+        { name: 'USA - Alaska (AKST/AKDT)', val: 'America/Anchorage' },
+        { name: 'USA - Hawaii (HST)', val: 'Pacific/Honolulu' },
+        { name: 'Canada - Atlantic (AST/ADT)', val: 'America/Halifax' },
+        { name: 'Mexico - Mexico City', val: 'America/Mexico_City' },
+        { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
+        { name: 'Ireland - Dublin (GMT/IST)', val: 'Europe/Dublin' },
+        { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
+        { name: 'France - Paris (CET/CEST)', val: 'Europe/Paris' },
+        { name: 'Italy - Rome (CET/CEST)', val: 'Europe/Rome' },
+        { name: 'Spain - Madrid (CET/CEST)', val: 'Europe/Madrid' },
+        { name: 'Portugal - Lisbon (WET/WEST)', val: 'Europe/Lisbon' },
+        { name: 'Switzerland - Zurich (CET/CEST)', val: 'Europe/Zurich' },
+        { name: 'Netherlands - Amsterdam (CET/CEST)', val: 'Europe/Amsterdam' },
+        { name: 'Austria - Vienna (CET/CEST)', val: 'Europe/Vienna' },
+        { name: 'Denmark - Copenhagen (CET/CEST)', val: 'Europe/Copenhagen' },
+        { name: 'Sweden - Stockholm (CET/CEST)', val: 'Europe/Stockholm' },
+        { name: 'Norway - Oslo (CET/CEST)', val: 'Europe/Oslo' },
+        { name: 'Finland - Helsinki (EET/EEST)', val: 'Europe/Helsinki' },
+        { name: 'Poland - Warsaw (CET/CEST)', val: 'Europe/Warsaw' },
+        { name: 'Hungary - Budapest (CET/CEST)', val: 'Europe/Budapest' },
+        { name: 'Greece - Athens (CET/CEST)', val: 'Europe/Athens' },
+        { name: 'Russia - Moscow (MSK)', val: 'Europe/Moscow' },
+        { name: 'Ukraine - Kyiv (EET/EEST)', val: 'Europe/Kyiv' },
+        { name: 'Turkey - Istanbul (+03)', val: 'Europe/Istanbul' },
+        { name: 'South Africa - Johannesburg (SAST)', val: 'Africa/Johannesburg' },
+        { name: 'Egypt - Cairo (EET/EEST)', val: 'Africa/Cairo' },
+        { name: 'Kenya - Nairobi (EAT)', val: 'Africa/Nairobi' },
+        { name: 'Nigeria - Lagos (WAT)', val: 'Africa/Lagos' },
+        { name: 'Morocco - Casablanca (+01)', val: 'Africa/Casablanca' },
+        { name: 'India (IST)', val: 'Asia/Kolkata' },
+        { name: 'Japan - Tokyo (JST)', val: 'Asia/Tokyo' },
+        { name: 'China - Beijing (CST)', val: 'Asia/Shanghai' },
+        { name: 'UAE - Dubai (GST)', val: 'Asia/Dubai' },
+        { name: 'Singapore (SGT)', val: 'Asia/Singapore' },
+        { name: 'South Korea - Seoul (KST)', val: 'Asia/Seoul' },
+        { name: 'Saudi Arabia - Riyadh (AST)', val: 'Asia/Riyadh' },
+        { name: 'Pakistan - Karachi (PKT)', val: 'Asia/Karachi' },
+        { name: 'Bangladesh - Dhaka (BST)', val: 'Asia/Dhaka' },
+        { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
+        { name: 'Australia - Melbourne (AEST/AEDT)', val: 'Australia/Melbourne' },
+        { name: 'Australia - Brisbane (AEST)', val: 'Australia/Brisbane' },
+        { name: 'Australia - Adelaide (ACST/ACDT)', val: 'Australia/Adelaide' },
+        { name: 'Australia - Darwin (ACST)', val: 'Australia/Darwin' },
+        { name: 'Australia - Perth (AWST)', val: 'Australia/Perth' },
+        { name: 'New Zealand - Auckland (NZST/NZDT)', val: 'Pacific/Auckland' },
+        { name: 'Fiji - Suva (FJT)', val: 'Pacific/Fiji' },
+        { name: 'Papua New Guinea - Port Moresby (PGT)', val: 'Pacific/Port_Moresby' },
+        { name: 'Vanuatu - Port Vila (VUT)', val: 'Pacific/Efate' },
+        { name: 'Solomon Islands - Honiara (SBT)', val: 'Pacific/Guadalcanal' },
+        { name: 'Samoa - Apia (WST)', val: 'Pacific/Apia' },
+        { name: 'Tonga - Nukuʻalofa (TOT)', val: 'Pacific/Tongatapu' },
+        { name: 'French Polynesia - Tahiti (TAHT)', val: 'Pacific/Tahiti' },
+        { name: 'Palau (PWT)', val: 'Pacific/Palau' }
+    ];
+
+    let tzMap = new Map();
+    let selectedTzValue = 'America/New_York';
+
+    function initTimezoneApp() {
+        const dl = document.getElementById('tz-dropdown');
+        if (dl.innerHTML === '') {
+            tzs.forEach(tz => { tzMap.set(tz.name, tz.val); });
+            renderTzDropdown(tzs);
+        }
+        
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-est').innerText = now.toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour12: false});
+            document.getElementById('live-gmt').innerText = now.toLocaleTimeString('en-US', {timeZone: 'UTC', hour12: false});
+            document.getElementById('live-ist').innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
+            
+            const istClock = document.getElementById('reminders-ist-clock-display');
+            if(istClock) istClock.innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
+        }, 1000);
+        
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('tz-search');
+            const dropdown = document.getElementById('tz-dropdown');
+            if (e.target !== searchInput && e.target !== dropdown && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        updateTimezoneScales();
+    }
+
+    function renderTzDropdown(list) {
+        const container = document.getElementById('tz-dropdown');
+        container.innerHTML = '';
+        if (list.length === 0) { container.innerHTML = '<div style="color:var(--text-muted); cursor:default;">No countries found.</div>'; return; }
+        list.forEach(tz => {
+            const div = document.createElement('div');
+            div.innerText = tz.name;
+            div.onclick = () => selectTz(tz);
+            container.appendChild(div);
+        });
+    }
+
+    function filterTzOptions() {
+        const query = document.getElementById('tz-search').value.toLowerCase();
+        const filtered = tzs.filter(tz => tz.name.toLowerCase().includes(query));
+        renderTzDropdown(filtered);
+        document.getElementById('tz-dropdown').style.display = 'block';
+    }
+
+    function showTzOptions() {
+        filterTzOptions();
+        document.getElementById('tz-dropdown').style.display = 'block';
+    }
+
+    function selectTz(tz) {
+        selectedTzValue = tz.val;
+        document.getElementById('selected-tz-display').innerText = `Currently Selected: ${tz.name}`;
+        document.getElementById('tz-search').value = ''; 
+        document.getElementById('tz-dropdown').style.display = 'none';
+        updateTimezoneScales();
+    }
+
+    function formatTimeInput(e) {
+        let val = e.target.value.replace(/\D/g, ''); 
+        if (val.length > 2) val = val.substring(0,2) + ':' + val.substring(2,4);
+        e.target.value = val;
+    }
+
+    function handleTextTimeChange() {
+        let timeInput = document.getElementById('merchant-time-input').value;
+        const parts = timeInput.split(':');
+        if(parts.length === 2) {
+            let h = parseInt(parts[0]); let m = parseInt(parts[1]);
+            if(isNaN(h) || h < 0 || h > 23) h = 0;
+            if(isNaN(m) || m < 0 || m > 59) m = 0;
+            
+            const totalMins = h * 60 + m;
+            document.getElementById('merchant-time-slider').value = totalMins;
+            document.getElementById('merchant-time-input').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            updateTimezoneScales();
+        } else {
+            document.getElementById('merchant-time-input').value = "12:00";
+            document.getElementById('merchant-time-slider').value = 720;
+            updateTimezoneScales();
+        }
+    }
+
+    function handleSliderChange() {
+        const slider = document.getElementById('merchant-time-slider');
+        const totalMins = parseInt(slider.value);
+        const hours = Math.floor(totalMins / 60); const mins = totalMins % 60;
+        document.getElementById('merchant-time-input').value = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+        updateTimezoneScales();
+    }
+
+    function updateTimezoneScales() {
+        const totalMins = parseInt(document.getElementById('merchant-time-slider').value);
+        const tz = selectedTzValue;
+
+        const getOffset = (timeZone, date = new Date()) => {
+            try {
+                const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+                const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+                return (tzDate.getTime() - utcDate.getTime()) / 60000;
+            } catch(e) { return 0; }
+        };
+
+        const selectedOffset = getOffset(tz);
+        const gmtOffset = 0; 
+        const estOffset = getOffset('America/New_York');
+
+        let gmtMins = totalMins - selectedOffset + gmtOffset;
+        let estMins = totalMins - selectedOffset + estOffset;
+
+        gmtMins = (gmtMins % 1440 + 1440) % 1440;
+        estMins = (estMins % 1440 + 1440) % 1440;
+
+        document.getElementById('gmt-marker').style.left = `${(gmtMins / 1440) * 100}%`;
+        document.getElementById('est-marker').style.left = `${(estMins / 1440) * 100}%`;
+
+        const gH = String(Math.floor(gmtMins/60)).padStart(2, '0');
+        const gM = String(gmtMins%60).padStart(2, '0');
+        const eH = String(Math.floor(estMins/60)).padStart(2, '0');
+        const eM = String(estMins%60).padStart(2, '0');
+
+        const isGmtGood = gmtMins >= 540 && gmtMins <= 1020; 
+        const isEstGood = estMins >= 540 && estMins <= 1020;
+
+        const gmtEl = document.getElementById('gmt-result-time');
+        gmtEl.innerText = `${gH}:${gM} ${isGmtGood ? '✓' : ''}`;
+        gmtEl.style.color = isGmtGood ? '#22c55e' : 'var(--danger-btn)';
+
+        const estEl = document.getElementById('est-result-time');
+        estEl.innerText = `${eH}:${eM} ${isEstGood ? '✓' : ''}`;
+        estEl.style.color = isEstGood ? '#22c55e' : 'var(--danger-btn)';
+        
+        const timeInputEl = document.getElementById('merchant-time-input');
+        if (isGmtGood || isEstGood) {
+            timeInputEl.style.borderColor = '#22c55e';
+            timeInputEl.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.2)';
+        } else {
+            timeInputEl.style.borderColor = '#0f172a';
+            timeInputEl.style.boxShadow = 'none';
+        }
+    }
+
+    // --- REMINDERS APP LOGIC ---
+    let remindersData = {
+        active: true,
+        standard: [
+            { id: "std_1", label: "Break 1", time: "", pos: "pos-br" },
+            { id: "std_2", label: "Lunch", time: "", pos: "pos-br" },
+            { id: "std_3", label: "Break 2", time: "", pos: "pos-br" }
+        ],
+        custom: [
+            { id: "cst_1", msg: "", time: "", pos: "pos-br" },
+            { id: "cst_2", msg: "", time: "", pos: "pos-br" },
+            { id: "cst_3", msg: "", time: "", pos: "pos-br" }
+        ]
+    };
+    
+    let triggeredLog = {};
+
+    function initRemindersApp() {
+        if (!currentUser) return;
+        const stored = localStorage.getItem('viking_reminders_' + currentUser.email);
+        if (stored) {
+            try { remindersData = JSON.parse(stored); } catch(e) {}
+        }
+        
+        document.getElementById('reminders-toggle').checked = remindersData.active;
+        buildRemindersUI();
+        setInterval(checkReminders, 5000);
+    }
+
+    function requestNotificationPermission() {
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }
+
+    function getPositionDropdown(id, currentVal) {
+        const options = [
+            { val: "pos-bl", txt: "Bottom Left" },
+            { val: "pos-tl", txt: "Top Left" },
+            { val: "pos-tr", txt: "Top Right" },
+            { val: "pos-br", txt: "Bottom Right" },
+            { val: "pos-center", txt: "Center" }
+        ];
+        let html = `<select id="pos_${id}" onchange="saveRemindersConfig()">`;
+        options.forEach(o => {
+            html += `<option value="${o.val}" ${currentVal === o.val ? 'selected' : ''}>${o.txt}</option>`;
+        });
+        html += `</select>`;
+        return html;
+    }
+
+    function buildRemindersUI() {
+        const stdList = document.getElementById('standard-reminders-list');
+        stdList.innerHTML = '';
+        remindersData.standard.forEach(rem => {
+            stdList.innerHTML += `
+                <div class="rem-row">
+                    <div class="rem-label">${rem.label}</div>
+                    <input type="time" id="time_${rem.id}" value="${rem.time}" onchange="saveRemindersConfig()">
+                    ${getPositionDropdown(rem.id, rem.pos)}
+                </div>
+            `;
+        });
+
+        const cstList = document.getElementById('custom-reminders-list');
+        cstList.innerHTML = '';
+        remindersData.custom.forEach((rem, idx) => {
+            cstList.innerHTML += `
+                <div class="rem-row">
+                    <input type="text" id="msg_${rem.id}" placeholder="Custom Message ${idx + 1}" value="${rem.msg}" oninput="saveRemindersConfig()" style="flex:1;">
+                    <input type="time" id="time_${rem.id}" value="${rem.time}" onchange="saveRemindersConfig()">
+                    ${getPositionDropdown(rem.id, rem.pos)}
+                </div>
+            `;
+        });
+        
+        updateCountdownDisplay();
+    }
+
+    function saveRemindersConfig() {
+        remindersData.active = document.getElementById('reminders-toggle').checked;
+        
+        remindersData.standard.forEach(rem => {
+            rem.time = document.getElementById(`time_${rem.id}`).value;
+            rem.pos = document.getElementById(`pos_${rem.id}`).value;
+        });
+        
+        remindersData.custom.forEach(rem => {
+            rem.msg = document.getElementById(`msg_${rem.id}`).value;
+            rem.time = document.getElementById(`time_${rem.id}`).value;
+            rem.pos = document.getElementById(`pos_${rem.id}`).value;
+        });
+
+        if (currentUser) {
+            localStorage.setItem('viking_reminders_' + currentUser.email, JSON.stringify(remindersData));
+        }
+        
+        if (remindersData.active) requestNotificationPermission();
+        
+        updateCountdownDisplay();
+    }
+
+    function checkReminders() {
+        if (!remindersData.active) {
+            document.getElementById('next-break-display').innerText = "Reminders Paused";
+            return;
+        }
+
+        const now = new Date();
+        const istDateStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
+        const istDateObj = new Date(istDateStr);
+        
+        const currentMins = istDateObj.getHours() * 60 + istDateObj.getMinutes();
+        const todayKey = istDateObj.toDateString();
+
+        const allRems = [...remindersData.standard, ...remindersData.custom];
+        
+        allRems.forEach(rem => {
+            if (!rem.time) return;
+            const parts = rem.time.split(':');
+            const targetMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            
+            let triggerMins = targetMins - 10;
+            if (triggerMins < 0) triggerMins += 1440; 
+            
+            const logKey = `${rem.id}_${todayKey}`;
+
+            if (currentMins === triggerMins && !triggeredLog[logKey]) {
+                triggeredLog[logKey] = true;
+                let msg = (rem.label) ? "Time to Wrap up and get a break 😊" : (rem.msg || "Custom Reminder! 😊");
+                showReminderToast(msg, rem.pos);
+            }
+        });
+
+        updateCountdownDisplay(currentMins);
+    }
+
+    function updateCountdownDisplay(currentMins = null) {
+        if (!remindersData.active) {
+            document.getElementById('next-break-display').innerText = "Reminders Paused";
+            return;
+        }
+        
+        if (currentMins === null) {
+            const now = new Date();
+            const istDateObj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            currentMins = istDateObj.getHours() * 60 + istDateObj.getMinutes();
+        }
+
+        const allRems = [...remindersData.standard, ...remindersData.custom].filter(r => r.time);
+        
+        let nextTargetMins = null;
+        let minDiff = 1440;
+
+        allRems.forEach(rem => {
+            const parts = rem.time.split(':');
+            const targetMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            
+            let diff = targetMins - currentMins;
+            if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nextTargetMins = targetMins;
+            }
+        });
+
+        const displayEl = document.getElementById('next-break-display');
+        if (nextTargetMins !== null) {
+            const hrs = Math.floor(minDiff / 60);
+            const mns = minDiff % 60;
+            let timeStr = "";
+            if (hrs > 0) timeStr += `${hrs}h `;
+            timeStr += `${mns}m`;
+            displayEl.innerText = `Next Break in: ${timeStr}`;
+        } else {
+            displayEl.innerText = "All Breaks Completed";
+        }
+    }
+
+    function showReminderToast(msg, positionClass) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Viking Cloud Workspace", {
+                body: msg,
+                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png",
+                requireInteraction: true 
+            });
+        }
+        
+        const toast = document.getElementById('reminder-toast');
+        const msgEl = document.getElementById('reminder-toast-msg');
+        msgEl.innerText = msg;
+        toast.className = '';
+        toast.classList.add(positionClass);
+        if (positionClass === 'pos-center') toast.classList.add('slideIn');
+        toast.style.display = 'flex';
+    }
+
+    function closeReminderToast() {
+        document.getElementById('reminder-toast').style.display = 'none';
+    }
+
+    // --- SHARED DATA VIEWS (Users & Logs) ---
+    async function openDataView(appContext, viewType) {
+        if (userRole !== 'Editor') return;
+        currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; updatePresenceLocation();
+        activeDataView = viewType;
+        
+        if (appContext === 'silo') {
+            siloCurrentView = 'DataView';
+            document.getElementById('silo-editor-panel').style.display = 'none';
+            document.getElementById('silo-view-panel').style.display = 'none';
+            document.getElementById('notes-container').style.display = 'none';
+            document.getElementById('silo-folder-actions').style.display = 'none';
+            
+            document.getElementById('silo-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Silo Activity Logs';
+            document.getElementById('silo-data-container').style.display = 'block';
+            renderDataView('silo', viewType);
+            
+        } else if (appContext === 'hub') {
+            document.getElementById('hub-feed').style.display = 'none';
+            document.getElementById('hub-full-view').style.display = 'none';
+            
+            document.getElementById('hub-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Hub Activity Logs';
+            document.getElementById('hub-data-container').style.display = 'block';
+            renderDataView('hub', viewType);
+
+        } else if (appContext === 'protocol') {
+            document.getElementById('protocol-feed').style.display = 'none';
+            document.getElementById('protocol-full-view').style.display = 'none';
+            document.getElementById('protocol-folder-actions').style.display = 'none';
+            
+            document.getElementById('protocol-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Protocol Activity Logs';
+            document.getElementById('protocol-data-container').style.display = 'block';
+            renderDataView('protocol', viewType);
+        }
+    }
+    
+    function closeDataView(appContext) {
+        document.getElementById(`${appContext}-data-container`).style.display = 'none';
+        activeDataView = '';
+        if (appContext === 'silo') siloSetView(siloCurrentFolder);
+        else if (appContext === 'hub') hubSwitchFolder(hubFolder);
+        else if (appContext === 'protocol') protocolSetFolder(protocolFolder);
+    }
+
+    async function renderDataView(appContext, viewType) {
+        const uiList = document.getElementById(`${appContext}-data-list`);
+        if(!uiList) return;
+        if (uiList.innerHTML === '') uiList.innerHTML = '<p>Loading data...</p>';
+
+        const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
+        let count = 0; let htmlContent = '';
+
+        if (viewType === 'users') {
+            const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
+            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure database tables exist.</p>';
+
+            const uniqueProfilesMap = new Map();
+            allProfiles.forEach(p => uniqueProfilesMap.set(p.email, p));
+            const uniqueProfiles = Array.from(uniqueProfilesMap.values());
+
+            uniqueProfiles.forEach(profile => {
+                if (!profile.email.toLowerCase().includes(searchQuery) && !(profile.display_name || '').toLowerCase().includes(searchQuery)) return;
+                count++;
+
+                const userPresenceArray = onlineUsers[profile.email];
+                let isOnline = false, locationText = 'Offline';
+
+                if (userPresenceArray && userPresenceArray.length > 0) {
+                    isOnline = true;
+                    const latestPresence = userPresenceArray.sort((a,b) => new Date(b.online_at) - new Date(a.online_at))[0];
+                    locationText = `Viewing: ${latestPresence.location}`;
+                }
+                
+                const dotClass = isOnline ? 'status-online' : 'status-offline';
+                const visibleName = profile.display_name ? profile.display_name : profile.email;
+
+                htmlContent += `
+                    <div class="data-row">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
+                                <span class="status-dot ${dotClass}"></span>${visibleName}
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-muted);">${profile.email} • Role: ${profile.role}</div>
+                        </div>
+                        <div style="text-align:right; font-size: 13px; color: var(--text-muted);">${locationText}</div>
+                    </div>`;
+            });
+            if (count === 0) htmlContent = "<p>No users found.</p>";
+            
+        } else if (viewType === 'logs') {
+            const appFilter = appContext; 
+            const { data: logs, error } = await supabaseClient.from('app_logs').select('*').eq('app', appFilter).order('created_at', { ascending: false }).limit(100);
+            if (error || !logs) return uiList.innerHTML = '<p>Error loading logs.</p>';
+
+            logs.forEach(log => {
+                const searchString = `${log.user_email} ${log.action} ${log.item_title}`.toLowerCase();
+                if (!searchString.includes(searchQuery)) return;
+                count++;
+                
+                const dateIST = new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                let actionColor = 'var(--text-muted)';
+                if (log.action === 'Deleted') actionColor = 'var(--danger-btn)';
+                if (log.action === 'Created') actionColor = '#22c55e';
+
+                htmlContent += `
+                    <div class="data-row">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
+                                ${log.user_email} <span style="color:${actionColor}; margin: 0 5px;">[${log.action}]</span> 
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-main);">Item: <i>${log.item_title}</i></div>
+                        </div>
+                        <div style="text-align:right; font-size: 12px; color: var(--text-muted); font-family:monospace;">
+                            ${dateIST} (IST)
+                        </div>
+                    </div>`;
+            });
+            if (count === 0) htmlContent = "<p>No logs found.</p>";
+        }
+        uiList.innerHTML = htmlContent;
+    }
+
+    async function loadSiloNotes(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('silo_notes').select('*').order('sort_order', { ascending: true });
+            if (error) throw error;
+            siloNotes = data || [];
+            
+            if (siloCurrentView === 'ViewNote' && siloActiveId) {
+                const stillExists = siloNotes.find(n => n.id === siloActiveId);
+                if (!stillExists) { alert("This note was just deleted by an administrator."); siloCurrentView = siloCurrentFolder; siloActiveId = null; }
+            }
+            if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'DataView')) siloRenderUI();
+        } catch (err) { if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
+    }
+    
+    function siloSearch(e) { 
+        siloQuery = e.target.value.toLowerCase(); 
+        if (activeDataView !== '') renderDataView('silo', activeDataView);
+        else siloSetView('All'); 
+    }
+    
+    function siloSetView(view, id = null, presetLabel = null) { 
+        document.getElementById('silo-data-container').style.display = 'none'; activeDataView = '';
+        
+        if (view !== 'Create' && view !== 'ViewNote' && view !== 'DataView') {
+            siloCurrentFolder = view;
+        }
+        
+        siloCurrentView = view; 
+        siloActiveId = id; 
+
+        if (view === 'Create') {
+            document.getElementById('silo-note-title').value = ''; 
+            siloQuill.root.innerHTML = '';
+            
+            if (presetLabel) { document.getElementById('silo-note-label').value = presetLabel; document.getElementById('silo-note-label').style.display = 'none'; } 
+            else { document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-label').style.display = 'block'; }
+        }
+        siloRenderUI(); 
+    }
+    
+    async function siloSaveNote() {
+        if (!supabaseClient) return;
+        const title = document.getElementById('silo-note-title').value;
+        const labelBox = document.getElementById('silo-note-label');
+        const label = labelBox.value;
+        const content = siloQuill.root.innerHTML; 
+        
+        if (!title.trim() && content === '<p><br></p>') return;
+        if (labelBox.style.display !== 'none' && !label.trim()) return alert("Label is required!");
+
+        if (siloActiveId) {
+            await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+            logActivity('silo', 'Edited', title);
+        } else {
+            await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+            logActivity('silo', 'Created', title);
+        }
+        document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; siloQuill.root.innerHTML = '';
+        siloSetView(siloCurrentFolder); loadSiloNotes(); 
+    }
+
+    async function siloDeleteNote(id) {
+        if (!supabaseClient) return;
+        const note = siloNotes.find(n => n.id === id);
+        if(confirm("Delete this note permanently?")) { 
+            await supabaseClient.from('silo_notes').delete().eq('id', id); 
+            if(note) logActivity('silo', 'Deleted', note.title);
+            siloSetView(siloCurrentFolder); loadSiloNotes(); 
+        }
+    }
+    
+    function siloBackup() {
+        const backupData = JSON.stringify(siloNotes, null, 2);
+        const blob = new Blob([backupData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'silo_backup.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    
+    async function processRestoreFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const parsedNotes = JSON.parse(e.target.result);
+                if (Array.isArray(parsedNotes)) {
+                    if (!supabaseClient) throw new Error("Database connection blocked.");
+                    const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
+                    if (error) throw error;
+                    alert("Notes restored successfully!");
+                    logActivity('silo', 'Restored Backup', 'Multiple Notes');
+                    siloSetView(siloCurrentFolder); loadSiloNotes();
+                } else alert("Invalid backup format.");
+            } catch (err) { alert("Failed to restore backup: " + err.message); }
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    function initSortableGrid() {
+        if (typeof Sortable === 'undefined') return; 
+        const container = document.getElementById('notes-container');
+        if(sortableInstance) sortableInstance.destroy();
+        
+        if(siloEditor && !siloQuery && siloCurrentView !== 'DataView') {
+            sortableInstance = new Sortable(container, {
+                animation: 150, handle: ".drag-handle", draggable: ".sortable-card", forceFallback: true, fallbackClass: "sortable-ghost",
+                onEnd: async function (evt) {
+                    if (!supabaseClient) return;
+                    const itemEl = evt.item; const prevEl = itemEl.previousElementSibling; const nextEl = itemEl.nextElementSibling;
+                    const id = parseInt(itemEl.dataset.id); let newSortOrder = Date.now() * 1000; 
+
+                    if (prevEl && nextEl) newSortOrder = (parseFloat(prevEl.dataset.order) + parseFloat(nextEl.dataset.order)) / 2.0;
+                    else if (prevEl && !nextEl) newSortOrder = parseFloat(prevEl.dataset.order) + 1000;
+                    else if (!prevEl && nextEl) newSortOrder = parseFloat(nextEl.dataset.order) - 1000;
+
+                    itemEl.dataset.order = newSortOrder; isSorting = true; 
+                    await supabaseClient.from('silo_notes').update({ sort_order: newSortOrder }).eq('id', id);
+                    setTimeout(() => { isSorting = false; loadSiloNotes(true); }, 500);
+                }
+            });
+        }
+    }
+
+    function siloRenderUI() {
+        if (siloCurrentView === 'DataView') return; 
+
+        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
+        document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
+        document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
+
+        const lblList = document.getElementById('label-list');
+        lblList.innerHTML = '';
+        
+        let uniqueLabels = [...new Set(siloNotes.map(n => n.label).filter(Boolean))];
+        
+        let savedOrder = [];
+        if (currentUser) {
+            try {
+                const stored = localStorage.getItem('siloLabelOrder_' + currentUser.email);
+                if (stored) savedOrder = JSON.parse(stored);
+            } catch(e) {}
+        }
+        
+        uniqueLabels.sort((a, b) => {
+            let idxA = savedOrder.indexOf(a);
+            let idxB = savedOrder.indexOf(b);
+            if(idxA === -1) idxA = 9999;
+            if(idxB === -1) idxB = 9999;
+            return idxA - idxB;
+        });
+
+        lblList.innerHTML += `<li class="static-label ${siloCurrentView==='All'?'active':''}" onclick="siloSetView('All')"><span style="margin-right:10px; opacity:0; width:16px;"></span><span style="flex:1;">All Notes</span></li>`;
+        
+        uniqueLabels.forEach(lbl => {
+            lblList.innerHTML += `<li class="drag-label ${siloCurrentView===lbl?'active':''}" data-id="${lbl}">
+                <span class="label-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⋮⋮</span>
+                <span style="flex:1; cursor:pointer;" onclick="siloSetView('${lbl}')">${lbl}</span>
+            </li>`;
+        });
+
+        if (window.labelSortableInstance) { window.labelSortableInstance.destroy(); }
+        
+        if (currentUser && typeof Sortable !== 'undefined') {
+            window.labelSortableInstance = new Sortable(lblList, {
+                animation: 150, filter: ".static-label", draggable: ".drag-label", handle: ".label-drag-handle",
+                onEnd: function() {
+                    const items = Array.from(lblList.querySelectorAll('.drag-label'));
+                    const newOrder = items.map(li => li.getAttribute('data-id'));
+                    localStorage.setItem('siloLabelOrder_' + currentUser.email, JSON.stringify(newOrder));
+                }
+            });
+        }
+
+        const folderActions = document.getElementById('silo-folder-actions');
+
+        if (siloCurrentView === 'ViewNote') {
+            folderActions.style.display = 'none';
+            const note = siloNotes.find(n => n.id === siloActiveId);
+            if(note) {
+                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);">Delete</button>` : '';
+                document.getElementById('silo-view-panel').innerHTML = `
+                    <button onclick="siloSetView('${siloCurrentFolder}')" class="silo-btn secondary" style="width:auto; margin-bottom:20px; border:1px solid var(--border-color);">← Back to Notes</button>
+                    <div class="silo-view-inner">
+                        <div class="view-note-header">
+                            <div>
+                                <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div>
+                                <h2 style="margin:5px 0 0 0; color:var(--text-main);">${note.title || 'Untitled'}</h2>
+                            </div>
+                            <div style="display:flex; gap:10px;">${actions}</div>
+                        </div>
+                        <div class="note-content-display">${note.content || ''}</div>
+                    </div>`;
+            }
+        } else if (siloCurrentView !== 'Create') {
+            const container = document.getElementById('notes-container'); container.innerHTML = '';
+            
+            if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
+                folderActions.style.display = 'block';
+                folderActions.innerHTML = `<button class="silo-btn" style="width:auto;" onclick="siloSetView('Create', null, '${siloCurrentView}')">➕ Create Note in ${siloCurrentView}</button>`;
+            } else {
+                folderActions.style.display = 'none';
+            }
+
+            const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
+            
+            filtered.forEach(n => {
+                const handle = siloEditor ? `<span class="drag-handle" style="position:absolute; top:5px; right:5px; cursor:grab; font-size:20px; color:var(--text-muted); padding:10px; z-index:10; line-height:1;" title="Drag to reorder" onclick="event.stopPropagation()">⋮⋮</span>` : '';
+                container.innerHTML += `
+                  <div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="if(!event.target.classList.contains('drag-handle')) siloSetView('ViewNote', ${n.id})">
+                    ${handle}
+                    <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; padding:25px 15px 15px 15px; box-sizing:border-box;">
+                      <h4 style="margin:0; font-size:16px; font-weight:600; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; color:var(--text-main); pointer-events:none;">${n.title || 'Untitled'}</h4>
+                    </div>
+                  </div>`;
+            });
+
+            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:var(--text-main);'>No notes found.</p>";
+            
+            initSortableGrid();
+        } else {
+             folderActions.style.display = 'none';
+        }
+    }
+    
+    function siloEditMode(id) {
+        const note = siloNotes.find(n => n.id === id);
+        if(note) { 
+            siloCurrentView = 'Create'; siloActiveId = id; 
+            document.getElementById('silo-note-label').style.display = 'block';
+            document.getElementById('silo-editor-title').innerText = "Edit Note"; 
+            document.getElementById('silo-note-title').value = note.title || ''; 
+            document.getElementById('silo-note-label').value = note.label || ''; 
+            
+            siloQuill.clipboard.dangerouslyPasteHTML(note.content || '');
+            
+            siloRenderUI();
+        }
+    }
+
+    async function loadHubUpdates(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('updates_hub').select('*').order('time', { ascending: false });
+            if (error) throw error;
+            hubUpdates = data || [];
+            
+            if (document.getElementById('hub-full-view').style.display === 'block' && hubOpenIndex !== null) {
+                const openId = hubUpdates[hubOpenIndex] ? hubUpdates[hubOpenIndex].id : null;
+                const stillExists = hubUpdates.find(u => u.id === openId);
+                if (!stillExists) {
+                    alert("This update was just deleted by an administrator.");
+                    document.getElementById('hub-full-view').style.display = 'none';
+                }
+            }
+            if (document.getElementById('hub-data-container').style.display !== 'block') {
+                hubRender();
+            }
+        } catch (err) { 
+            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
+        }
+    }
+    
+    function hubSwitchFolder(folder) { 
+        document.getElementById('hub-data-container').style.display = 'none';
+        document.getElementById('hub-feed').style.display = 'flex';
+        activeDataView = ''; hubFolder = folder; 
+        document.getElementById('hub-full-view').style.display='none'; 
+        hubRender(); 
+    }
+    
+    function hubRenderAuth() { if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex); }
+    
+    async function hubDeleteById(id, title) {
+        if(!supabaseClient) return;
+        if(confirm("Delete this update permanently?")) { 
+            await supabaseClient.from('updates_hub').delete().eq('id', id); 
+            document.getElementById('hub-full-view').style.display = 'none'; 
+            logActivity('hub', 'Deleted', title);
+            loadHubUpdates(); 
+        }
+    }
+
+    function hubRender() {
+        const feed = document.getElementById('hub-feed'); 
+        if (activeDataView !== '') return renderDataView('hub', activeDataView);
+
+        const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
+        let htmlContent = "";
+        
+        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
+        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
+        
+        let count = 0; let unreadCount = 0;
+        const now = Date.now(); const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+
+        hubUpdates.forEach((item, idx) => {
+            const isProtocol = item.is_protocol === true;
+            if (isProtocol) return;
+
+            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
+            
+            if (!hubReadIds.includes(item.id)) unreadCount++;
+
+            if (hubFolder === 'latest' && belongsTo !== 'latest') return;
+            if (hubFolder === 'history' && belongsTo !== 'history') return;
+
+            if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
+            
+            const isRead = hubReadIds.includes(item.id);
+            const unreadDot = (!isRead) ? `<span class="unread-dot"></span>` : '';
+            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
+
+            let actionBtns = '';
+            if (hubEditor) {
+                const safeTitle = (item.title || '').replace(/'/g, "\\'");
+                actionBtns = `<div style="display:flex; gap:5px;">
+                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
+                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
+                              </div>`;
+            }
+
+            htmlContent += `
+              <div class="hub-strip" onclick="hubOpenView(${idx})">
+                <div class="hub-strip-left">
+                   <div style="display:flex; align-items:center;">${unreadDot}<h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3></div>
+                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
+              </div>`;
+            count++;
+        });
+
+        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
+        feed.innerHTML = htmlContent;
+
+        const badge = document.getElementById('dashboard-hub-badge'); const banner = document.getElementById('hub-banner');
+        if (unreadCount > 0) {
+            badge.style.display = 'block'; badge.innerText = unreadCount;
+            banner.style.display = 'block'; banner.innerText = `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
+        } else { badge.style.display = 'none'; banner.style.display = 'none'; }
+    }
+
+    document.querySelector('#app-updates .silo-search').addEventListener('input', () => {
+        if (activeDataView !== '') renderDataView('hub', activeDataView); else hubRender();
+    });
+
+    function hubOpenView(index) {
+        if(index === null || !hubUpdates[index]) return;
+        hubOpenIndex = index; const item = hubUpdates[index];
+        
+        if (!hubReadIds.includes(item.id)) {
+            hubReadIds.push(item.id);
+            try { localStorage.setItem('hubReadIds_' + currentUser.email, JSON.stringify(hubReadIds)); } catch(e) {} 
+            hubRender(); 
+        }
+
+        document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; document.getElementById('hub-fv-date').innerText = item.datestr || ''; document.getElementById('hub-fv-body').innerHTML = item.body || '';
+        
+        const safeTitle = (item.title || '').replace(/'/g, "\\'");
+        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="hubOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="hubDelete(${index}, '${safeTitle}')">Delete</button></div>` : '';
+        document.getElementById('hub-full-view').style.display = 'block';
+    }
+
+    function hubOpenEditor(isEdit, index = null) {
+        hubOpenIndex = index;
+        if(isEdit && index !== null && hubUpdates[index]) { 
+            document.getElementById('hubModalTitle').innerText = "Edit Update"; 
+            document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; 
+            hubQuill.clipboard.dangerouslyPasteHTML(hubUpdates[index].body || '');
+            document.getElementById('hubSaveBtn').innerText = "Update Changes"; 
+        } else { 
+            document.getElementById('hubModalTitle').innerText = "Create New Update"; 
+            document.getElementById('hubPostTitle').value = ""; 
+            hubQuill.root.innerHTML = ""; 
+            document.getElementById('hubSaveBtn').innerText = "Publish"; 
+            hubOpenIndex = null; 
+        }
+        document.getElementById('hubEditorModal').style.display = 'flex';
+    }
+    
+    async function hubSavePost() {
+        if (!supabaseClient) return;
+        const title = document.getElementById('hubPostTitle').value; 
+        const body = hubQuill.root.innerHTML;
+        
+        if(!title || !title.trim()) return alert("Title is required.");
+        
+        if(hubOpenIndex !== null) {
+            await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
+            logActivity('hub', 'Edited', title);
+        } else {
+            await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: false }]);
+            logActivity('hub', 'Created', title);
+        }
+        
+        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
+    }
+    
+    async function hubDelete(index, title) {
+        if (!supabaseClient) return;
+        if(confirm("Delete this update permanently?")) { 
+            await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); 
+            document.getElementById('hub-full-view').style.display = 'none'; 
+            logActivity('hub', 'Deleted', title);
+            loadHubUpdates(); 
+        }
+    }
+
+    // --- 9. STARTUP ---
+    window.onload = () => { 
+        checkSession(); 
+    };
+
+  </script>
+</body>
+</html>
