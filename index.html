@@ -140,7 +140,7 @@
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
     /* =========================================
-       TIME ZONE SCALE APP UI
+       TIME ZONE APP UI
        ========================================= */
     .tz-scale-container { position: relative; height: 24px; background: #e2e8f0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);}
     .tz-highlight { position: absolute; top: 0; height: 100%; background: rgba(34, 197, 94, 0.2); border-left: 2px solid #22c55e; border-right: 2px solid #22c55e; box-sizing: border-box;}
@@ -202,6 +202,8 @@
         align-items: center;
         font-size: 14px;
         margin-bottom: 10px;
+        width: 100%;
+        box-sizing: border-box;
     }
     .protocol-folder-btn:active {
         border-bottom: 0px;
@@ -283,7 +285,7 @@
         </div>
         <div class="app-card" onclick="switchApp('timezone')">
           <span class="icon">🌍</span>
-          <h3>Time Zone Scale</h3>
+          <h3>Time Zone Scan</h3>
           <p>Global Call Sync</p>
         </div>
         <div class="app-card" onclick="switchApp('reminders')">
@@ -348,10 +350,10 @@
           <input type="text" id="silo-note-label" class="silo-input" placeholder="Label (e.g., Meeting)">
           
           <div class="rt-toolbar">
-            <button class="rt-btn" onclick="siloFormat('bold')"><b>B</b></button>
-            <button class="rt-btn" onclick="siloFormat('italic')"><i>I</i></button>
-            <button class="rt-btn" onclick="siloFormat('underline')"><u>U</u></button>
-            <button class="rt-btn" onclick="siloFormat('insertUnorderedList')">• Bullet</button>
+            <button class="rt-btn" onclick="hubFormat('bold', 'silo-note-content')"><b>B</b></button>
+            <button class="rt-btn" onclick="hubFormat('italic', 'silo-note-content')"><i>I</i></button>
+            <button class="rt-btn" onclick="hubFormat('underline', 'silo-note-content')"><u>U</u></button>
+            <button class="rt-btn" onclick="hubFormat('insertUnorderedList', 'silo-note-content')">• Bullet</button>
             <input type="file" id="silo-img-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event, 'silo-note-content')">
             <button class="rt-btn" onclick="document.getElementById('silo-img-upload').click()">🖼️ Image</button>
           </div>
@@ -484,7 +486,8 @@
         <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
         <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
         <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
-        </div>
+        
+      </div>
     </aside>
 
     <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative;">
@@ -553,7 +556,7 @@
 
   <div id="app-timezone" class="app-container" style="flex-direction: column;">
       <header style="background: var(--topbar-bg); height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px;">
-          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Time Zone Scale</h2>
+          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Time Zone Scan</h2>
           
           <div style="display: flex; gap: 40px; font-weight: 600; font-variant-numeric: tabular-nums;">
               <div style="text-align: center;">
@@ -661,19 +664,16 @@
               </div>
 
               <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
-                  
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
                       <div id="standard-reminders-list"></div>
                   </div>
-
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
                       <div id="custom-reminders-list"></div>
                   </div>
-
               </div>
               
           </div>
@@ -699,7 +699,7 @@
     // Silo States
     let siloNotes = [];
     let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
-    let siloCurrentFolder = 'All'; // FIXED BUG
+    let siloCurrentFolder = 'All';
     let sortableInstance = null;
     let isSorting = false;
 
@@ -715,7 +715,6 @@
 
     let activeDataView = ''; 
 
-    // --- GLOBAL QUOTES LOGIC ---
     const corporateQuotes = [
         "Your expertise is the bridge between a merchant's hard work and their customers' trust.",
         "Every compliance step you guide is a shield against global cyber threats.",
@@ -795,7 +794,7 @@
         event.target.value = ''; 
     }
 
-    function hubFormat(cmd, editorId) { 
+    function hubFormat(cmd, editorId = 'hubRichText') { 
         document.execCommand(cmd, false, null); 
         document.getElementById(editorId).focus(); 
     }
@@ -926,7 +925,7 @@
       else if (appName === 'silo') currentAppLocation = 'Silo Notes';
       else if (appName === 'updates') currentAppLocation = 'Updates Hub';
       else if (appName === 'protocol') currentAppLocation = 'Process Protocol';
-      else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
+      else if (appName === 'timezone') currentAppLocation = 'Time Zone Scan';
       else if (appName === 'reminders') { currentAppLocation = 'Reminders'; requestNotificationPermission(); }
       
       updatePresenceLocation();
@@ -953,7 +952,6 @@
     function protocolRender() {
         if (activeDataView !== '') return renderDataView('protocol', activeDataView);
 
-        // Sidebar 3D Folders
         const folderListEl = document.getElementById('protocol-folder-list');
         folderListEl.innerHTML = '';
         let uniqueFolders = [...new Set(processProtocols.map(p => p.folder).filter(Boolean))].sort();
@@ -963,7 +961,6 @@
             folderListEl.innerHTML += `<button class="protocol-folder-btn ${protocolFolder===folder?'active':''}" onclick="protocolSetFolder('${folder}')">${folder}</button>`;
         });
 
-        // Contextual Create Button in Main View
         const folderActions = document.getElementById('protocol-folder-actions');
         if (isGlobalEditor && protocolFolder !== 'All') {
             folderActions.style.display = 'block';
@@ -972,7 +969,6 @@
             folderActions.style.display = 'none';
         }
 
-        // Feed Render
         const feed = document.getElementById('protocol-feed');
         const query = document.querySelector('#app-protocol .silo-search').value.toLowerCase();
         let htmlContent = "";
@@ -1050,15 +1046,24 @@
         if(!title || !title.trim()) return alert("Title is required.");
         if(!folder || !folder.trim()) return alert("Folder category is required.");
 
+        let result;
         if(protocolOpenIndex !== null) {
-            await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
+            result = await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
             logActivity('protocol', 'Edited', title);
         } else {
-            await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+            result = await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
             logActivity('protocol', 'Created', title);
         }
         
-        document.getElementById('protocolEditorModal').style.display = 'none'; document.getElementById('protocol-full-view').style.display = 'none'; loadProtocols();
+        // FIXED: Show alert if table doesn't exist
+        if (result && result.error) {
+            alert("Failed to save Protocol!\n\nReason: " + result.error.message + "\n\nPlease ensure you have run the SQL code to create the 'process_protocols' table in Supabase.");
+            return;
+        }
+        
+        document.getElementById('protocolEditorModal').style.display = 'none'; 
+        document.getElementById('protocol-full-view').style.display = 'none'; 
+        loadProtocols();
     }
 
     async function protocolDeleteById(id, title) {
@@ -1603,405 +1608,23 @@
         uiList.innerHTML = htmlContent;
     }
 
-    async function loadSiloNotes(silent = false) {
-        if (!supabaseClient) return;
-        try {
-            const { data, error } = await supabaseClient.from('silo_notes').select('*').order('sort_order', { ascending: true });
-            if (error) throw error;
-            siloNotes = data || [];
-            
-            if (siloCurrentView === 'ViewNote' && siloActiveId) {
-                const stillExists = siloNotes.find(n => n.id === siloActiveId);
-                if (!stillExists) { alert("This note was just deleted by an administrator."); siloCurrentView = siloCurrentFolder; siloActiveId = null; }
-            }
-            if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'DataView')) siloRenderUI();
-        } catch (err) { if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
-    }
-    
-    function siloSearch(e) { 
-        siloQuery = e.target.value.toLowerCase(); 
-        if (activeDataView !== '') renderDataView('silo', activeDataView);
-        else siloSetView('All'); 
-    }
-    
-    function siloSetView(view, id = null, presetLabel = null) { 
-        document.getElementById('silo-data-container').style.display = 'none'; activeDataView = '';
-        
-        // FIXED BUG: Track the previous folder we were looking at
-        if (view !== 'Create' && view !== 'ViewNote' && view !== 'DataView') {
-            siloCurrentFolder = view;
-        }
-        
-        siloCurrentView = view; 
-        siloActiveId = id; 
-
-        if (view === 'Create') {
-            document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-content').innerHTML = '';
-            if (presetLabel) { document.getElementById('silo-note-label').value = presetLabel; document.getElementById('silo-note-label').style.display = 'none'; } 
-            else { document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-label').style.display = 'block'; }
-        }
-        siloRenderUI(); 
-    }
-    
-    async function siloSaveNote() {
-        if (!supabaseClient) return;
-        const title = document.getElementById('silo-note-title').value;
-        const labelBox = document.getElementById('silo-note-label');
-        const label = labelBox.value;
-        const content = document.getElementById('silo-note-content').innerHTML; 
-        
-        if (!title.trim() && !content.trim()) return;
-        if (labelBox.style.display !== 'none' && !label.trim()) return alert("Label is required!");
-
-        if (siloActiveId) {
-            await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
-            logActivity('silo', 'Edited', title);
-        } else {
-            await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
-            logActivity('silo', 'Created', title);
-        }
-        document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-content').innerHTML = '';
-        siloSetView(siloCurrentFolder); loadSiloNotes(); 
-    }
-
-    async function siloDeleteNote(id) {
-        if (!supabaseClient) return;
-        const note = siloNotes.find(n => n.id === id);
-        if(confirm("Delete this note permanently?")) { 
-            await supabaseClient.from('silo_notes').delete().eq('id', id); 
-            if(note) logActivity('silo', 'Deleted', note.title);
-            siloSetView(siloCurrentFolder); loadSiloNotes(); 
-        }
-    }
-    
-    function siloBackup() {
-        const backupData = JSON.stringify(siloNotes, null, 2);
-        const blob = new Blob([backupData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'silo_backup.json';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    }
-    
-    async function processRestoreFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            try {
-                const parsedNotes = JSON.parse(e.target.result);
-                if (Array.isArray(parsedNotes)) {
-                    if (!supabaseClient) throw new Error("Database connection blocked.");
-                    const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
-                    if (error) throw error;
-                    alert("Notes restored successfully!");
-                    logActivity('silo', 'Restored Backup', 'Multiple Notes');
-                    siloSetView(siloCurrentFolder); loadSiloNotes();
-                } else alert("Invalid backup format.");
-            } catch (err) { alert("Failed to restore backup: " + err.message); }
-            event.target.value = ''; 
-        };
-        reader.readAsText(file);
-    }
-
-    function initSortableGrid() {
-        if (typeof Sortable === 'undefined') return; 
-        const container = document.getElementById('notes-container');
-        if(sortableInstance) sortableInstance.destroy();
-        
-        if(siloEditor && !siloQuery && siloCurrentView !== 'DataView') {
-            sortableInstance = new Sortable(container, {
-                animation: 150, handle: ".drag-handle", draggable: ".sortable-card", forceFallback: true, fallbackClass: "sortable-ghost",
-                onEnd: async function (evt) {
-                    if (!supabaseClient) return;
-                    const itemEl = evt.item; const prevEl = itemEl.previousElementSibling; const nextEl = itemEl.nextElementSibling;
-                    const id = parseInt(itemEl.dataset.id); let newSortOrder = Date.now() * 1000; 
-
-                    if (prevEl && nextEl) newSortOrder = (parseFloat(prevEl.dataset.order) + parseFloat(nextEl.dataset.order)) / 2.0;
-                    else if (prevEl && !nextEl) newSortOrder = parseFloat(prevEl.dataset.order) + 1000;
-                    else if (!prevEl && nextEl) newSortOrder = parseFloat(nextEl.dataset.order) - 1000;
-
-                    itemEl.dataset.order = newSortOrder; isSorting = true; 
-                    await supabaseClient.from('silo_notes').update({ sort_order: newSortOrder }).eq('id', id);
-                    setTimeout(() => { isSorting = false; loadSiloNotes(true); }, 500);
-                }
-            });
-        }
-    }
-
-    function siloRenderUI() {
-        if (siloCurrentView === 'DataView') return; 
-
-        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
-        document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
-        document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
-
-        const lblList = document.getElementById('label-list');
-        lblList.innerHTML = '';
-        
-        let uniqueLabels = [...new Set(siloNotes.map(n => n.label).filter(Boolean))];
-        
-        let savedOrder = [];
-        if (currentUser) {
-            try {
-                const stored = localStorage.getItem('siloLabelOrder_' + currentUser.email);
-                if (stored) savedOrder = JSON.parse(stored);
-            } catch(e) {}
-        }
-        
-        uniqueLabels.sort((a, b) => {
-            let idxA = savedOrder.indexOf(a);
-            let idxB = savedOrder.indexOf(b);
-            if(idxA === -1) idxA = 9999;
-            if(idxB === -1) idxB = 9999;
-            return idxA - idxB;
-        });
-
-        lblList.innerHTML += `<li class="static-label ${siloCurrentView==='All'?'active':''}" onclick="siloSetView('All')"><span style="margin-right:10px; opacity:0; width:16px;"></span><span style="flex:1;">All Notes</span></li>`;
-        
-        uniqueLabels.forEach(lbl => {
-            lblList.innerHTML += `<li class="drag-label ${siloCurrentView===lbl?'active':''}" data-id="${lbl}">
-                <span class="label-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⋮⋮</span>
-                <span style="flex:1; cursor:pointer;" onclick="siloSetView('${lbl}')">${lbl}</span>
-            </li>`;
-        });
-
-        if (window.labelSortableInstance) { window.labelSortableInstance.destroy(); }
-        
-        if (currentUser && typeof Sortable !== 'undefined') {
-            window.labelSortableInstance = new Sortable(lblList, {
-                animation: 150, filter: ".static-label", draggable: ".drag-label", handle: ".label-drag-handle",
-                onEnd: function() {
-                    const items = Array.from(lblList.querySelectorAll('.drag-label'));
-                    const newOrder = items.map(li => li.getAttribute('data-id'));
-                    localStorage.setItem('siloLabelOrder_' + currentUser.email, JSON.stringify(newOrder));
-                }
-            });
-        }
-
-        const folderActions = document.getElementById('silo-folder-actions');
-
-        if (siloCurrentView === 'ViewNote') {
-            folderActions.style.display = 'none';
-            const note = siloNotes.find(n => n.id === siloActiveId);
-            if(note) {
-                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);">Delete</button>` : '';
-                document.getElementById('silo-view-panel').innerHTML = `
-                    <button onclick="siloSetView('${siloCurrentFolder}')" class="silo-btn secondary" style="width:auto; margin-bottom:20px; border:1px solid var(--border-color);">← Back to Notes</button>
-                    <div class="silo-view-inner">
-                        <div class="view-note-header">
-                            <div>
-                                <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div>
-                                <h2 style="margin:5px 0 0 0; color:var(--text-main);">${note.title || 'Untitled'}</h2>
-                            </div>
-                            <div style="display:flex; gap:10px;">${actions}</div>
-                        </div>
-                        <div class="note-content-display">${note.content || ''}</div>
-                    </div>`;
-            }
-        } else if (siloCurrentView !== 'Create') {
-            const container = document.getElementById('notes-container'); container.innerHTML = '';
-            
-            if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
-                folderActions.style.display = 'block';
-                folderActions.innerHTML = `<button class="silo-btn" style="width:auto;" onclick="siloSetView('Create', null, '${siloCurrentView}')">➕ Create Note in ${siloCurrentView}</button>`;
-            } else {
-                folderActions.style.display = 'none';
-            }
-
-            const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
-            
-            filtered.forEach(n => {
-                const handle = siloEditor ? `<span class="drag-handle" style="position:absolute; top:5px; right:5px; cursor:grab; font-size:20px; color:var(--text-muted); padding:10px; z-index:10; line-height:1;" title="Drag to reorder" onclick="event.stopPropagation()">⋮⋮</span>` : '';
-                container.innerHTML += `
-                  <div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="if(!event.target.classList.contains('drag-handle')) siloSetView('ViewNote', ${n.id})">
-                    ${handle}
-                    <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; padding:25px 15px 15px 15px; box-sizing:border-box;">
-                      <h4 style="margin:0; font-size:16px; font-weight:600; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; color:var(--text-main); pointer-events:none;">${n.title || 'Untitled'}</h4>
-                    </div>
-                  </div>`;
-            });
-
-            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:var(--text-main);'>No notes found.</p>";
-            
-            initSortableGrid();
-        } else {
-             folderActions.style.display = 'none';
-        }
-    }
-    
-    function siloEditMode(id) {
-        const note = siloNotes.find(n => n.id === id);
-        if(note) { 
-            siloCurrentView = 'Create'; siloActiveId = id; 
-            document.getElementById('silo-note-label').style.display = 'block';
-            document.getElementById('silo-editor-title').innerText = "Edit Note"; 
-            document.getElementById('silo-note-title').value = note.title || ''; 
-            document.getElementById('silo-note-label').value = note.label || ''; 
-            document.getElementById('silo-note-content').innerHTML = note.content || ''; 
-            siloRenderUI();
-        }
-    }
-
-    async function loadHubUpdates(silent = false) {
-        if (!supabaseClient) return;
-        try {
-            const { data, error } = await supabaseClient.from('updates_hub').select('*').order('time', { ascending: false });
-            if (error) throw error;
-            hubUpdates = data || [];
-            
-            if (document.getElementById('hub-full-view').style.display === 'block' && hubOpenIndex !== null) {
-                const openId = hubUpdates[hubOpenIndex] ? hubUpdates[hubOpenIndex].id : null;
-                const stillExists = hubUpdates.find(u => u.id === openId);
-                if (!stillExists) {
-                    alert("This update was just deleted by an administrator.");
-                    document.getElementById('hub-full-view').style.display = 'none';
-                }
-            }
-            if (document.getElementById('hub-data-container').style.display !== 'block') {
-                hubRender();
-            }
-        } catch (err) { 
-            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; 
-        }
-    }
-    
-    function hubSwitchFolder(folder) { 
-        document.getElementById('hub-data-container').style.display = 'none';
-        document.getElementById('hub-feed').style.display = 'flex';
-        activeDataView = ''; hubFolder = folder; 
-        document.getElementById('hub-full-view').style.display='none'; 
-        hubRender(); 
-    }
-    
-    function hubRenderAuth() { if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex); }
-    
-    async function hubDeleteById(id, title) {
-        if(!supabaseClient) return;
-        if(confirm("Delete this update permanently?")) { 
-            await supabaseClient.from('updates_hub').delete().eq('id', id); 
-            document.getElementById('hub-full-view').style.display = 'none'; 
-            logActivity('hub', 'Deleted', title);
-            loadHubUpdates(); 
-        }
-    }
-
-    function hubRender() {
-        const feed = document.getElementById('hub-feed'); 
-        if (activeDataView !== '') return renderDataView('hub', activeDataView);
-
-        const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
-        let htmlContent = "";
-        
-        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
-        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
-        
-        let count = 0; let unreadCount = 0;
-        const now = Date.now(); const fifteenDays = 15 * 24 * 60 * 60 * 1000;
-
-        hubUpdates.forEach((item, idx) => {
-            const isProtocol = item.is_protocol === true;
-            if (isProtocol) return; // HIDDEN FROM HUB NOW
-
-            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
-            
-            if (!hubReadIds.includes(item.id)) unreadCount++;
-
-            if (hubFolder === 'latest' && belongsTo !== 'latest') return;
-            if (hubFolder === 'history' && belongsTo !== 'history') return;
-
-            if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
-            
-            const isRead = hubReadIds.includes(item.id);
-            const unreadDot = (!isRead) ? `<span class="unread-dot"></span>` : '';
-            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
-
-            let actionBtns = '';
-            if (hubEditor) {
-                const safeTitle = (item.title || '').replace(/'/g, "\\'");
-                actionBtns = `<div style="display:flex; gap:5px;">
-                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
-                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
-                              </div>`;
-            }
-
-            htmlContent += `
-              <div class="hub-strip" onclick="hubOpenView(${idx})">
-                <div class="hub-strip-left">
-                   <div style="display:flex; align-items:center;">${unreadDot}<h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3></div>
-                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
-                </div>
-                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
-              </div>`;
-            count++;
-        });
-
-        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
-        feed.innerHTML = htmlContent;
-
-        const badge = document.getElementById('dashboard-hub-badge'); const banner = document.getElementById('hub-banner');
-        if (unreadCount > 0) {
-            badge.style.display = 'block'; badge.innerText = unreadCount;
-            banner.style.display = 'block'; banner.innerText = `You have ${unreadCount} unread update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
-        } else { badge.style.display = 'none'; banner.style.display = 'none'; }
-    }
-
-    document.querySelector('#app-updates .silo-search').addEventListener('input', () => {
-        if (activeDataView !== '') renderDataView('hub', activeDataView); else hubRender();
-    });
-
-    function hubOpenView(index) {
-        if(index === null || !hubUpdates[index]) return;
-        hubOpenIndex = index; const item = hubUpdates[index];
-        
-        if (!hubReadIds.includes(item.id)) {
-            hubReadIds.push(item.id);
-            try { localStorage.setItem('hubReadIds_' + currentUser.email, JSON.stringify(hubReadIds)); } catch(e) {} 
-            hubRender(); 
-        }
-
-        document.getElementById('hub-fv-title').innerText = item.title || 'Untitled'; document.getElementById('hub-fv-date').innerText = item.datestr || ''; document.getElementById('hub-fv-body').innerHTML = item.body || '';
-        
-        const safeTitle = (item.title || '').replace(/'/g, "\\'");
-        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="hubOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="hubDelete(${index}, '${safeTitle}')">Delete</button></div>` : '';
-        document.getElementById('hub-full-view').style.display = 'block';
-    }
-
-    function hubOpenEditor(isEdit, index = null) {
-        hubOpenIndex = index;
-        if(isEdit && index !== null && hubUpdates[index]) { document.getElementById('hubModalTitle').innerText = "Edit Update"; document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; document.getElementById('hubRichText').innerHTML = hubUpdates[index].body || ''; document.getElementById('hubSaveBtn').innerText = "Update Changes"; } 
-        else { document.getElementById('hubModalTitle').innerText = "Create New Update"; document.getElementById('hubPostTitle').value = ""; document.getElementById('hubRichText').innerHTML = ""; document.getElementById('hubSaveBtn').innerText = "Publish"; hubOpenIndex = null; }
-        document.getElementById('hubEditorModal').style.display = 'flex';
-    }
-    
-    async function hubSavePost() {
-        if (!supabaseClient) return;
-        const title = document.getElementById('hubPostTitle').value; const body = document.getElementById('hubRichText').innerHTML;
-        if(!title || !title.trim()) return alert("Title is required.");
-        
-        if(hubOpenIndex !== null) {
-            await supabaseClient.from('updates_hub').update({ title, body }).eq('id', hubUpdates[hubOpenIndex].id);
-            logActivity('hub', 'Edited', title);
-        } else {
-            await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: false }]);
-            logActivity('hub', 'Created', title);
-        }
-        
-        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
-    }
-    
-    async function hubDelete(index, title) {
-        if (!supabaseClient) return;
-        if(confirm("Delete this update permanently?")) { 
-            await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); 
-            document.getElementById('hub-full-view').style.display = 'none'; 
-            logActivity('hub', 'Deleted', title);
-            loadHubUpdates(); 
-        }
-    }
-
     // --- 9. STARTUP & PWA REGISTRATION ---
     window.onload = () => { 
         checkSession(); 
+        
+        if (supabaseClient) {
+            supabaseClient.channel('public:silo_notes').on('postgres_changes', { event: '*', schema: 'public', table: 'silo_notes' }, payload => { if (!isSorting) loadSiloNotes(true); }).subscribe();
+            supabaseClient.channel('public:updates_hub').on('postgres_changes', { event: '*', schema: 'public', table: 'updates_hub' }, payload => { loadHubUpdates(true); }).subscribe();
+            supabaseClient.channel('public:process_protocols').on('postgres_changes', { event: '*', schema: 'public', table: 'process_protocols' }, payload => { loadProtocols(true); }).subscribe();
+            supabaseClient.channel('public:app_logs').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_logs' }, payload => {
+                 if (activeDataView === 'logs') {
+                     if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'logs');
+                     if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'logs');
+                     if (document.getElementById('protocol-data-container').style.display === 'block') renderDataView('protocol', 'logs');
+                 }
+            }).subscribe();
+        }
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js')
             .then(registration => console.log('PWA ServiceWorker registered'))
