@@ -664,16 +664,19 @@
               </div>
 
               <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+                  
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
                       <div id="standard-reminders-list"></div>
                   </div>
+
                   <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
                       <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
                       <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
                       <div id="custom-reminders-list"></div>
                   </div>
+
               </div>
               
           </div>
@@ -1608,6 +1611,20 @@
 
     // --- 9. STARTUP & PWA REGISTRATION ---
     window.onload = () => { 
+        // AGGRESSIVE CACHE BUSTING: Forces the browser to load this new, fixed code
+        if ('caches' in window) {
+            caches.keys().then((names) => {
+                names.forEach((name) => caches.delete(name));
+            });
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+
         checkSession(); 
         
         if (supabaseClient) {
