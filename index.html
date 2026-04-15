@@ -140,7 +140,7 @@
     #silo-create-section .silo-btn { border: 2px solid #0f172a !important; }
 
     /* =========================================
-       TIME ZONE APP UI
+       TIME ZONE SCAN APP UI
        ========================================= */
     .tz-scale-container { position: relative; height: 24px; background: #e2e8f0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);}
     .tz-highlight { position: absolute; top: 0; height: 100%; background: rgba(34, 197, 94, 0.2); border-left: 2px solid #22c55e; border-right: 2px solid #22c55e; box-sizing: border-box;}
@@ -1055,7 +1055,6 @@
             logActivity('protocol', 'Created', title);
         }
         
-        // FIXED: Show alert if table doesn't exist
         if (result && result.error) {
             alert("Failed to save Protocol!\n\nReason: " + result.error.message + "\n\nPlease ensure you have run the SQL code to create the 'process_protocols' table in Supabase.");
             return;
@@ -1486,7 +1485,6 @@
         document.getElementById('reminder-toast').style.display = 'none';
     }
 
-    // --- SHARED DATA VIEWS (Users & Logs) ---
     async function openDataView(appContext, viewType) {
         if (userRole !== 'Editor') return;
         currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; updatePresenceLocation();
