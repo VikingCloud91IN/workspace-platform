@@ -108,8 +108,9 @@
     .ql-container.ql-snow { border-color: var(--border-color); border-radius: 0 0 4px 4px; min-height: 250px; max-height: 40vh; overflow-y: auto; background: var(--input-bg); font-family: inherit; font-size: 16px; margin-bottom: 12px; }
     .ql-editor { color: var(--text-main); line-height: 1.6; }
 
-    /* Hub Email Strip UI */
-    #hub-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
+    /* Hub & Protocol Banners and Strips UI */
+    #hub-banner, #protocol-banner { background: var(--danger-btn); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 14px; cursor: pointer; display: none; transition: 0.2s; }
+    #hub-banner:hover, #protocol-banner:hover { opacity: 0.9; }
     #hub-feed, #protocol-feed { padding: 30px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; box-sizing: border-box; }
     .hub-strip { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 25px; border-radius: 50px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box; }
     .hub-strip:hover { transform: translateX(4px); border-color: var(--accent); }
@@ -279,6 +280,7 @@
           <p>Latest compliance Updates</p>
         </div>
         <div class="app-card" onclick="switchApp('protocol')">
+          <div id="dashboard-protocol-badge" class="dashboard-badge">0</div>
           <span class="icon">🛡️</span>
           <h3>Process Protocol</h3>
           <p>Standard Operating Procedures</p>
@@ -411,6 +413,7 @@
       </header>
 
       <div id="protocol-folder-actions" style="padding: 25px 30px 0; display: none;"></div>
+      <div id="protocol-banner" onclick="protocolSetFolder('All')">You have unread protocols!</div>
       <div id="protocol-feed"><p style="text-align: center;">Loading Protocol Database...</p></div>
     </div>
   </div>
@@ -710,6 +713,7 @@
     let processProtocols = [];
     let protocolFolder = 'All';
     let protocolOpenIndex = null;
+    let protocolReadIds = []; 
 
     let activeDataView = ''; 
 
@@ -774,6 +778,18 @@
             }
         } catch (e) {}
     }
+    
+    function initProtocolReadReceipts() {
+        if (!currentUser) return;
+        protocolReadIds = [];
+        try {
+            const storedIds = localStorage.getItem('protocolReadIds_' + currentUser.email);
+            if (storedIds) {
+                const parsed = JSON.parse(storedIds);
+                if (Array.isArray(parsed)) protocolReadIds = parsed;
+            }
+        } catch (e) {}
+    }
 
     async function logActivity(app, action, title) {
         if (!supabaseClient || !currentUser) return;
@@ -810,7 +826,11 @@
             document.getElementById('global-login-overlay').style.display = 'none';
             document.getElementById('app-workspace').classList.add('active');
             
-            setupPresence(); initQuotes(); initHubReadReceipts();
+            setupPresence(); 
+            initQuotes(); 
+            initHubReadReceipts();
+            initProtocolReadReceipts();
+            
             loadSiloNotes(true); loadHubUpdates(true); loadProtocols(true);
             initTimezoneApp(); initRemindersApp();
         }
@@ -831,7 +851,12 @@
           await fetchUserProfile();
           document.getElementById('global-login-overlay').style.display = 'none';
           document.getElementById('app-workspace').classList.add('active');
-          setupPresence(); initQuotes(); initHubReadReceipts();
+          
+          setupPresence(); 
+          initQuotes(); 
+          initHubReadReceipts();
+          initProtocolReadReceipts();
+          
           loadSiloNotes(true); loadHubUpdates(true); loadProtocols(true);
           initTimezoneApp(); initRemindersApp();
       }
@@ -952,10 +977,16 @@
         const query = document.querySelector('#app-protocol .silo-search').value.toLowerCase();
         let htmlContent = "";
         let count = 0;
+        let unreadCount = 0;
 
         processProtocols.forEach((item, idx) => {
+            if (!protocolReadIds.includes(item.id)) unreadCount++;
+
             if (protocolFolder !== 'All' && item.folder !== protocolFolder) return;
             if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
+
+            const isRead = protocolReadIds.includes(item.id); 
+            const unreadDot = (!isRead) ? `<span class="unread-dot"></span>` : ''; 
 
             const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
             let actionBtns = '';
@@ -971,9 +1002,9 @@
             htmlContent += `
               <div class="hub-strip" onclick="protocolOpenView(${idx})" style="margin-bottom: 15px;">
                 <div class="hub-strip-left">
-                   <div style="font-size:11px; color:var(--accent); font-weight:bold; text-transform:uppercase;">${item.folder || 'Uncategorized'}</div>
-                   <h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3>
-                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                   <div style="font-size:11px; color:var(--accent); font-weight:bold; text-transform:uppercase; margin-bottom: 2px;">${item.folder || 'Uncategorized'}</div>
+                   <div style="display:flex; align-items:center;">${unreadDot}<h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3></div>
+                   <span style="color:var(--text-muted); font-size:13px; margin-top:2px;">${previewBody}</span>
                 </div>
                 <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
               </div>`;
@@ -982,11 +1013,27 @@
 
         if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No protocols found.</p>";
         feed.innerHTML = htmlContent;
+
+        const badge = document.getElementById('dashboard-protocol-badge'); 
+        const banner = document.getElementById('protocol-banner');
+        if (unreadCount > 0) {
+            badge.style.display = 'block'; badge.innerText = unreadCount;
+            banner.style.display = 'block'; banner.innerText = `You have ${unreadCount} unread protocol${unreadCount > 1 ? 's' : ''}! Click here to view All Protocols.`;
+        } else { 
+            badge.style.display = 'none'; 
+            banner.style.display = 'none'; 
+        }
     }
 
     function protocolOpenView(index) {
         if(index === null || !processProtocols[index]) return;
         protocolOpenIndex = index; const item = processProtocols[index];
+
+        if (!protocolReadIds.includes(item.id)) {
+            protocolReadIds.push(item.id);
+            try { localStorage.setItem('protocolReadIds_' + currentUser.email, JSON.stringify(protocolReadIds)); } catch(e) {} 
+            protocolRender(); 
+        }
 
         document.getElementById('protocol-fv-folder').innerText = item.folder || 'Uncategorized'; 
         document.getElementById('protocol-fv-title').innerText = item.title || 'Untitled'; 
