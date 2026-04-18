@@ -251,6 +251,14 @@
 </head>
 <body>
 
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+        alert("A background script error occurred. This might prevent login.\nError: " + msg + "\nLine: " + line);
+        console.error("Global Error Caught:", msg, error);
+        return false;
+    };
+  </script>
+
   <div id="global-login-overlay">
       <div class="login-box">
           <h2 style="margin-top:0; color:var(--text-main);">Viking Cloud Workspace</h2>
@@ -410,4 +418,1943 @@
           </div>
         </div>
 
-        <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px
+        <div id="silo-folder-actions" style="width: 100%; max-width: 1200px; padding: 25px 30px 0 30px; margin: 0 auto; display: none; box-sizing: border-box;"></div>
+        <div id="notes-container"><p style="grid-column: 1 / -1; text-align: center;">Loading Silo Database...</p></div>
+      </main>
+    </div>
+  </div>
+
+  <div id="silo-view-panel" class="full-screen-overlay"></div>
+
+  <div id="silo-data-container" class="full-screen-overlay">
+      <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="closeDataView('silo')">← Back to Feed</button>
+      <div class="silo-view-inner" style="max-width: 1000px;">
+          <h1 id="silo-data-title" style="margin: 0 0 20px 0; color: var(--text-main);">Platform Directory</h1>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+          <div id="silo-data-list"></div>
+      </div>
+  </div>
+
+  <div id="app-protocol" class="app-container">
+    <aside id="protocol-sidebar">
+      <div style="padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.2); display:flex; align-items:center; gap:10px;">
+        <button class="burger-btn" onclick="document.getElementById('app-protocol').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div>
+          <h1 style="margin:0; font-size:1.6rem; line-height:1;">Process Protocol</h1>
+          <div id="protocol-mode-indicator" style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 5px;">Viewer Mode</div>
+        </div>
+      </div>
+      
+      <div style="padding: 25px; flex-grow: 1; overflow-y: auto;">
+        <button class="silo-btn admin-only" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="protocolOpenEditor(false)">➕ Create Protocol</button>
+        
+        <div style="font-size: 12px; text-transform: uppercase; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 10px;">Folders</div>
+        <div id="protocol-folder-list"></div>
+      </div>
+    </aside>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden;">
+      <header class="silo-topbar" style="background: var(--topbar-bg);">
+        <div style="display:flex; align-items:center; flex:1; gap:15px;">
+          <button class="burger-btn main-burger" onclick="document.getElementById('app-protocol').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <h2 class="topbar-app-title">Process Protocol</h2>
+          <input type="text" id="protocol-search" class="silo-search" placeholder="Search protocols, users, or logs..." onkeyup="protocolRender()">
+        </div>
+        <div style="display: flex; gap: 10px; margin-left: 15px;">
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('protocol', 'users')">Users</button>
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('protocol', 'logs')">Activity Logs</button>
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+        </div>
+      </header>
+
+      <div id="protocol-folder-actions" style="padding: 25px 30px 0; display: none;"></div>
+      <div id="protocol-banner" onclick="protocolSetFolder('All')">You have unread protocols!</div>
+      <div id="protocol-feed"><p style="text-align: center;">Loading Protocol Database...</p></div>
+    </div>
+  </div>
+
+  <div id="protocol-data-container" class="full-screen-overlay">
+      <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="closeDataView('protocol')">← Back to Feed</button>
+      <div class="silo-view-inner" style="max-width: 1000px;">
+          <h1 id="protocol-data-title" style="margin: 0 0 20px 0; color: var(--text-main);">Platform Directory</h1>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+          <div id="protocol-data-list"></div>
+      </div>
+  </div>
+
+  <div id="protocol-full-view" class="full-screen-overlay">
+    <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="document.getElementById('protocol-full-view').style.display='none'">← Back to Protocols</button>
+    <div class="silo-view-inner">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <small id="protocol-fv-folder" style="color: var(--accent); font-weight: bold; text-transform: uppercase;"></small>
+          <h1 id="protocol-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
+          <div style="font-size:12px; color:var(--text-muted);" id="protocol-fv-date"></div>
+        </div>
+        <div id="protocol-fv-actions"></div>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+      <div id="protocol-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
+    </div>
+  </div>
+
+  <div id="protocolEditorModal" class="full-screen-overlay editor-overlay">
+    <div class="silo-view-inner">
+      <h3 id="protocolModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Protocol</h3>
+      <input type="text" id="protocolPostTitle" class="silo-input" placeholder="Protocol Title">
+      <input type="text" id="protocolFolderInput" class="silo-input" placeholder="Folder Category (e.g., Security, Compliance)">
+      
+      <div class="editor-flex-wrapper">
+          <div id="protocol-editor-container"></div>
+      </div>
+      
+      <div style="text-align:right; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+        <button class="silo-btn secondary" style="width:auto; margin:0;" onclick="document.getElementById('protocolEditorModal').style.display='none'">Cancel</button>
+        <button id="protocolSaveBtn" class="dashboard-btn" style="margin:0;" onclick="protocolSavePost()">Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-updates" class="app-container">
+    <aside id="hub-sidebar">
+      <div style="padding: 25px; border-bottom: 1px solid rgba(255,255,255,0.2); display:flex; align-items:center; gap:10px;">
+        <button class="burger-btn" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div>
+          <h1 style="margin:0; font-size:1.6rem; line-height:1;">Update Hub</h1>
+          <div id="hub-mode-indicator" style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 5px;">Viewer Mode</div>
+        </div>
+      </div>
+      <div style="padding: 25px; flex-grow: 1; overflow-y: auto;">
+        
+        <button class="hub-nav-btn admin-only" id="hub-create-btn" style="display:none; margin-bottom: 20px; background: var(--accent); color: white;" onclick="hubOpenEditor(false)">➕ Create New Update</button>
+        <button class="hub-nav-btn active" id="hub-btn-latest" onclick="hubSwitchFolder('latest')">📂 Latest Updates</button>
+        <button class="hub-nav-btn" id="hub-btn-history" onclick="hubSwitchFolder('history')">📁 Update History</button>
+        </div>
+    </aside>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden;">
+      <header class="silo-topbar" style="background: var(--topbar-bg);">
+        <div style="display:flex; align-items:center; flex:1; gap:15px;">
+          <button class="burger-btn main-burger" onclick="document.getElementById('app-updates').classList.toggle('sidebar-hidden')" title="Toggle Sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <h2 class="topbar-app-title">Update Hub</h2>
+          <input type="text" id="hub-search" class="silo-search" placeholder="Search updates, users, or logs..." onkeyup="hubRender()">
+        </div>
+        <div style="display: flex; gap: 10px; margin-left: 15px;">
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('hub', 'compliance')">Compliance Report</button>
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('hub', 'users')">Users</button>
+          <button class="dashboard-btn admin-only" style="background: var(--text-muted); display:none;" onclick="openDataView('hub', 'logs')">Activity Logs</button>
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+        </div>
+      </header>
+
+      <div id="hub-banner" onclick="hubSwitchFolder('latest')">You have unread optional updates!</div>
+      <div id="hub-feed"><p style="text-align: center;">Loading Updates Database...</p></div>
+    </div>
+  </div>
+
+  <div id="hub-data-container" class="full-screen-overlay">
+      <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="closeDataView('hub')">← Back to Feed</button>
+      <div class="silo-view-inner" style="max-width: 1000px;">
+          <h1 id="hub-data-title" style="margin: 0 0 20px 0; color: var(--text-main);">Platform Directory</h1>
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 20px;">
+          <div id="hub-data-list"></div>
+      </div>
+  </div>
+
+  <div id="hub-full-view" class="full-screen-overlay">
+    <button class="silo-btn secondary" style="width:auto; margin-bottom: 20px;" onclick="document.getElementById('hub-full-view').style.display='none'">← Back to Feed</button>
+    <div class="silo-view-inner">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <small id="hub-fv-date" style="color: var(--accent); font-weight: bold;"></small>
+          <h1 id="hub-fv-title" style="margin: 5px 0 10px 0; color: var(--text-main);"></h1>
+        </div>
+        <div id="hub-fv-actions"></div>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+      <div id="hub-fv-body" style="line-height: 1.6; color: var(--text-main);"></div>
+    </div>
+  </div>
+
+  <div id="hubEditorModal" class="full-screen-overlay editor-overlay">
+    <div class="silo-view-inner">
+      <h3 id="hubModalTitle" style="margin-top: 0; color:var(--text-main);">Create New Update</h3>
+      <input type="text" id="hubPostTitle" class="silo-input" placeholder="Update Title">
+      
+      <div class="editor-flex-wrapper">
+          <div id="hub-editor-container"></div>
+      </div>
+      
+      <div style="display:flex; gap:20px; margin-top: 15px; margin-bottom:10px; flex-shrink: 0;">
+           <label style="display:flex; align-items:center; gap:5px; font-size:14px; cursor:pointer; color:var(--text-main);"><input type="checkbox" id="hubIsMandatory" checked> Mandatory Update</label>
+           <label style="display:flex; align-items:center; gap:5px; font-size:14px; cursor:pointer; color:var(--danger-btn); display:none;" id="hubRequireReackLabel"><input type="checkbox" id="hubRequireReack"> Require Re-acknowledgement (Increases Version)</label>
+      </div>
+
+      <div style="text-align:right; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+        <button class="silo-btn secondary" style="width:auto; margin:0;" onclick="document.getElementById('hubEditorModal').style.display='none'">Cancel</button>
+        <button id="hubSaveBtn" class="dashboard-btn" style="margin:0;" onclick="hubSavePost()">Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-timezone" class="app-container" style="flex-direction: column;">
+      <header style="background: var(--topbar-bg); height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px;">
+          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Time Zone Scale</h2>
+          
+          <div style="display: flex; gap: 40px; font-weight: 600; font-variant-numeric: tabular-nums;">
+              <div style="text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">EST (USA)</div>
+                  <div id="live-est" style="font-size: 18px; color: var(--text-main);">00:00:00</div>
+              </div>
+              <div style="text-align: center; padding: 0 40px; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">GMT (UK)</div>
+                  <div id="live-gmt" style="font-size: 18px; color: var(--text-main);">00:00:00</div>
+              </div>
+              <div style="text-align: center;">
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">IST (India)</div>
+                  <div id="live-ist" style="font-size: 18px; color: var(--text-main);">00:00:00</div>
+              </div>
+          </div>
+          
+          <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+      </header>
+      
+      <main style="flex: 1; padding: 20px 40px; display: flex; flex-direction: column; gap: 20px; background: var(--bg-color); overflow: hidden;">
+          
+          <div style="background: var(--card-bg); padding: 20px 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1.2; display: flex; flex-direction: column; justify-content: center;">
+              <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Global Sync Window</h3>
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: var(--text-muted);">Ensure the merchant's local time lands within the green safe zones (09:00 to 17:00).</p>
+              
+              <div style="margin-bottom: 25px;">
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
+                      <span style="color: var(--text-main);">GMT / UTC (UK)</span>
+                      <span id="gmt-result-time" style="color: var(--accent); font-size:18px;">--:--</span>
+                  </div>
+                  <div class="tz-scale-container">
+                      <div class="tz-highlight" style="left: 37.5%; width: 33.33%;"></div> 
+                      <div class="tz-marker" id="gmt-marker"></div>
+                  </div>
+                  <div class="tz-labels">
+                      <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+                  </div>
+              </div>
+
+              <div>
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px;">
+                      <span style="color: var(--text-main);">EST / EDT (USA)</span>
+                      <span id="est-result-time" style="color: var(--accent); font-size:18px;">--:--</span>
+                  </div>
+                  <div class="tz-scale-container">
+                      <div class="tz-highlight" style="left: 37.5%; width: 33.33%;"></div>
+                      <div class="tz-marker" id="est-marker"></div>
+                  </div>
+                  <div class="tz-labels">
+                      <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+                  </div>
+              </div>
+          </div>
+
+          <div style="background: var(--card-bg); padding: 20px 30px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 0.8; display: flex; flex-direction: column; justify-content: center;">
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                  <div>
+                      <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Merchant Local Time</h3>
+                      <div style="font-size: 13px; color: var(--accent); font-weight: bold;" id="selected-tz-display">Currently Selected: USA/Canada - Eastern (EST/EDT)</div>
+                  </div>
+                  
+                  <div style="position: relative; width: 350px;">
+                      <input type="text" id="tz-search" class="silo-input" style="margin: 0; font-weight:600; border: 2px solid #0f172a; padding: 8px 10px;" placeholder="Search Country or Time Zone..." oninput="filterTzOptions()" onfocus="showTzOptions()" value="USA/Canada - Eastern (EST/EDT)">
+                      <div id="tz-dropdown" class="tz-dropdown-list"></div>
+                  </div>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 30px;">
+                  <div style="flex: 1;">
+                      <input type="range" id="merchant-time-slider" min="0" max="1440" step="15" value="720" oninput="handleSliderChange()">
+                      <div class="tz-labels" style="margin-top: 10px;">
+                          <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+                      </div>
+                  </div>
+                  <input type="text" id="merchant-time-input" value="12:00" maxlength="5" placeholder="HH:MM" onchange="handleTextTimeChange()" onkeyup="formatTimeInput(event)" style="width: 140px; text-align: center; font-family: inherit; font-size: 28px; font-weight: bold; color: var(--primary-btn); background: var(--bg-color); padding: 8px; border-radius: 8px; border: 2px solid #0f172a; outline: none; transition: 0.2s;">
+              </div>
+          </div>
+      </main>
+  </div>
+
+  <div id="app-reminders" class="app-container" style="flex-direction: column;">
+      <header style="background: var(--topbar-bg); height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 30px;">
+          <h2 style="margin: 0; color: var(--text-main); font-size:1.3rem;">Reminders</h2>
+          
+          <div style="display: flex; align-items: center; gap: 30px;">
+              <div id="next-break-display" style="font-weight: bold; color: var(--accent); font-size: 14px; background: rgba(59, 130, 246, 0.1); padding: 6px 12px; border-radius: 20px;">Next Break: --:--</div>
+              <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; color: var(--text-main);">
+                  <span>Active</span>
+                  <label class="switch">
+                    <input type="checkbox" id="reminders-toggle" checked onchange="saveRemindersConfig()">
+                    <span class="slider-toggle"></span>
+                  </label>
+              </div>
+              <button class="dashboard-btn" onclick="switchApp('workspace')">Dashboard</button>
+          </div>
+      </header>
+      
+      <main style="flex: 1; padding: 30px; background: var(--bg-color); overflow: hidden; display: flex; flex-direction: column;">
+          <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; width: 100%; height: 100%;">
+              
+              <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center;">
+                  <h3 style="margin: 0 0 5px 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Current Time (IST)</h3>
+                  <div id="reminders-ist-clock-display" style="font-size: 42px; font-weight: bold; color: var(--primary-btn); font-variant-numeric: tabular-nums;">00:00:00</div>
+              </div>
+
+              <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+                  
+                  <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
+                      <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Standard Shift Breaks (IST)</h3>
+                      <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">OS Notifications trigger 10 mins before the set time.</p>
+                      <div id="standard-reminders-list"></div>
+                  </div>
+
+                  <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03); flex: 1; overflow-y: auto;">
+                      <h3 style="margin: 0 0 5px 0; color: var(--text-main);">Additional Custom Reminders</h3>
+                      <p style="margin: 0 0 20px 0; font-size: 13px; color: var(--text-muted);">Set your own personal reminder messages and times.</p>
+                      <div id="custom-reminders-list"></div>
+                  </div>
+
+              </div>
+              
+          </div>
+      </main>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://ntxjpofwldorxqbwolup.supabase.co'; 
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50eGpwb2Z3bGRvcnhxYndvbHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODM3NzksImV4cCI6MjA5MDE1OTc3OX0.ynsDR4f9cRjjhSyLdo09YBO800dQfxInJAQFzVwXI00';
+    
+    let supabaseClient = null;
+    try {
+        if (typeof supabase !== 'undefined') { supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); }
+    } catch (e) { console.error("Supabase Error:", e); }
+
+    let isGlobalEditor = false;
+    let currentUser = null;
+    let userRole = 'Viewer';
+    let currentAppLocation = 'Dashboard';
+    let onlineUsers = {};
+    let presenceChannel = null;
+
+    // --- QUILL EDITOR INITIALIZATION WITH FAIL-SAFES ---
+    const quillConfig = {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'bullet' }],
+                ['image', 'clean']
+            ]
+        }
+    };
+    
+    let siloQuill, protocolQuill, hubQuill;
+    try {
+        siloQuill = new Quill('#silo-editor-container', quillConfig);
+        protocolQuill = new Quill('#protocol-editor-container', quillConfig);
+        hubQuill = new Quill('#hub-editor-container', quillConfig);
+    } catch (error) {
+        console.error("Quill Editor failed to load. Check your internet connection or adblocker.", error);
+        alert("Warning: The Rich Text Editor failed to load. Please check your internet connection.");
+    }
+
+    // Silo States
+    let siloNotes = [];
+    let siloEditor = false, siloCurrentView = 'All', siloActiveId = null, siloQuery = '';
+    let siloCurrentFolder = 'All'; 
+    let sortableInstance = null;
+    let isSorting = false;
+
+    // Hub States
+    let hubUpdates = [];
+    let hubEditor = false, hubFolder = 'latest', hubOpenIndex = null;
+    let hubReadIds = []; 
+    let myAcknowledgements = [];
+    let pendingMandatoryUpdates = [];
+
+    // Protocol States
+    let processProtocols = [];
+    let protocolFolder = 'All';
+    let protocolOpenIndex = null;
+    let protocolReadIds = []; 
+
+    let activeDataView = ''; 
+
+    // --- GLOBAL QUOTES LOGIC ---
+    const corporateQuotes = [
+        "Your expertise is the bridge between a merchant's hard work and their customers' trust.",
+        "Every compliance step you guide is a shield against global cyber threats.",
+        "You aren't just ticking boxes; you are securing the future of global commerce.",
+        "Helping a merchant achieve compliance today means preventing a breach tomorrow.",
+        "You are the silent guardians of the digital wallet. Your impact is felt worldwide.",
+        "Patience is your superpower. Your calm guidance turns a 'daunting' process into a success story.",
+        "To the merchant, you are the expert who makes the impossible, possible.",
+        "Empathy is the key: when you understand their struggle, you become their greatest ally.",
+        "A merchant's success is your success. Thank you for being their guiding light.",
+        "Your clarity simplifies complexity. You turn technical jargon into merchant confidence.",
+        "Compliance is a journey, not a destination. Thank you for staying the course.",
+        "Expertise pays off: your knowledge protects millions of transactions every single day.",
+        "Strive for value, not just success. Your guidance is invaluable to global businesses.",
+        "Quality service wins the game. You are the MVP of merchant compliance!",
+        "Every resolved query is a step toward a more secure world.",
+        "None of us is as smart as all of us. Together, we secure the globe.",
+        "Your dedication to learning keeps our team ahead of evolving threats.",
+        "A supportive team makes any compliance challenge manageable. Lean on each other!",
+        "Celebrate the wins—every merchant certified is a victory for our team.",
+        "Your progress matters. Continuous improvement is better than delayed perfection.",
+        "When the going gets tough, remember: you are building a safer internet for everyone.",
+        "Your focus today protects a reputation built over 20 years.",
+        "Trust is built in drops. Your consistent support is the ocean that merchants rely on.",
+        "Keep calm and comply on. You have the skills to handle any technical curveball.",
+        "You make a difference. Thank you for your tireless work in securing global payments."
+    ];
+    let currentQuoteIndex = 0;
+    let quotesInitialized = false;
+
+    function initQuotes() {
+        if(quotesInitialized) return;
+        quotesInitialized = true;
+        const board = document.getElementById('dashboard-quotes-board');
+        const textEl = document.getElementById('dashboard-quote-text');
+        if(board) board.style.display = 'block';
+        
+        setInterval(() => {
+            currentQuoteIndex = (currentQuoteIndex + 1) % corporateQuotes.length;
+            if (textEl) {
+                textEl.style.opacity = 0;
+                setTimeout(() => { textEl.innerText = corporateQuotes[currentQuoteIndex]; textEl.style.opacity = 1; }, 400);
+            }
+        }, 60000);
+    }
+
+    function initLocalReadReceipts() {
+        if (!currentUser) return;
+        hubReadIds = []; protocolReadIds = [];
+        try {
+            let storedHub = localStorage.getItem('hubReadIds_' + currentUser.email);
+            if (storedHub) { const parsed = JSON.parse(storedHub); if (Array.isArray(parsed)) hubReadIds = parsed; }
+            
+            let storedProto = localStorage.getItem('protocolReadIds_' + currentUser.email);
+            if (storedProto) { const parsed = JSON.parse(storedProto); if (Array.isArray(parsed)) protocolReadIds = parsed; }
+        } catch (e) {}
+    }
+
+    async function logActivity(app, action, title) {
+        if (!supabaseClient || !currentUser) return;
+        try { await supabaseClient.from('app_logs').insert([{ app: app, action: action, item_title: title, user_email: currentUser.email }]); } catch(e) {}
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'a') {
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable) || document.activeElement.classList.contains('ql-editor');
+            if (!isInput) {
+                const siloView = document.getElementById('silo-view-panel');
+                const hubView = document.getElementById('hub-full-view');
+                const protocolView = document.getElementById('protocol-full-view');
+                const blocker = document.getElementById('mandatory-blocker-overlay');
+                
+                if (blocker && blocker.style.display === 'flex') { e.preventDefault(); selectElementContents(document.getElementById('blocker-body')); }
+                else if (siloView && siloView.style.display === 'block') { e.preventDefault(); selectElementContents(document.querySelector('#silo-view-panel .note-content-display')); } 
+                else if (hubView && hubView.style.display === 'block') { e.preventDefault(); selectElementContents(document.getElementById('hub-fv-body')); }
+                else if (protocolView && protocolView.style.display === 'block') { e.preventDefault(); selectElementContents(document.getElementById('protocol-fv-body')); }
+            }
+        }
+    });
+    
+    function selectElementContents(el) {
+        if (!el) return;
+        const range = document.createRange(); range.selectNodeContents(el);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+
+    async function checkSession() {
+        try {
+            if (!supabaseClient) return;
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                await fetchUserProfile();
+                document.getElementById('global-login-overlay').style.display = 'none';
+                document.getElementById('app-workspace').classList.add('active');
+                
+                setupPresence(); 
+                initQuotes(); 
+                initLocalReadReceipts();
+                
+                loadSiloNotes(true); 
+                loadHubUpdates(true); // Hub Updates triggers Acknowledgements
+                loadProtocols(true);
+                initTimezoneApp(); initRemindersApp();
+            }
+        } catch(e) {
+            console.error("Session check error", e);
+        }
+    }
+
+    async function handleAuthLogin() {
+      try {
+          if (!supabaseClient) return alert("Database connection blocked by network.");
+          const email = document.getElementById('auth-email').value;
+          const pass = document.getElementById('auth-password').value;
+          if (!email || !pass) return alert("Required fields missing.");
+          
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+          if (error) {
+              if(error.message.includes("Email not confirmed")) alert("Please confirm your email first.");
+              else alert("Login failed: " + error.message);
+          } else {
+              currentUser = data.user;
+              await fetchUserProfile();
+              document.getElementById('global-login-overlay').style.display = 'none';
+              document.getElementById('app-workspace').classList.add('active');
+              
+              setupPresence(); 
+              initQuotes(); 
+              initLocalReadReceipts();
+              
+              loadSiloNotes(true); 
+              loadHubUpdates(true); 
+              loadProtocols(true);
+              initTimezoneApp(); initRemindersApp();
+          }
+      } catch(e) {
+          alert("A system error occurred during login: " + e.message);
+      }
+    }
+
+    async function handleGlobalLogout() {
+        if (presenceChannel) presenceChannel.untrack();
+        await supabaseClient.auth.signOut();
+        window.location.reload();
+    }
+
+    async function fetchUserProfile() {
+        const { data, error } = await supabaseClient.from('user_profiles').select('*').eq('id', currentUser.id).single();
+        let displayName = currentUser.email; 
+        if (data) { userRole = data.role || 'Viewer'; if (data.display_name) displayName = data.display_name; }
+
+        isGlobalEditor = (userRole.trim().toLowerCase() === 'editor');
+        userRole = isGlobalEditor ? 'Editor' : 'Viewer';
+        siloEditor = isGlobalEditor; hubEditor = isGlobalEditor;
+        
+        document.getElementById('user-display-info').innerText = `${displayName}\nRole: ${userRole}`;
+        document.getElementById('silo-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('hub-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
+        document.getElementById('protocol-mode-indicator').innerText = isGlobalEditor ? 'Editor Mode' : 'Viewer Mode';
+        
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isGlobalEditor ? 'block' : 'none');
+        document.getElementById('silo-admin-tools').style.display = isGlobalEditor ? 'block' : 'none';
+
+        siloRenderUI(); hubRenderAuth(); protocolRender();
+    }
+
+    function setupPresence() {
+        if (presenceChannel) { presenceChannel.untrack(); supabaseClient.removeChannel(presenceChannel); }
+        presenceChannel = supabaseClient.channel('workspace_presence', { config: { presence: { key: currentUser.email } }});
+        
+        presenceChannel.on('presence', { event: 'sync' }, () => {
+            onlineUsers = presenceChannel.presenceState();
+            if (activeDataView === 'users') {
+                if (document.getElementById('silo-data-container').style.display === 'block') renderDataView('silo', 'users');
+                if (document.getElementById('hub-data-container').style.display === 'block') renderDataView('hub', 'users');
+                if (document.getElementById('protocol-data-container').style.display === 'block') renderDataView('protocol', 'users');
+            }
+        });
+        presenceChannel.subscribe(async (status) => { if (status === 'SUBSCRIBED') await updatePresenceLocation(); });
+    }
+
+    async function updatePresenceLocation() {
+        if(!currentUser || !presenceChannel) return;
+        try { await presenceChannel.track({ email: currentUser.email, role: userRole, location: currentAppLocation, online_at: new Date().toISOString() }); } catch(e) {}
+    }
+
+    function switchApp(appName) {
+      document.querySelectorAll('.app-container').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById('silo-data-container').style.display = 'none';
+      document.getElementById('hub-data-container').style.display = 'none';
+      document.getElementById('protocol-data-container').style.display = 'none';
+      document.getElementById('notes-container').style.display = 'grid';
+      document.getElementById('hub-feed').style.display = 'flex';
+      document.getElementById('protocol-feed').style.display = 'flex';
+      activeDataView = '';
+
+      let targetApp = appName === 'workspace' ? 'app-workspace' : `app-${appName}`;
+      document.getElementById(targetApp).classList.add('active');
+      
+      if (appName === 'workspace') currentAppLocation = 'Dashboard';
+      else if (appName === 'silo') currentAppLocation = 'Silo Notes';
+      else if (appName === 'updates') currentAppLocation = 'Updates Hub';
+      else if (appName === 'protocol') currentAppLocation = 'Process Protocol';
+      else if (appName === 'timezone') currentAppLocation = 'Time Zone Scale';
+      else if (appName === 'reminders') { currentAppLocation = 'Reminders'; requestNotificationPermission(); }
+      
+      updatePresenceLocation();
+    }
+
+    // --- NEW: PROCESS PROTOCOL LOGIC ---
+    async function loadProtocols(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('process_protocols').select('*').order('time', { ascending: false });
+            if (error) throw error;
+            processProtocols = data || [];
+            if (document.getElementById('protocol-data-container').style.display !== 'block') { protocolRender(); }
+        } catch (err) { 
+            if(!silent) document.getElementById('protocol-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> Ensure 'process_protocols' table is created.</p>`; 
+        }
+    }
+
+    function protocolSetFolder(folder) {
+        protocolFolder = folder;
+        protocolRender();
+    }
+
+    function protocolRender() {
+        if (activeDataView !== '') return renderDataView('protocol', activeDataView);
+
+        // Sidebar Folders
+        const folderListEl = document.getElementById('protocol-folder-list');
+        folderListEl.innerHTML = '';
+        let uniqueFolders = [...new Set(processProtocols.map(p => p.folder).filter(Boolean))].sort();
+
+        folderListEl.innerHTML += `<button class="protocol-folder-btn ${protocolFolder==='All'?'active':''}" onclick="protocolSetFolder('All')">All Protocols</button>`;
+        uniqueFolders.forEach(folder => {
+            folderListEl.innerHTML += `<button class="protocol-folder-btn ${protocolFolder===folder?'active':''}" onclick="protocolSetFolder('${folder}')">${folder}</button>`;
+        });
+
+        // Contextual Create Button in Main View
+        const folderActions = document.getElementById('protocol-folder-actions');
+        if (isGlobalEditor && protocolFolder !== 'All') {
+            folderActions.style.display = 'block';
+            folderActions.innerHTML = `<button class="silo-btn" style="width:auto;" onclick="protocolOpenEditor(false, null, '${protocolFolder}')">➕ Create Protocol in ${protocolFolder}</button>`;
+        } else {
+            folderActions.style.display = 'none';
+        }
+
+        // Feed Render
+        const feed = document.getElementById('protocol-feed');
+        const query = document.querySelector('#app-protocol .silo-search').value.toLowerCase();
+        let htmlContent = "";
+        let count = 0;
+        let unreadCount = 0;
+
+        processProtocols.forEach((item, idx) => {
+            if (!protocolReadIds.includes(item.id)) unreadCount++;
+
+            if (protocolFolder !== 'All' && item.folder !== protocolFolder) return;
+            if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
+
+            const isRead = protocolReadIds.includes(item.id); 
+            const unreadDot = (!isRead) ? `<span class="unread-dot"></span>` : ''; 
+
+            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
+            let actionBtns = '';
+            
+            if (isGlobalEditor) {
+                const safeTitle = (item.title || '').replace(/'/g, "\\'");
+                actionBtns = `<div style="display:flex; gap:5px;">
+                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); protocolOpenEditor(true, ${idx})">Edit</button>
+                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); protocolDeleteById(${item.id}, '${safeTitle}')">Delete</button>
+                              </div>`;
+            }
+
+            htmlContent += `
+              <div class="hub-strip" onclick="protocolOpenView(${idx})" style="margin-bottom: 15px;">
+                <div class="hub-strip-left">
+                   <div style="font-size:11px; color:var(--accent); font-weight:bold; text-transform:uppercase; margin-bottom: 2px;">${item.folder || 'Uncategorized'}</div>
+                   <div style="display:flex; align-items:center;">${unreadDot}<h3 style="margin:0; font-size:16px; color:var(--text-main);">${item.title || 'Untitled'}</h3></div>
+                   <span style="color:var(--text-muted); font-size:13px; margin-top:2px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
+              </div>`;
+            count++;
+        });
+
+        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No protocols found.</p>";
+        feed.innerHTML = htmlContent;
+
+        const badge = document.getElementById('dashboard-protocol-badge'); 
+        const banner = document.getElementById('protocol-banner');
+        if (unreadCount > 0) {
+            badge.style.display = 'block'; badge.innerText = unreadCount;
+            banner.style.display = 'block'; banner.innerText = `You have ${unreadCount} unread protocol${unreadCount > 1 ? 's' : ''}! Click here to view All Protocols.`;
+        } else { 
+            badge.style.display = 'none'; 
+            banner.style.display = 'none'; 
+        }
+    }
+
+    function protocolOpenView(index) {
+        if(index === null || !processProtocols[index]) return;
+        protocolOpenIndex = index; const item = processProtocols[index];
+
+        if (!protocolReadIds.includes(item.id)) {
+            protocolReadIds.push(item.id);
+            try { localStorage.setItem('protocolReadIds_' + currentUser.email, JSON.stringify(protocolReadIds)); } catch(e) {} 
+            protocolRender(); 
+        }
+
+        document.getElementById('protocol-fv-folder').innerText = item.folder || 'Uncategorized'; 
+        document.getElementById('protocol-fv-title').innerText = item.title || 'Untitled'; 
+        document.getElementById('protocol-fv-date').innerText = item.datestr || ''; 
+        document.getElementById('protocol-fv-body').innerHTML = item.body || '';
+        
+        const safeTitle = (item.title || '').replace(/'/g, "\\'");
+        document.getElementById('protocol-fv-actions').innerHTML = isGlobalEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="protocolOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="protocolDeleteById(${item.id}, '${safeTitle}')">Delete</button></div>` : '';
+        document.getElementById('protocol-full-view').style.display = 'block';
+    }
+
+    function protocolOpenEditor(isEdit, index = null, presetFolder = null) {
+        protocolOpenIndex = index;
+        if (isEdit && index !== null && processProtocols[index]) { 
+            document.getElementById('protocolModalTitle').innerText = "Edit Protocol"; 
+            document.getElementById('protocolPostTitle').value = processProtocols[index].title || ''; 
+            document.getElementById('protocolFolderInput').value = processProtocols[index].folder || ''; 
+            if(protocolQuill) protocolQuill.clipboard.dangerouslyPasteHTML(processProtocols[index].body || '');
+            document.getElementById('protocolSaveBtn').innerText = "Update Changes"; 
+        } else { 
+            document.getElementById('protocolModalTitle').innerText = "Create New Protocol"; 
+            document.getElementById('protocolPostTitle').value = ""; 
+            document.getElementById('protocolFolderInput').value = presetFolder || ""; 
+            if(protocolQuill) protocolQuill.root.innerHTML = ""; 
+            document.getElementById('protocolSaveBtn').innerText = "Publish"; 
+            protocolOpenIndex = null; 
+        }
+        document.getElementById('protocolEditorModal').style.display = 'block';
+    }
+
+    async function protocolSavePost() {
+        if (!supabaseClient) {
+            alert("Cannot connect to the database. Please check your network or credentials.");
+            return;
+        }
+
+        const title = document.getElementById('protocolPostTitle').value; 
+        const folder = document.getElementById('protocolFolderInput').value; 
+        const body = protocolQuill ? protocolQuill.root.innerHTML : '';
+        
+        if(!title || !title.trim()) return alert("Title is required.");
+        if(!folder || !folder.trim()) return alert("Folder category is required.");
+
+        if(protocolOpenIndex !== null) {
+            const { error } = await supabaseClient.from('process_protocols').update({ title, folder, body }).eq('id', processProtocols[protocolOpenIndex].id);
+            if (error) { alert("Failed to update protocol: " + error.message); return; }
+            logActivity('protocol', 'Edited', title);
+        } else {
+            const { error } = await supabaseClient.from('process_protocols').insert([{ id: Date.now(), title, folder, body, time: Date.now(), datestr: new Date().toLocaleString() }]);
+            if (error) { alert("Failed to save protocol: " + error.message); return; }
+            logActivity('protocol', 'Created', title);
+        }
+        
+        document.getElementById('protocolEditorModal').style.display = 'none'; 
+        document.getElementById('protocol-full-view').style.display = 'none'; 
+        loadProtocols();
+    }
+
+    async function protocolDeleteById(id, title) {
+        if(!supabaseClient) return;
+        if(confirm("Delete this protocol permanently?")) { 
+            await supabaseClient.from('process_protocols').delete().eq('id', id); 
+            document.getElementById('protocol-full-view').style.display = 'none'; 
+            logActivity('protocol', 'Deleted', title);
+            loadProtocols(); 
+        }
+    }
+
+
+    // --- EXTENDED GLOBAL TIMEZONE LOGIC ---
+    const tzs = [
+        { name: 'USA/Canada - Eastern (EST/EDT)', val: 'America/New_York' },
+        { name: 'USA/Canada - Central (CST/CDT)', val: 'America/Chicago' },
+        { name: 'USA/Canada - Mountain (MST/MDT)', val: 'America/Denver' },
+        { name: 'USA/Canada - Pacific (PST/PDT)', val: 'America/Los_Angeles' },
+        { name: 'USA - Alaska (AKST/AKDT)', val: 'America/Anchorage' },
+        { name: 'USA - Hawaii (HST)', val: 'Pacific/Honolulu' },
+        { name: 'Canada - Atlantic (AST/ADT)', val: 'America/Halifax' },
+        { name: 'Mexico - Mexico City', val: 'America/Mexico_City' },
+        { name: 'UK - London (GMT/BST)', val: 'Europe/London' },
+        { name: 'Ireland - Dublin (GMT/IST)', val: 'Europe/Dublin' },
+        { name: 'Germany - Berlin (CET/CEST)', val: 'Europe/Berlin' },
+        { name: 'France - Paris (CET/CEST)', val: 'Europe/Paris' },
+        { name: 'Italy - Rome (CET/CEST)', val: 'Europe/Rome' },
+        { name: 'Spain - Madrid (CET/CEST)', val: 'Europe/Madrid' },
+        { name: 'Portugal - Lisbon (WET/WEST)', val: 'Europe/Lisbon' },
+        { name: 'Switzerland - Zurich (CET/CEST)', val: 'Europe/Zurich' },
+        { name: 'Netherlands - Amsterdam (CET/CEST)', val: 'Europe/Amsterdam' },
+        { name: 'Austria - Vienna (CET/CEST)', val: 'Europe/Vienna' },
+        { name: 'Denmark - Copenhagen (CET/CEST)', val: 'Europe/Copenhagen' },
+        { name: 'Sweden - Stockholm (CET/CEST)', val: 'Europe/Stockholm' },
+        { name: 'Norway - Oslo (CET/CEST)', val: 'Europe/Oslo' },
+        { name: 'Finland - Helsinki (EET/EEST)', val: 'Europe/Helsinki' },
+        { name: 'Poland - Warsaw (CET/CEST)', val: 'Europe/Warsaw' },
+        { name: 'Hungary - Budapest (CET/CEST)', val: 'Europe/Budapest' },
+        { name: 'Greece - Athens (CET/CEST)', val: 'Europe/Athens' },
+        { name: 'Russia - Moscow (MSK)', val: 'Europe/Moscow' },
+        { name: 'Ukraine - Kyiv (EET/EEST)', val: 'Europe/Kyiv' },
+        { name: 'Turkey - Istanbul (+03)', val: 'Europe/Istanbul' },
+        { name: 'South Africa - Johannesburg (SAST)', val: 'Africa/Johannesburg' },
+        { name: 'Egypt - Cairo (EET/EEST)', val: 'Africa/Cairo' },
+        { name: 'Kenya - Nairobi (EAT)', val: 'Africa/Nairobi' },
+        { name: 'Nigeria - Lagos (WAT)', val: 'Africa/Lagos' },
+        { name: 'Morocco - Casablanca (+01)', val: 'Africa/Casablanca' },
+        { name: 'India (IST)', val: 'Asia/Kolkata' },
+        { name: 'Japan - Tokyo (JST)', val: 'Asia/Tokyo' },
+        { name: 'China - Beijing (CST)', val: 'Asia/Shanghai' },
+        { name: 'UAE - Dubai (GST)', val: 'Asia/Dubai' },
+        { name: 'Singapore (SGT)', val: 'Asia/Singapore' },
+        { name: 'South Korea - Seoul (KST)', val: 'Asia/Seoul' },
+        { name: 'Saudi Arabia - Riyadh (AST)', val: 'Asia/Riyadh' },
+        { name: 'Pakistan - Karachi (PKT)', val: 'Asia/Karachi' },
+        { name: 'Bangladesh - Dhaka (BST)', val: 'Asia/Dhaka' },
+        { name: 'Australia - Sydney (AEST/AEDT)', val: 'Australia/Sydney' },
+        { name: 'Australia - Melbourne (AEST/AEDT)', val: 'Australia/Melbourne' },
+        { name: 'Australia - Brisbane (AEST)', val: 'Australia/Brisbane' },
+        { name: 'Australia - Adelaide (ACST/ACDT)', val: 'Australia/Adelaide' },
+        { name: 'Australia - Darwin (ACST)', val: 'Australia/Darwin' },
+        { name: 'Australia - Perth (AWST)', val: 'Australia/Perth' },
+        { name: 'New Zealand - Auckland (NZST/NZDT)', val: 'Pacific/Auckland' },
+        { name: 'Fiji - Suva (FJT)', val: 'Pacific/Fiji' },
+        { name: 'Papua New Guinea - Port Moresby (PGT)', val: 'Pacific/Port_Moresby' },
+        { name: 'Vanuatu - Port Vila (VUT)', val: 'Pacific/Efate' },
+        { name: 'Solomon Islands - Honiara (SBT)', val: 'Pacific/Guadalcanal' },
+        { name: 'Samoa - Apia (WST)', val: 'Pacific/Apia' },
+        { name: 'Tonga - Nukuʻalofa (TOT)', val: 'Pacific/Tongatapu' },
+        { name: 'French Polynesia - Tahiti (TAHT)', val: 'Pacific/Tahiti' },
+        { name: 'Palau (PWT)', val: 'Pacific/Palau' }
+    ];
+
+    let tzMap = new Map();
+    let selectedTzValue = 'America/New_York';
+
+    function initTimezoneApp() {
+        const dl = document.getElementById('tz-dropdown');
+        if (dl.innerHTML === '') {
+            tzs.forEach(tz => { tzMap.set(tz.name, tz.val); });
+            renderTzDropdown(tzs);
+        }
+        
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-est').innerText = now.toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour12: false});
+            document.getElementById('live-gmt').innerText = now.toLocaleTimeString('en-US', {timeZone: 'UTC', hour12: false});
+            document.getElementById('live-ist').innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
+            
+            const istClock = document.getElementById('reminders-ist-clock-display');
+            if(istClock) istClock.innerText = now.toLocaleTimeString('en-US', {timeZone: 'Asia/Kolkata', hour12: false});
+        }, 1000);
+        
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('tz-search');
+            const dropdown = document.getElementById('tz-dropdown');
+            if (e.target !== searchInput && e.target !== dropdown && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        updateTimezoneScales();
+    }
+
+    function renderTzDropdown(list) {
+        const container = document.getElementById('tz-dropdown');
+        container.innerHTML = '';
+        if (list.length === 0) { container.innerHTML = '<div style="color:var(--text-muted); cursor:default;">No countries found.</div>'; return; }
+        list.forEach(tz => {
+            const div = document.createElement('div');
+            div.innerText = tz.name;
+            div.onclick = () => selectTz(tz);
+            container.appendChild(div);
+        });
+    }
+
+    function filterTzOptions() {
+        const query = document.getElementById('tz-search').value.toLowerCase();
+        const filtered = tzs.filter(tz => tz.name.toLowerCase().includes(query));
+        renderTzDropdown(filtered);
+        document.getElementById('tz-dropdown').style.display = 'block';
+    }
+
+    function showTzOptions() {
+        filterTzOptions();
+        document.getElementById('tz-dropdown').style.display = 'block';
+    }
+
+    function selectTz(tz) {
+        selectedTzValue = tz.val;
+        document.getElementById('selected-tz-display').innerText = `Currently Selected: ${tz.name}`;
+        document.getElementById('tz-search').value = ''; 
+        document.getElementById('tz-dropdown').style.display = 'none';
+        updateTimezoneScales();
+    }
+
+    function formatTimeInput(e) {
+        let val = e.target.value.replace(/\D/g, ''); 
+        if (val.length > 2) val = val.substring(0,2) + ':' + val.substring(2,4);
+        e.target.value = val;
+    }
+
+    function handleTextTimeChange() {
+        let timeInput = document.getElementById('merchant-time-input').value;
+        const parts = timeInput.split(':');
+        if(parts.length === 2) {
+            let h = parseInt(parts[0]); let m = parseInt(parts[1]);
+            if(isNaN(h) || h < 0 || h > 23) h = 0;
+            if(isNaN(m) || m < 0 || m > 59) m = 0;
+            
+            const totalMins = h * 60 + m;
+            document.getElementById('merchant-time-slider').value = totalMins;
+            document.getElementById('merchant-time-input').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            updateTimezoneScales();
+        } else {
+            document.getElementById('merchant-time-input').value = "12:00";
+            document.getElementById('merchant-time-slider').value = 720;
+            updateTimezoneScales();
+        }
+    }
+
+    function handleSliderChange() {
+        const slider = document.getElementById('merchant-time-slider');
+        const totalMins = parseInt(slider.value);
+        const hours = Math.floor(totalMins / 60); const mins = totalMins % 60;
+        document.getElementById('merchant-time-input').value = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+        updateTimezoneScales();
+    }
+
+    function updateTimezoneScales() {
+        const totalMins = parseInt(document.getElementById('merchant-time-slider').value);
+        const tz = selectedTzValue;
+
+        const getOffset = (timeZone, date = new Date()) => {
+            try {
+                const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+                const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+                return (tzDate.getTime() - utcDate.getTime()) / 60000;
+            } catch(e) { return 0; }
+        };
+
+        const selectedOffset = getOffset(tz);
+        const gmtOffset = 0; 
+        const estOffset = getOffset('America/New_York');
+
+        let gmtMins = totalMins - selectedOffset + gmtOffset;
+        let estMins = totalMins - selectedOffset + estOffset;
+
+        gmtMins = (gmtMins % 1440 + 1440) % 1440;
+        estMins = (estMins % 1440 + 1440) % 1440;
+
+        document.getElementById('gmt-marker').style.left = `${(gmtMins / 1440) * 100}%`;
+        document.getElementById('est-marker').style.left = `${(estMins / 1440) * 100}%`;
+
+        const gH = String(Math.floor(gmtMins/60)).padStart(2, '0');
+        const gM = String(gmtMins%60).padStart(2, '0');
+        const eH = String(Math.floor(estMins/60)).padStart(2, '0');
+        const eM = String(estMins%60).padStart(2, '0');
+
+        const isGmtGood = gmtMins >= 540 && gmtMins <= 1020; 
+        const isEstGood = estMins >= 540 && estMins <= 1020;
+
+        const gmtEl = document.getElementById('gmt-result-time');
+        gmtEl.innerText = `${gH}:${gM} ${isGmtGood ? '✓' : ''}`;
+        gmtEl.style.color = isGmtGood ? '#22c55e' : 'var(--danger-btn)';
+
+        const estEl = document.getElementById('est-result-time');
+        estEl.innerText = `${eH}:${eM} ${isEstGood ? '✓' : ''}`;
+        estEl.style.color = isEstGood ? '#22c55e' : 'var(--danger-btn)';
+        
+        const timeInputEl = document.getElementById('merchant-time-input');
+        if (isGmtGood || isEstGood) {
+            timeInputEl.style.borderColor = '#22c55e';
+            timeInputEl.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.2)';
+        } else {
+            timeInputEl.style.borderColor = '#0f172a';
+            timeInputEl.style.boxShadow = 'none';
+        }
+    }
+
+    // --- REMINDERS APP LOGIC ---
+    let remindersData = {
+        active: true,
+        standard: [
+            { id: "std_1", label: "Break 1", time: "", pos: "pos-br" },
+            { id: "std_2", label: "Lunch", time: "", pos: "pos-br" },
+            { id: "std_3", label: "Break 2", time: "", pos: "pos-br" }
+        ],
+        custom: [
+            { id: "cst_1", msg: "", time: "", pos: "pos-br" },
+            { id: "cst_2", msg: "", time: "", pos: "pos-br" },
+            { id: "cst_3", msg: "", time: "", pos: "pos-br" }
+        ]
+    };
+    
+    let triggeredLog = {};
+
+    function initRemindersApp() {
+        if (!currentUser) return;
+        const stored = localStorage.getItem('viking_reminders_' + currentUser.email);
+        if (stored) {
+            try { remindersData = JSON.parse(stored); } catch(e) {}
+        }
+        
+        document.getElementById('reminders-toggle').checked = remindersData.active;
+        buildRemindersUI();
+        setInterval(checkReminders, 5000);
+    }
+
+    function requestNotificationPermission() {
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }
+
+    function getPositionDropdown(id, currentVal) {
+        const options = [
+            { val: "pos-bl", txt: "Bottom Left" },
+            { val: "pos-tl", txt: "Top Left" },
+            { val: "pos-tr", txt: "Top Right" },
+            { val: "pos-br", txt: "Bottom Right" },
+            { val: "pos-center", txt: "Center" }
+        ];
+        let html = `<select id="pos_${id}" onchange="saveRemindersConfig()">`;
+        options.forEach(o => {
+            html += `<option value="${o.val}" ${currentVal === o.val ? 'selected' : ''}>${o.txt}</option>`;
+        });
+        html += `</select>`;
+        return html;
+    }
+
+    function buildRemindersUI() {
+        const stdList = document.getElementById('standard-reminders-list');
+        stdList.innerHTML = '';
+        remindersData.standard.forEach(rem => {
+            stdList.innerHTML += `
+                <div class="rem-row">
+                    <div class="rem-label">${rem.label}</div>
+                    <input type="time" id="time_${rem.id}" value="${rem.time}" onchange="saveRemindersConfig()">
+                    ${getPositionDropdown(rem.id, rem.pos)}
+                </div>
+            `;
+        });
+
+        const cstList = document.getElementById('custom-reminders-list');
+        cstList.innerHTML = '';
+        remindersData.custom.forEach((rem, idx) => {
+            cstList.innerHTML += `
+                <div class="rem-row">
+                    <input type="text" id="msg_${rem.id}" placeholder="Custom Message ${idx + 1}" value="${rem.msg}" oninput="saveRemindersConfig()" style="flex:1;">
+                    <input type="time" id="time_${rem.id}" value="${rem.time}" onchange="saveRemindersConfig()">
+                    ${getPositionDropdown(rem.id, rem.pos)}
+                </div>
+            `;
+        });
+        
+        updateCountdownDisplay();
+    }
+
+    function saveRemindersConfig() {
+        remindersData.active = document.getElementById('reminders-toggle').checked;
+        
+        remindersData.standard.forEach(rem => {
+            rem.time = document.getElementById(`time_${rem.id}`).value;
+            rem.pos = document.getElementById(`pos_${rem.id}`).value;
+        });
+        
+        remindersData.custom.forEach(rem => {
+            rem.msg = document.getElementById(`msg_${rem.id}`).value;
+            rem.time = document.getElementById(`time_${rem.id}`).value;
+            rem.pos = document.getElementById(`pos_${rem.id}`).value;
+        });
+
+        if (currentUser) {
+            localStorage.setItem('viking_reminders_' + currentUser.email, JSON.stringify(remindersData));
+        }
+        
+        if (remindersData.active) requestNotificationPermission();
+        
+        updateCountdownDisplay();
+    }
+
+    function checkReminders() {
+        if (!remindersData.active) {
+            document.getElementById('next-break-display').innerText = "Reminders Paused";
+            return;
+        }
+
+        const now = new Date();
+        const istDateStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
+        const istDateObj = new Date(istDateStr);
+        
+        const currentMins = istDateObj.getHours() * 60 + istDateObj.getMinutes();
+        const todayKey = istDateObj.toDateString();
+
+        const allRems = [...remindersData.standard, ...remindersData.custom];
+        
+        allRems.forEach(rem => {
+            if (!rem.time) return;
+            const parts = rem.time.split(':');
+            const targetMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            
+            let triggerMins = targetMins - 10;
+            if (triggerMins < 0) triggerMins += 1440; 
+            
+            const logKey = `${rem.id}_${todayKey}`;
+
+            if (currentMins === triggerMins && !triggeredLog[logKey]) {
+                triggeredLog[logKey] = true;
+                let msg = (rem.label) ? "Time to Wrap up and get a break 😊" : (rem.msg || "Custom Reminder! 😊");
+                showReminderToast(msg, rem.pos);
+            }
+        });
+
+        updateCountdownDisplay(currentMins);
+    }
+
+    function updateCountdownDisplay(currentMins = null) {
+        if (!remindersData.active) {
+            document.getElementById('next-break-display').innerText = "Reminders Paused";
+            return;
+        }
+        
+        if (currentMins === null) {
+            const now = new Date();
+            const istDateObj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+            currentMins = istDateObj.getHours() * 60 + istDateObj.getMinutes();
+        }
+
+        const allRems = [...remindersData.standard, ...remindersData.custom].filter(r => r.time);
+        
+        let nextTargetMins = null;
+        let minDiff = 1440;
+
+        allRems.forEach(rem => {
+            const parts = rem.time.split(':');
+            const targetMins = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            
+            let diff = targetMins - currentMins;
+            if (diff > 0 && diff < minDiff) {
+                minDiff = diff;
+                nextTargetMins = targetMins;
+            }
+        });
+
+        const displayEl = document.getElementById('next-break-display');
+        if (nextTargetMins !== null) {
+            const hrs = Math.floor(minDiff / 60);
+            const mns = minDiff % 60;
+            let timeStr = "";
+            if (hrs > 0) timeStr += `${hrs}h `;
+            timeStr += `${mns}m`;
+            displayEl.innerText = `Next Break in: ${timeStr}`;
+        } else {
+            displayEl.innerText = "All Breaks Completed";
+        }
+    }
+
+    function showReminderToast(msg, positionClass) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Viking Cloud Workspace", {
+                body: msg,
+                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png",
+                requireInteraction: true 
+            });
+        }
+        
+        const toast = document.getElementById('reminder-toast');
+        const msgEl = document.getElementById('reminder-toast-msg');
+        msgEl.innerText = msg;
+        toast.className = '';
+        toast.classList.add(positionClass);
+        if (positionClass === 'pos-center') toast.classList.add('slideIn');
+        toast.style.display = 'flex';
+    }
+
+    function closeReminderToast() {
+        document.getElementById('reminder-toast').style.display = 'none';
+    }
+
+    // --- SHARED DATA VIEWS (Users & Logs & Compliance) ---
+    async function openDataView(appContext, viewType) {
+        if (userRole !== 'Editor') return;
+        
+        if(viewType === 'compliance') currentAppLocation = 'Viewing Compliance';
+        else currentAppLocation = viewType === 'users' ? 'Viewing Directory' : 'Viewing Logs'; 
+        updatePresenceLocation();
+        
+        activeDataView = viewType;
+        
+        if (appContext === 'silo') {
+            siloCurrentView = 'DataView';
+            document.getElementById('silo-editor-panel').style.display = 'none';
+            document.getElementById('silo-view-panel').style.display = 'none';
+            document.getElementById('notes-container').style.display = 'none';
+            document.getElementById('silo-folder-actions').style.display = 'none';
+            
+            document.getElementById('silo-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Silo Activity Logs';
+            document.getElementById('silo-data-container').style.display = 'block';
+            renderDataView('silo', viewType);
+            
+        } else if (appContext === 'hub') {
+            document.getElementById('hub-feed').style.display = 'none';
+            document.getElementById('hub-full-view').style.display = 'none';
+            
+            let titleText = 'Platform Directory';
+            if(viewType === 'logs') titleText = 'Hub Activity Logs';
+            if(viewType === 'compliance') titleText = 'Mandatory Compliance Report';
+            
+            document.getElementById('hub-data-title').innerText = titleText;
+            document.getElementById('hub-data-container').style.display = 'block';
+            
+            if (viewType === 'compliance') renderComplianceReport();
+            else renderDataView('hub', viewType);
+
+        } else if (appContext === 'protocol') {
+            document.getElementById('protocol-feed').style.display = 'none';
+            document.getElementById('protocol-full-view').style.display = 'none';
+            document.getElementById('protocol-folder-actions').style.display = 'none';
+            
+            document.getElementById('protocol-data-title').innerText = viewType === 'users' ? 'Platform Directory' : 'Protocol Activity Logs';
+            document.getElementById('protocol-data-container').style.display = 'block';
+            renderDataView('protocol', viewType);
+        }
+    }
+    
+    function closeDataView(appContext) {
+        document.getElementById(`${appContext}-data-container`).style.display = 'none';
+        activeDataView = '';
+        if (appContext === 'silo') siloSetView(siloCurrentFolder);
+        else if (appContext === 'hub') hubSwitchFolder(hubFolder);
+        else if (appContext === 'protocol') protocolSetFolder(protocolFolder);
+    }
+
+    async function renderDataView(appContext, viewType) {
+        const uiList = document.getElementById(`${appContext}-data-list`);
+        if(!uiList) return;
+        if (uiList.innerHTML === '') uiList.innerHTML = '<p>Loading data...</p>';
+
+        const searchQuery = document.getElementById(`${appContext}-search`)?.value.toLowerCase() || '';
+        let count = 0; let htmlContent = '';
+
+        if (viewType === 'users') {
+            const { data: allProfiles, error } = await supabaseClient.from('user_profiles').select('*').order('email', { ascending: true });
+            if (error || !allProfiles) return uiList.innerHTML = '<p>Error loading users. Ensure database tables exist.</p>';
+
+            const uniqueProfilesMap = new Map();
+            allProfiles.forEach(p => uniqueProfilesMap.set(p.email, p));
+            const uniqueProfiles = Array.from(uniqueProfilesMap.values());
+
+            uniqueProfiles.forEach(profile => {
+                if (!profile.email.toLowerCase().includes(searchQuery) && !(profile.display_name || '').toLowerCase().includes(searchQuery)) return;
+                count++;
+
+                const userPresenceArray = onlineUsers[profile.email];
+                let isOnline = false, locationText = 'Offline';
+
+                if (userPresenceArray && userPresenceArray.length > 0) {
+                    isOnline = true;
+                    const latestPresence = userPresenceArray.sort((a,b) => new Date(b.online_at) - new Date(a.online_at))[0];
+                    locationText = `Viewing: ${latestPresence.location}`;
+                }
+                
+                const dotClass = isOnline ? 'status-online' : 'status-offline';
+                const visibleName = profile.display_name ? profile.display_name : profile.email;
+
+                htmlContent += `
+                    <div class="data-row">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
+                                <span class="status-dot ${dotClass}"></span>${visibleName}
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-muted);">${profile.email} • Role: ${profile.role}</div>
+                        </div>
+                        <div style="text-align:right; font-size: 13px; color: var(--text-muted);">${locationText}</div>
+                    </div>`;
+            });
+            if (count === 0) htmlContent = "<p>No users found.</p>";
+            
+        } else if (viewType === 'logs') {
+            const appFilter = appContext; 
+            const { data: logs, error } = await supabaseClient.from('app_logs').select('*').eq('app', appFilter).order('created_at', { ascending: false }).limit(100);
+            if (error || !logs) return uiList.innerHTML = '<p>Error loading logs.</p>';
+
+            logs.forEach(log => {
+                const searchString = `${log.user_email} ${log.action} ${log.item_title}`.toLowerCase();
+                if (!searchString.includes(searchQuery)) return;
+                count++;
+                
+                const dateIST = new Date(log.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                let actionColor = 'var(--text-muted)';
+                if (log.action === 'Deleted') actionColor = 'var(--danger-btn)';
+                if (log.action === 'Created') actionColor = '#22c55e';
+
+                htmlContent += `
+                    <div class="data-row">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px; color:var(--text-main);">
+                                ${log.user_email} <span style="color:${actionColor}; margin: 0 5px;">[${log.action}]</span> 
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-main);">Item: <i>${log.item_title}</i></div>
+                        </div>
+                        <div style="text-align:right; font-size: 12px; color: var(--text-muted); font-family:monospace;">
+                            ${dateIST} (IST)
+                        </div>
+                    </div>`;
+            });
+            if (count === 0) htmlContent = "<p>No logs found.</p>";
+        }
+        uiList.innerHTML = htmlContent;
+    }
+
+    // --- PHASE 4: COMPLIANCE REPORT & EXCEL EXPORT ---
+    async function renderComplianceReport() {
+        const uiList = document.getElementById(`hub-data-list`);
+        uiList.innerHTML = '<p>Fetching live compliance data...</p>';
+        
+        try {
+            // Fetch everything needed
+            const { data: allUpdates } = await supabaseClient.from('updates_hub').select('*').eq('is_protocol', false).order('time', {ascending: false});
+            const { data: allAcks } = await supabaseClient.from('update_acknowledgements').select('*');
+            const { data: allUsers } = await supabaseClient.from('user_profiles').select('*').order('email', {ascending: true});
+            
+            if (!allUpdates || !allUsers) throw new Error("Could not load data.");
+            
+            // Save to global window object so CSV export can grab it
+            window.complianceExportData = { allUpdates, allAcks, allUsers };
+            
+            let html = `
+                <div style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; gap: 20px;">
+                    <select id="compliance-update-select" class="silo-input" style="flex:1; margin:0;" onchange="renderComplianceTable()">
+                        <option value="">-- Select an Update to View Status --</option>
+                        ${allUpdates.map(u => `<option value="${u.id}">[v${u.version || 1}] ${u.title}</option>`).join('')}
+                    </select>
+                    <button class="silo-btn" style="width:auto; margin:0; background:#10b981; white-space:nowrap;" onclick="exportComplianceCSV()">📥 Export to Excel (CSV)</button>
+                </div>
+                <div id="compliance-table-container"></div>
+            `;
+            uiList.innerHTML = html;
+        } catch(e) {
+            uiList.innerHTML = `<p style="color:red;">Error: Database tables may be missing. Did you run the Phase 1 SQL Script?</p>`;
+        }
+    }
+
+    window.renderComplianceTable = function() {
+        const updateId = document.getElementById('compliance-update-select').value;
+        const container = document.getElementById('compliance-table-container');
+        if(!updateId) { container.innerHTML = ''; return; }
+        
+        const { allUpdates, allAcks, allUsers } = window.complianceExportData;
+        const targetUpdate = allUpdates.find(u => u.id == updateId);
+        const targetVersion = targetUpdate.version || 1;
+        const isMandatory = targetUpdate.is_mandatory !== false;
+        
+        let tableHtml = `<table style="width:100%; border-collapse: collapse; text-align:left; font-size:14px;">
+            <tr style="border-bottom:2px solid var(--border-color);">
+                <th style="padding:10px;">User Email</th>
+                <th style="padding:10px;">Status (v${targetVersion})</th>
+                <th style="padding:10px;">Date Acknowledged</th>
+            </tr>`;
+            
+        allUsers.forEach(user => {
+            const userAcks = allAcks ? allAcks.filter(a => a.update_id == updateId && a.user_email === user.email) : [];
+            const highestAckVersion = userAcks.length > 0 ? Math.max(...userAcks.map(a=>a.version)) : 0;
+            
+            let statusText, statusColor, dateText = '--';
+            if (!isMandatory) {
+                statusText = 'Optional'; statusColor = 'var(--text-muted)';
+            } else if (highestAckVersion >= targetVersion) {
+                statusText = 'Acknowledged'; statusColor = '#22c55e';
+                const ackObj = userAcks.find(a => a.version === highestAckVersion);
+                if(ackObj) dateText = new Date(ackObj.acknowledged_at).toLocaleString();
+            } else if (highestAckVersion > 0) {
+                statusText = 'Pending Re-ack'; statusColor = '#f59e0b';
+            } else {
+                statusText = 'Pending'; statusColor = 'var(--danger-btn)';
+            }
+            
+            tableHtml += `<tr style="border-bottom:1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:10px; color:var(--text-main); font-weight:600;">${user.email}</td>
+                <td style="padding:10px; font-weight:bold; color:${statusColor};">${statusText}</td>
+                <td style="padding:10px; color:var(--text-muted);">${dateText}</td>
+            </tr>`;
+        });
+        tableHtml += `</table>`;
+        container.innerHTML = tableHtml;
+    }
+    
+    window.exportComplianceCSV = function() {
+        if(!window.complianceExportData) return alert("No data to export.");
+        const { allUpdates, allAcks, allUsers } = window.complianceExportData;
+        
+        let csvContent = "Update Title,Version,Is Mandatory,User Email,Status,Acknowledged Date\n";
+        
+        allUpdates.forEach(update => {
+            const isMandatory = update.is_mandatory !== false;
+            const targetVersion = update.version || 1;
+            const safeTitle = (update.title || '').replace(/"/g, '""'); // Excel escaping
+            
+            allUsers.forEach(user => {
+                const userAcks = allAcks ? allAcks.filter(a => a.update_id == update.id && a.user_email === user.email) : [];
+                const highestAckVersion = userAcks.length > 0 ? Math.max(...userAcks.map(a=>a.version)) : 0;
+                
+                let statusText = 'Pending', dateText = 'N/A';
+                if (!isMandatory) { statusText = 'Optional'; }
+                else if (highestAckVersion >= targetVersion) { 
+                    statusText = 'Acknowledged'; 
+                    const ackObj = userAcks.find(a => a.version === highestAckVersion);
+                    if(ackObj) dateText = new Date(ackObj.acknowledged_at).toLocaleString();
+                } else if (highestAckVersion > 0) { statusText = 'Pending Re-ack'; }
+                
+                csvContent += `"${safeTitle}",${targetVersion},${isMandatory},"${user.email}","${statusText}","${dateText}"\n`;
+            });
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.setAttribute("href", url);
+        a.setAttribute("download", "Viking_Compliance_Report.csv");
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+
+    // --- SILO NOTES LOGIC ---
+    async function loadSiloNotes(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            const { data, error } = await supabaseClient.from('silo_notes').select('*').order('sort_order', { ascending: true });
+            if (error) throw error;
+            siloNotes = data || [];
+            
+            if (siloCurrentView === 'ViewNote' && siloActiveId) {
+                const stillExists = siloNotes.find(n => n.id === siloActiveId);
+                if (!stillExists) { alert("This note was just deleted by an administrator."); siloCurrentView = siloCurrentFolder; siloActiveId = null; }
+            }
+            if (!silent || (siloCurrentView !== 'Create' && siloCurrentView !== 'DataView')) siloRenderUI();
+        } catch (err) { if(!silent) document.getElementById('notes-container').innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red;"><b>Database Error:</b> ${err.message}</p>`; }
+    }
+    
+    function siloSearch(e) { 
+        siloQuery = e.target.value.toLowerCase(); 
+        if (activeDataView !== '') renderDataView('silo', activeDataView);
+        else siloSetView('All'); 
+    }
+    
+    function siloSetView(view, id = null, presetLabel = null) { 
+        document.getElementById('silo-data-container').style.display = 'none'; activeDataView = '';
+        
+        if (view !== 'Create' && view !== 'ViewNote' && view !== 'DataView') {
+            siloCurrentFolder = view;
+        }
+        
+        siloCurrentView = view; 
+        siloActiveId = id; 
+
+        if (view === 'Create') {
+            document.getElementById('silo-note-title').value = ''; 
+            if(siloQuill) siloQuill.root.innerHTML = '';
+            
+            if (presetLabel) { document.getElementById('silo-note-label').value = presetLabel; document.getElementById('silo-note-label').style.display = 'none'; } 
+            else { document.getElementById('silo-note-label').value = ''; document.getElementById('silo-note-label').style.display = 'block'; }
+        }
+        siloRenderUI(); 
+    }
+    
+    async function siloSaveNote() {
+        if (!supabaseClient) return alert("Database connection error.");
+        if (!siloQuill) return alert("Editor not loaded.");
+        const title = document.getElementById('silo-note-title').value;
+        const labelBox = document.getElementById('silo-note-label');
+        const label = labelBox.value;
+        const content = siloQuill.root.innerHTML; 
+        
+        if (!title.trim() && content === '<p><br></p>') return;
+        if (labelBox.style.display !== 'none' && !label.trim()) return alert("Label is required!");
+
+        if (siloActiveId) {
+            const { error } = await supabaseClient.from('silo_notes').update({ title, label, content }).eq('id', siloActiveId);
+            if (error) return alert("Failed to update note: " + error.message);
+            logActivity('silo', 'Edited', title);
+        } else {
+            const { error } = await supabaseClient.from('silo_notes').insert([{ id: Date.now(), title, label, content, sort_order: Date.now() * 1000 }]);
+            if (error) return alert("Failed to save note: " + error.message);
+            logActivity('silo', 'Created', title);
+        }
+        document.getElementById('silo-note-title').value = ''; document.getElementById('silo-note-label').value = ''; siloQuill.root.innerHTML = '';
+        siloSetView(siloCurrentFolder); loadSiloNotes(); 
+    }
+
+    async function siloDeleteNote(id) {
+        if (!supabaseClient) return;
+        const note = siloNotes.find(n => n.id === id);
+        if(confirm("Delete this note permanently?")) { 
+            await supabaseClient.from('silo_notes').delete().eq('id', id); 
+            if(note) logActivity('silo', 'Deleted', note.title);
+            siloSetView(siloCurrentFolder); loadSiloNotes(); 
+        }
+    }
+    
+    function siloBackup() {
+        const backupData = JSON.stringify(siloNotes, null, 2);
+        const blob = new Blob([backupData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'silo_backup.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    
+    async function processRestoreFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const parsedNotes = JSON.parse(e.target.result);
+                if (Array.isArray(parsedNotes)) {
+                    if (!supabaseClient) throw new Error("Database connection blocked.");
+                    const { error } = await supabaseClient.from('silo_notes').upsert(parsedNotes);
+                    if (error) throw error;
+                    alert("Notes restored successfully!");
+                    logActivity('silo', 'Restored Backup', 'Multiple Notes');
+                    siloSetView(siloCurrentFolder); loadSiloNotes();
+                } else alert("Invalid backup format.");
+            } catch (err) { alert("Failed to restore backup: " + err.message); }
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    function initSortableGrid() {
+        if (typeof Sortable === 'undefined') return; 
+        const container = document.getElementById('notes-container');
+        if(sortableInstance) sortableInstance.destroy();
+        
+        if(siloEditor && !siloQuery && siloCurrentView !== 'DataView') {
+            sortableInstance = new Sortable(container, {
+                animation: 150, handle: ".drag-handle", draggable: ".sortable-card", forceFallback: true, fallbackClass: "sortable-ghost",
+                onEnd: async function (evt) {
+                    if (!supabaseClient) return;
+                    const itemEl = evt.item; const prevEl = itemEl.previousElementSibling; const nextEl = itemEl.nextElementSibling;
+                    const id = parseInt(itemEl.dataset.id); let newSortOrder = Date.now() * 1000; 
+
+                    if (prevEl && nextEl) newSortOrder = (parseFloat(prevEl.dataset.order) + parseFloat(nextEl.dataset.order)) / 2.0;
+                    else if (prevEl && !nextEl) newSortOrder = parseFloat(prevEl.dataset.order) + 1000;
+                    else if (!prevEl && nextEl) newSortOrder = parseFloat(nextEl.dataset.order) - 1000;
+
+                    itemEl.dataset.order = newSortOrder; isSorting = true; 
+                    await supabaseClient.from('silo_notes').update({ sort_order: newSortOrder }).eq('id', id);
+                    setTimeout(() => { isSorting = false; loadSiloNotes(true); }, 500);
+                }
+            });
+        }
+    }
+
+    function siloRenderUI() {
+        if (siloCurrentView === 'DataView') return; 
+
+        document.getElementById('silo-editor-panel').style.display = siloCurrentView === 'Create' ? 'block' : 'none';
+        document.getElementById('silo-view-panel').style.display = siloCurrentView === 'ViewNote' ? 'block' : 'none';
+        document.getElementById('notes-container').style.display = (siloCurrentView !== 'Create' && siloCurrentView !== 'ViewNote') ? 'grid' : 'none';
+
+        const lblList = document.getElementById('label-list');
+        lblList.innerHTML = '';
+        
+        let uniqueLabels = [...new Set(siloNotes.map(n => n.label).filter(Boolean))];
+        
+        let savedOrder = [];
+        if (currentUser) {
+            try {
+                const stored = localStorage.getItem('siloLabelOrder_' + currentUser.email);
+                if (stored) savedOrder = JSON.parse(stored);
+            } catch(e) {}
+        }
+        
+        uniqueLabels.sort((a, b) => {
+            let idxA = savedOrder.indexOf(a);
+            let idxB = savedOrder.indexOf(b);
+            if(idxA === -1) idxA = 9999;
+            if(idxB === -1) idxB = 9999;
+            return idxA - idxB;
+        });
+
+        lblList.innerHTML += `<li class="static-label ${siloCurrentView==='All'?'active':''}" onclick="siloSetView('All')"><span style="margin-right:10px; opacity:0; width:16px;"></span><span style="flex:1;">All Notes</span></li>`;
+        
+        uniqueLabels.forEach(lbl => {
+            lblList.innerHTML += `<li class="drag-label ${siloCurrentView===lbl?'active':''}" data-id="${lbl}">
+                <span class="label-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⋮⋮</span>
+                <span style="flex:1; cursor:pointer;" onclick="siloSetView('${lbl}')">${lbl}</span>
+            </li>`;
+        });
+
+        if (window.labelSortableInstance) { window.labelSortableInstance.destroy(); }
+        
+        if (currentUser && typeof Sortable !== 'undefined') {
+            window.labelSortableInstance = new Sortable(lblList, {
+                animation: 150, filter: ".static-label", draggable: ".drag-label", handle: ".label-drag-handle",
+                onEnd: function() {
+                    const items = Array.from(lblList.querySelectorAll('.drag-label'));
+                    const newOrder = items.map(li => li.getAttribute('data-id'));
+                    localStorage.setItem('siloLabelOrder_' + currentUser.email, JSON.stringify(newOrder));
+                }
+            });
+        }
+
+        const folderActions = document.getElementById('silo-folder-actions');
+
+        if (siloCurrentView === 'ViewNote') {
+            folderActions.style.display = 'none';
+            const note = siloNotes.find(n => n.id === siloActiveId);
+            if(note) {
+                let actions = siloEditor ? `<button onclick="siloEditMode(${note.id})" class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);">Edit</button> <button onclick="siloDeleteNote(${note.id})" class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);">Delete</button>` : '';
+                document.getElementById('silo-view-panel').innerHTML = `
+                    <button onclick="siloSetView('${siloCurrentFolder}')" class="silo-btn secondary" style="width:auto; margin-bottom:20px; border:1px solid var(--border-color);">← Back to Notes</button>
+                    <div class="silo-view-inner">
+                        <div class="view-note-header">
+                            <div>
+                                <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase;">${note.label || 'General'}</div>
+                                <h2 style="margin:5px 0 0 0; color:var(--text-main);">${note.title || 'Untitled'}</h2>
+                            </div>
+                            <div style="display:flex; gap:10px;">${actions}</div>
+                        </div>
+                        <div class="note-content-display">${note.content || ''}</div>
+                    </div>`;
+            }
+        } else if (siloCurrentView !== 'Create') {
+            const container = document.getElementById('notes-container'); container.innerHTML = '';
+            
+            if (siloEditor && siloCurrentView !== 'All' && !siloQuery) {
+                folderActions.style.display = 'block';
+                folderActions.innerHTML = `<button class="silo-btn" style="width:auto;" onclick="siloSetView('Create', null, '${siloCurrentView}')">➕ Create Note in ${siloCurrentView}</button>`;
+            } else {
+                folderActions.style.display = 'none';
+            }
+
+            const filtered = siloNotes.filter(n => (siloCurrentView === 'All' ? true : n.label === siloCurrentView) && ((n.title || '').toLowerCase().includes(siloQuery) || (n.content || '').toLowerCase().includes(siloQuery)));
+            
+            filtered.forEach(n => {
+                const handle = siloEditor ? `<span class="drag-handle" style="position:absolute; top:5px; right:5px; cursor:grab; font-size:20px; color:var(--text-muted); padding:10px; z-index:10; line-height:1;" title="Drag to reorder" onclick="event.stopPropagation()">⋮⋮</span>` : '';
+                container.innerHTML += `
+                  <div class="note-card sortable-card" data-id="${n.id}" data-order="${n.sort_order}" onclick="if(!event.target.classList.contains('drag-handle')) siloSetView('ViewNote', ${n.id})">
+                    ${handle}
+                    <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; padding:25px 15px 15px 15px; box-sizing:border-box;">
+                      <h4 style="margin:0; font-size:16px; font-weight:600; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; color:var(--text-main); pointer-events:none;">${n.title || 'Untitled'}</h4>
+                    </div>
+                  </div>`;
+            });
+
+            if(filtered.length===0 && siloCurrentView === 'All') container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:var(--text-main);'>No notes found.</p>";
+            
+            initSortableGrid();
+        } else {
+             folderActions.style.display = 'none';
+        }
+    }
+    
+    function siloEditMode(id) {
+        const note = siloNotes.find(n => n.id === id);
+        if(note) { 
+            siloCurrentView = 'Create'; siloActiveId = id; 
+            document.getElementById('silo-note-label').style.display = 'block';
+            document.getElementById('silo-editor-title').innerText = "Edit Note"; 
+            document.getElementById('silo-note-title').value = note.title || ''; 
+            document.getElementById('silo-note-label').value = note.label || ''; 
+            
+            if(siloQuill) siloQuill.clipboard.dangerouslyPasteHTML(note.content || '');
+            
+            siloRenderUI();
+        }
+    }
+
+    // --- PHASE 2 & 3: HUB UPDATES & MANDATORY BLOCKERS ---
+    async function loadHubUpdates(silent = false) {
+        if (!supabaseClient) return;
+        try {
+            // Fetch updates
+            const { data: updatesData, error } = await supabaseClient.from('updates_hub').select('*').order('time', { ascending: false });
+            if (error) throw error;
+            hubUpdates = updatesData || [];
+            
+            // Fetch this specific user's acknowledgements from the database
+            const { data: ackData } = await supabaseClient.from('update_acknowledgements').select('*').eq('user_email', currentUser.email);
+            myAcknowledgements = ackData || [];
+
+            // Calculate pending mandatory updates
+            pendingMandatoryUpdates = [];
+            hubUpdates.forEach(update => {
+                if (update.is_protocol) return; 
+                // Default is_mandatory to true if not explicitly false (for backwards compatibility)
+                if (update.is_mandatory !== false) {
+                    const ack = myAcknowledgements.find(a => a.update_id === update.id);
+                    const currentVersion = update.version || 1;
+                    if (!ack || ack.version < currentVersion) {
+                        pendingMandatoryUpdates.push(update);
+                    }
+                }
+            });
+
+            // Trigger the Blocker if necessary
+            if (pendingMandatoryUpdates.length > 0) {
+                showMandatoryBlocker();
+            }
+
+            if (document.getElementById('hub-full-view').style.display === 'block' && hubOpenIndex !== null) {
+                const openId = hubUpdates[hubOpenIndex] ? hubUpdates[hubOpenIndex].id : null;
+                const stillExists = hubUpdates.find(u => u.id === openId);
+                if (!stillExists) {
+                    alert("This update was just deleted by an administrator.");
+                    document.getElementById('hub-full-view').style.display = 'none';
+                }
+            }
+            if (document.getElementById('hub-data-container').style.display !== 'block') {
+                hubRender();
+            }
+        } catch (err) { 
+            if(!silent) document.getElementById('hub-feed').innerHTML = `<p style="text-align:center; color:red;"><b>Database Error:</b> Make sure you ran the Phase 1 SQL Script!</p>`; 
+        }
+    }
+    
+    function showMandatoryBlocker() {
+        if (!pendingMandatoryUpdates || pendingMandatoryUpdates.length === 0) return;
+        
+        // Show the oldest pending update first to force sequential reading
+        const update = pendingMandatoryUpdates[pendingMandatoryUpdates.length - 1]; 
+        
+        document.getElementById('mandatory-blocker-overlay').style.display = 'flex';
+        document.getElementById('blocker-title').innerText = `[v${update.version || 1}] ${update.title || 'Mandatory Update'}`;
+        document.getElementById('blocker-body').innerHTML = update.body || '';
+        document.getElementById('blocker-checkbox').checked = false;
+        document.getElementById('blocker-ack-btn').disabled = true;
+    }
+    
+    async function acknowledgeCurrentUpdate() {
+        const btn = document.getElementById('blocker-ack-btn');
+        btn.disabled = true; btn.innerText = "Saving...";
+        
+        const update = pendingMandatoryUpdates[pendingMandatoryUpdates.length - 1]; 
+        const currentVersion = update.version || 1;
+        
+        const { error } = await supabaseClient.from('update_acknowledgements').insert([{
+            update_id: update.id,
+            user_email: currentUser.email,
+            version: currentVersion
+        }]);
+        
+        if (error) {
+            btn.disabled = false; btn.innerText = "Acknowledge & Continue";
+            return alert("Failed to acknowledge: " + error.message);
+        }
+        
+        // Save locally to avoid immediate re-fetching
+        myAcknowledgements.push({update_id: update.id, user_email: currentUser.email, version: currentVersion});
+        pendingMandatoryUpdates.pop(); 
+        
+        if (pendingMandatoryUpdates.length > 0) {
+            btn.innerText = "Acknowledge & Continue";
+            showMandatoryBlocker(); 
+        } else {
+            document.getElementById('mandatory-blocker-overlay').style.display = 'none';
+            btn.innerText = "Acknowledge & Continue";
+            hubRender(); 
+        }
+    }
+
+    function hubSwitchFolder(folder) { 
+        document.getElementById('hub-data-container').style.display = 'none';
+        document.getElementById('hub-feed').style.display = 'flex';
+        activeDataView = ''; hubFolder = folder; 
+        document.getElementById('hub-full-view').style.display='none'; 
+        hubRender(); 
+    }
+    
+    function hubRenderAuth() { if (document.getElementById('hub-full-view').style.display === 'block') hubOpenView(hubOpenIndex); }
+    
+    async function hubDeleteById(id, title) {
+        if(!supabaseClient) return;
+        if(confirm("Delete this update permanently?")) { 
+            await supabaseClient.from('updates_hub').delete().eq('id', id); 
+            document.getElementById('hub-full-view').style.display = 'none'; 
+            logActivity('hub', 'Deleted', title);
+            loadHubUpdates(); 
+        }
+    }
+
+    function hubRender() {
+        const feed = document.getElementById('hub-feed'); 
+        if (activeDataView !== '') return renderDataView('hub', activeDataView);
+
+        const query = document.querySelector('#app-updates .silo-search').value.toLowerCase(); 
+        let htmlContent = "";
+        
+        document.getElementById('hub-btn-latest').classList.toggle('active', hubFolder === 'latest'); 
+        document.getElementById('hub-btn-history').classList.toggle('active', hubFolder === 'history');
+        
+        let count = 0; let unreadCount = 0;
+        const now = Date.now(); const fifteenDays = 15 * 24 * 60 * 60 * 1000;
+
+        hubUpdates.forEach((item, idx) => {
+            const isProtocol = item.is_protocol === true;
+            if (isProtocol) return;
+
+            const belongsTo = (now - item.time) < fifteenDays ? 'latest' : 'history';
+            
+            // For the badge, only track optional updates since mandatory are forced via blocker
+            if (item.is_mandatory === false && !hubReadIds.includes(item.id)) unreadCount++;
+
+            if (hubFolder === 'latest' && belongsTo !== 'latest') return;
+            if (hubFolder === 'history' && belongsTo !== 'history') return;
+
+            if (!(item.title || '').toLowerCase().includes(query) && !(item.body || '').toLowerCase().includes(query)) return;
+            
+            // Check read status based on mandatory vs optional
+            let isRead = false;
+            if (item.is_mandatory !== false) {
+                const ack = myAcknowledgements.find(a => a.update_id === item.id);
+                isRead = ack && ack.version >= (item.version || 1);
+            } else {
+                isRead = hubReadIds.includes(item.id);
+            }
+            
+            const unreadDot = (!isRead) ? `<span class="unread-dot"></span>` : '';
+            const previewBody = (item.body || '').replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
+
+            let actionBtns = '';
+            if (hubEditor) {
+                const safeTitle = (item.title || '').replace(/'/g, "\\'");
+                actionBtns = `<div style="display:flex; gap:5px;">
+                                <button class="silo-btn secondary" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="event.stopPropagation(); hubOpenEditor(true, ${idx})">Edit</button>
+                                <button class="silo-btn" style="width:auto; padding:4px 8px; font-size:11px; margin:0; background:var(--danger-btn);" onclick="event.stopPropagation(); hubDeleteById(${item.id}, '${safeTitle}')">Delete</button>
+                              </div>`;
+            }
+
+            const mandatoryTag = item.is_mandatory !== false ? '<span style="font-size:10px; background:var(--danger-btn); color:white; padding:2px 6px; border-radius:10px; margin-right:8px;">Mandatory</span>' : '<span style="font-size:10px; background:var(--text-muted); color:white; padding:2px 6px; border-radius:10px; margin-right:8px;">Optional</span>';
+
+            htmlContent += `
+              <div class="hub-strip" onclick="hubOpenView(${idx})">
+                <div class="hub-strip-left">
+                   <div style="display:flex; align-items:center; margin-bottom:4px;">${unreadDot} ${mandatoryTag} <h3 style="margin:0; font-size:16px; color:var(--text-main);">[v${item.version||1}] ${item.title || 'Untitled'}</h3></div>
+                   <span style="color:var(--text-muted); font-size:13px;">${previewBody}</span>
+                </div>
+                <div class="hub-strip-right">${actionBtns}${item.datestr || ''}</div>
+              </div>`;
+            count++;
+        });
+
+        if(count === 0) htmlContent = "<p style='text-align:center; color:var(--text-main);'>No updates found.</p>";
+        feed.innerHTML = htmlContent;
+
+        const badge = document.getElementById('dashboard-hub-badge'); const banner = document.getElementById('hub-banner');
+        if (unreadCount > 0) {
+            badge.style.display = 'block'; badge.innerText = unreadCount;
+            banner.style.display = 'block'; banner.innerText = `You have ${unreadCount} unread optional update${unreadCount > 1 ? 's' : ''}! Click here to view Latest Updates.`;
+        } else { badge.style.display = 'none'; banner.style.display = 'none'; }
+    }
+
+    document.querySelector('#app-updates .silo-search').addEventListener('input', () => {
+        if (activeDataView !== '') renderDataView('hub', activeDataView); else hubRender();
+    });
+
+    function hubOpenView(index) {
+        if(index === null || !hubUpdates[index]) return;
+        hubOpenIndex = index; const item = hubUpdates[index];
+        
+        // Optional items local read receipt tracking
+        if (item.is_mandatory === false && !hubReadIds.includes(item.id)) {
+            hubReadIds.push(item.id);
+            try { localStorage.setItem('hubReadIds_' + currentUser.email, JSON.stringify(hubReadIds)); } catch(e) {} 
+            hubRender(); 
+        }
+
+        document.getElementById('hub-fv-title').innerText = `[v${item.version||1}] ${item.title || 'Untitled'}`; 
+        document.getElementById('hub-fv-date').innerText = item.datestr || ''; 
+        document.getElementById('hub-fv-body').innerHTML = item.body || '';
+        
+        const safeTitle = (item.title || '').replace(/'/g, "\\'");
+        document.getElementById('hub-fv-actions').innerHTML = hubEditor ? `<div style="display:flex; gap:10px;"><button class="silo-btn secondary" style="width:auto; padding:5px 15px; border:1px solid var(--border-color);" onclick="hubOpenEditor(true, ${index})">Edit</button><button class="silo-btn" style="width:auto; padding:5px 15px; background:var(--danger-btn);" onclick="hubDelete(${index}, '${safeTitle}')">Delete</button></div>` : '';
+        document.getElementById('hub-full-view').style.display = 'block';
+    }
+
+    function hubOpenEditor(isEdit, index = null) {
+        hubOpenIndex = index;
+        if(isEdit && index !== null && hubUpdates[index]) { 
+            document.getElementById('hubModalTitle').innerText = "Edit Update"; 
+            document.getElementById('hubPostTitle').value = hubUpdates[index].title || ''; 
+            if(hubQuill) hubQuill.clipboard.dangerouslyPasteHTML(hubUpdates[index].body || '');
+            
+            document.getElementById('hubIsMandatory').checked = hubUpdates[index].is_mandatory !== false;
+            document.getElementById('hubRequireReackLabel').style.display = 'flex';
+            document.getElementById('hubRequireReack').checked = false;
+            
+            document.getElementById('hubSaveBtn').innerText = "Update Changes"; 
+        } else { 
+            document.getElementById('hubModalTitle').innerText = "Create New Update"; 
+            document.getElementById('hubPostTitle').value = ""; 
+            if(hubQuill) hubQuill.root.innerHTML = ""; 
+            
+            document.getElementById('hubIsMandatory').checked = true;
+            document.getElementById('hubRequireReackLabel').style.display = 'none';
+            document.getElementById('hubRequireReack').checked = false;
+            
+            document.getElementById('hubSaveBtn').innerText = "Publish"; 
+            hubOpenIndex = null; 
+        }
+        document.getElementById('hubEditorModal').style.display = 'flex';
+    }
+    
+    async function hubSavePost() {
+        if (!supabaseClient) return alert("Database connection error.");
+        if (!hubQuill) return alert("Editor not loaded.");
+        const title = document.getElementById('hubPostTitle').value; 
+        const body = hubQuill.root.innerHTML;
+        const isMandatory = document.getElementById('hubIsMandatory').checked;
+        const requireReack = document.getElementById('hubRequireReack').checked;
+        
+        if(!title || !title.trim()) return alert("Title is required.");
+        
+        if(hubOpenIndex !== null) {
+            let newVersion = hubUpdates[hubOpenIndex].version || 1;
+            if (requireReack) newVersion += 1;
+            
+            const { error } = await supabaseClient.from('updates_hub').update({ title, body, is_mandatory: isMandatory, version: newVersion }).eq('id', hubUpdates[hubOpenIndex].id);
+            if (error) return alert("Failed to update: " + error.message);
+            logActivity('hub', 'Edited', title);
+        } else {
+            const { error } = await supabaseClient.from('updates_hub').insert([{ id: Date.now(), title, body, time: Date.now(), datestr: new Date().toLocaleString(), is_protocol: false, is_mandatory: isMandatory, version: 1 }]);
+            if (error) return alert("Failed to save: " + error.message);
+            logActivity('hub', 'Created', title);
+        }
+        
+        document.getElementById('hubEditorModal').style.display = 'none'; document.getElementById('hub-full-view').style.display = 'none'; loadHubUpdates();
+    }
+    
+    async function hubDelete(index, title) {
+        if (!supabaseClient) return;
+        if(confirm("Delete this update permanently?")) { 
+            await supabaseClient.from('updates_hub').delete().eq('id', hubUpdates[index].id); 
+            document.getElementById('hub-full-view').style.display = 'none'; 
+            logActivity('hub', 'Deleted', title);
+            loadHubUpdates(); 
+        }
+    }
+
+    // --- 9. STARTUP ---
+    window.onload = () => { 
+        checkSession(); 
+    };
+
+  </script>
+</body>
+</html>
