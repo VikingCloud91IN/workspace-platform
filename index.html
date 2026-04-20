@@ -749,6 +749,7 @@
     let currentAppLocation = 'Dashboard';
     let onlineUsers = {};
     let presenceChannel = null;
+    let hubPollingInterval = null;
 
     // --- QUILL EDITOR INITIALIZATION WITH FAIL-SAFES ---
     const quillConfig = {
@@ -785,6 +786,8 @@
     let hubReadIds = []; 
     let myAcknowledgements = [];
     let pendingMandatoryUpdates = [];
+    let notifiedUpdates = []; 
+    let initialHubLoadComplete = false;
 
     // Protocol States
     let processProtocols = [];
@@ -881,6 +884,13 @@
         const range = document.createRange(); range.selectNodeContents(el);
         const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
     }
+    
+    function startHubPolling() {
+        if (hubPollingInterval) clearInterval(hubPollingInterval);
+        hubPollingInterval = setInterval(() => {
+            if (currentUser) loadHubUpdates(true);
+        }, 60000); 
+    }
 
     async function checkSession() {
         try {
@@ -895,11 +905,14 @@
                 setupPresence(); 
                 initQuotes(); 
                 initLocalReadReceipts();
+                requestNotificationPermission();
                 
                 loadSiloNotes(true); 
-                loadHubUpdates(true); // Hub Updates triggers Acknowledgements
+                loadHubUpdates(true); 
                 loadProtocols(true);
                 initTimezoneApp(); initRemindersApp();
+                
+                startHubPolling();
             }
         } catch(e) {
             console.error("Session check error", e);
@@ -926,11 +939,14 @@
               setupPresence(); 
               initQuotes(); 
               initLocalReadReceipts();
+              requestNotificationPermission();
               
               loadSiloNotes(true); 
               loadHubUpdates(true); 
               loadProtocols(true);
               initTimezoneApp(); initRemindersApp();
+              
+              startHubPolling();
           }
       } catch(e) {
           alert("A system error occurred during login: " + e.message);
@@ -1007,7 +1023,7 @@
       updatePresenceLocation();
     }
 
-    // --- NEW: PROCESS PROTOCOL LOGIC ---
+    // --- PROCESS PROTOCOL LOGIC ---
     async function loadProtocols(silent = false) {
         if (!supabaseClient) return;
         try {
@@ -2080,6 +2096,24 @@
     }
 
     // --- PHASE 2 & 3: HUB UPDATES & MANDATORY BLOCKERS ---
+    function showOSNotificationForUpdate(update) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            let msg = update.is_mandatory !== false ? 
+                `Mandatory Update: "${update.title}" requires your acknowledgment.` : 
+                `New Optional Update: "${update.title}"`;
+                
+            const notif = new Notification("Workspace Update Hub", {
+                body: msg,
+                icon: "https://cdn-icons-png.flaticon.com/512/3239/3239045.png",
+                requireInteraction: true 
+            });
+            notif.onclick = function() {
+                window.focus();
+                this.close();
+            };
+        }
+    }
+
     async function loadHubUpdates(silent = false) {
         if (!supabaseClient) return;
         try {
@@ -2096,7 +2130,18 @@
             pendingMandatoryUpdates = [];
             hubUpdates.forEach(update => {
                 if (update.is_protocol) return; 
-                // Default is_mandatory to true if not explicitly false (for backwards compatibility)
+                
+                // Trigger an OS notification for ANY completely new update or new version
+                const updateKey = `${update.id}_${update.version || 1}`;
+                if (!notifiedUpdates.includes(updateKey)) {
+                    notifiedUpdates.push(updateKey);
+                    // Only send OS notification if this isn't the initial login load (to prevent spam)
+                    if (initialHubLoadComplete) {
+                        showOSNotificationForUpdate(update);
+                    }
+                }
+                
+                // Default is_mandatory to true if not explicitly false
                 if (update.is_mandatory !== false) {
                     const ack = myAcknowledgements.find(a => a.update_id === update.id);
                     const currentVersion = update.version || 1;
@@ -2105,6 +2150,8 @@
                     }
                 }
             });
+            
+            initialHubLoadComplete = true;
 
             // Trigger the Blocker if necessary
             if (pendingMandatoryUpdates.length > 0) {
